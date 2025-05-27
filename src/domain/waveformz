@@ -1,0 +1,185 @@
+use anyhow::{Context, Result};
+use std::{fs::File, path::Path, time::Duration};
+use symphonia::core::{
+    audio::{AudioBufferRef, Signal},
+    codecs::DecoderOptions,
+    formats::{SeekMode, SeekTo, Track},
+    io::MediaSourceStream,
+    probe::Hint,
+    units::Time,
+};
+
+use super::{SAMPLES_PER_POINT, WF_LEN};
+
+pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Vec<f32> {
+    // Open the media source
+    let file = File::open(audio_path.as_ref()).expect("Failed to open file");
+    let extension = audio_path.as_ref().extension();
+
+    let mss = MediaSourceStream::new(Box::new(file), Default::default());
+
+    // Create a hint to help the format registry guess what format reader is appropriate
+    let mut hint = Hint::new();
+    if let Some(ext) = extension {
+        hint.with_extension(ext.to_str().unwrap());
+    }
+
+    // Probe the media source to determine the format
+    let probed = symphonia::default::get_probe()
+        .format(&hint, mss, &Default::default(), &Default::default())
+        .expect("Failed to probe media format");
+
+    // Get the format reader
+    let mut format = probed.format;
+
+    // Get the default track
+    let track = format.default_track().expect("No default track");
+    let track_id = track.id;
+
+    // Create a decoder for the track
+    let mut decoder = symphonia::default::get_codecs()
+        .make(&track.codec_params, &DecoderOptions { verify: true })
+        .expect("Failed to create decoder");
+
+    let duration = get_duration_raw(track).unwrap();
+    // Calculate the time interval between samples
+    let interval = duration / WF_LEN as u32;
+
+    let mut waveform = Vec::with_capacity(WF_LEN);
+
+    for i in 0..WF_LEN {
+        let seek_time = Time::from(interval * i as u32);
+
+        if format
+            .seek(
+                SeekMode::Coarse,
+                SeekTo::Time {
+                    time: seek_time,
+                    track_id: Some(track_id),
+                },
+            )
+            .is_err()
+        {
+            continue;
+        }
+
+        let mut samples_read = 0;
+        let mut sum_squares = 0.0;
+
+        while samples_read < SAMPLES_PER_POINT {
+            // Decode packets until we get an audio packet
+            let packet = match format.next_packet() {
+                Ok(packet) if packet.track_id() == track_id => packet,
+                Ok(_) => continue,
+                Err(_) => break, // End of file or error
+            };
+
+            // Decode the packet
+            let decoded = match decoder.decode(&packet) {
+                Ok(decoded) => decoded,
+                Err(_) => continue, // Skip problematic packets
+            };
+
+            match decoded {
+                AudioBufferRef::F32(buf) => {
+                    let remaining = SAMPLES_PER_POINT - samples_read;
+                    let chunk = &buf.chan(0)[..buf.frames().min(remaining)];
+                    sum_squares += chunk.iter().map(|&s| s * s).sum::<f32>();
+                    samples_read += chunk.len();
+                }
+                AudioBufferRef::S16(buf) => {
+                    let remaining = SAMPLES_PER_POINT - samples_read;
+                    let chunk = &buf.chan(0)[..buf.frames().min(remaining)];
+                    sum_squares += chunk
+                        .iter()
+                        .map(|&s| {
+                            let sample = s as f32 / i16::MAX as f32;
+                            sample * sample
+                        })
+                        .sum::<f32>();
+                    samples_read += chunk.len();
+                }
+                AudioBufferRef::U16(buf) => {
+                    let remaining = SAMPLES_PER_POINT - samples_read;
+                    let chunk = &buf.chan(0)[..buf.frames().min(remaining)];
+                    sum_squares += chunk
+                        .iter()
+                        .map(|&s| {
+                            let sample = (s as f32 / u16::MAX as f32) * 2.0 - 1.0;
+                            sample * sample
+                        })
+                        .sum::<f32>();
+                    samples_read += chunk.len();
+                }
+                AudioBufferRef::S32(buf) => {
+                    let remaining = SAMPLES_PER_POINT - samples_read;
+                    let chunk = &buf.chan(0)[..buf.frames().min(remaining)];
+                    sum_squares += chunk
+                        .iter()
+                        .map(|&s| {
+                            let sample = s as f32 / i32::MAX as f32;
+                            sample * sample
+                        })
+                        .sum::<f32>();
+                    samples_read += chunk.len();
+                }
+                AudioBufferRef::U32(buf) => {
+                    let remaining = SAMPLES_PER_POINT - samples_read;
+                    let chunk = &buf.chan(0)[..buf.frames().min(remaining)];
+                    sum_squares += chunk
+                        .iter()
+                        .map(|&s| {
+                            let sample = (s as f64 / u32::MAX as f64) * 2.0 - 1.0;
+                            (sample * sample) as f32
+                        })
+                        .sum::<f32>();
+                    samples_read += chunk.len();
+                }
+                _ => continue,
+            }
+
+            if samples_read >= SAMPLES_PER_POINT {
+                break;
+            }
+        }
+
+        if samples_read > 0 {
+            let rms = (sum_squares / samples_read as f32).sqrt();
+            waveform.push(rms);
+        } else {
+            break;
+        }
+    }
+
+    normalize_waveform(&mut waveform);
+    waveform
+}
+
+pub fn get_duration_raw(track: &Track) -> Result<Duration> {
+    let n_frames = track
+        .codec_params
+        .n_frames
+        .context("Could not generate nframes")?;
+
+    let sample_rate = track
+        .codec_params
+        .sample_rate
+        .context("Sample rate is not specified")?;
+
+    Ok(Duration::from_secs(n_frames / sample_rate as u64))
+}
+
+fn normalize_waveform(waveform: &mut [f32]) {
+    let min = *waveform.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
+    let max = *waveform.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
+
+    if (max - min).abs() < f32::EPSILON {
+        for value in waveform.iter_mut() {
+            *value = 0.3;
+        }
+    } else {
+        for value in waveform.iter_mut() {
+            *value = (*value - min) / (max - min);
+        }
+    }
+}
