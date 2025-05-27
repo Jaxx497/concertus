@@ -19,8 +19,12 @@ impl StatefulWidget for SearchBar {
     ) {
         let theme = &state.get_theme(&Pane::Search);
         let search = state.get_search_widget();
-        search.set_style(Style::new().bg(theme.bg));
-        search.set_block(Block::new().padding(SEARCH_PADDING).bg(theme.bg));
+        search.set_block(
+            Block::bordered()
+                .border_type(ratatui::widgets::BorderType::Rounded)
+                .padding(SEARCH_PADDING)
+                .fg(theme.text_highlighted),
+        );
 
         search.render(area, buf);
     }

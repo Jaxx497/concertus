@@ -5,7 +5,6 @@ use super::{
 use crate::{
     domain::{Album, QueueSong, SimpleSong, SongInfo},
     key_handler::Director,
-    library,
     player::{PlaybackState, PlayerState},
     strip_win_prefix, Library,
 };
@@ -86,9 +85,9 @@ impl UiState {
 
             settings_mode: SettingsMode::default(),
             settings_selection: 0,
-            new_root_input: new_root_input_textarea(),
+            new_root_input: new_textarea("Enter path to directory"),
 
-            search: new_textarea(),
+            search: new_textarea("Enter search query"),
             table_pos: TableState::default()
                 .with_selected(Some(0))
                 .with_selected_column(Some(0)),
@@ -770,18 +769,10 @@ impl UiState {
     }
 }
 
-fn new_textarea() -> TextArea<'static> {
+fn new_textarea(placeholder: &str) -> TextArea<'static> {
     let mut search = TextArea::default();
     search.set_cursor_line_style(Style::default());
-    search.set_placeholder_text(" Enter search term: ");
+    search.set_placeholder_text(format!(" {placeholder}: "));
 
     search
-}
-
-fn new_root_input_textarea() -> TextArea<'static> {
-    let mut input = TextArea::default();
-    input.set_cursor_line_style(Style::default());
-    input.set_placeholder_text(" Enter directory path: ");
-
-    input
 }

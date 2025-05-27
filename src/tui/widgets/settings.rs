@@ -1,6 +1,6 @@
 use crate::{
     strip_win_prefix,
-    ui_state::{SettingsMode, UiState},
+    ui_state::{Pane, SettingsMode, UiState},
 };
 use ratatui::{
     layout::{Constraint, Layout, Margin},
@@ -112,11 +112,16 @@ fn render_add_root(
 
     Paragraph::new("Enter the path to a directory containing music files:").render(chunks[0], buf);
 
+    let theme = state.get_theme(&Pane::Popup);
+
     state.new_root_input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
-            .fg(Color::Yellow),
+            .fg(theme.text_highlighted),
     );
+    state
+        .new_root_input
+        .set_style(Style::new().fg(theme.text_focused));
 
     state.new_root_input.render(chunks[1], buf);
 

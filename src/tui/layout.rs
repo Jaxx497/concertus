@@ -16,7 +16,7 @@ impl AppLayout {
         };
 
         let (search_splitter, search_height) = match state.get_mode() == Mode::Search {
-            true => (1, 3),
+            true => (0, 5),
             false => (0, 0),
         };
 
