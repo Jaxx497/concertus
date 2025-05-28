@@ -15,8 +15,6 @@ pub use sidebar::SideBar;
 pub use song_window::SongTable;
 pub use waveform::Waveform;
 
-pub use song_window::StandardTable;
-
 const DUR_WIDTH: u16 = 5;
 const PAUSE_ICON: &str = "󰏤";
 const SELECTOR: &str = "⮞  ";

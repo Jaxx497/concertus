@@ -55,8 +55,8 @@ impl Concertus {
         let mut terminal = ratatui::init();
         terminal.clear()?;
 
-        self.initialize_ui();
         self.preload_lib();
+        self.initialize_ui();
 
         match self.requires_setup {
             true => {
@@ -187,16 +187,36 @@ impl Concertus {
             
             Action::SettingsUp => {
                 let roots_count = self.ui.get_roots().len();
-                if roots_count > 0 && self.ui.settings_selection > 0 {
-                    self.ui.settings_selection -= 1;
+                if roots_count > 0 {
+                    let current = self.ui.settings_selection.selected().unwrap_or(0);
+                    let new_selection = if current > 0 {
+                        current - 1
+                    } else {
+                        roots_count - 1  // Wrap to bottom
+                    };
+                    self.ui.settings_selection.select(Some(new_selection));
                 }
             }
             Action::SettingsDown => {
                 let roots_count = self.ui.get_roots().len();
-                if roots_count > 0 && self.ui.settings_selection < roots_count - 1 {
-                    self.ui.settings_selection += 1;
+                if roots_count > 0 {
+                    let current = self.ui.settings_selection.selected().unwrap_or(0);
+                    let new_selection = (current + 1) % roots_count;  // Wrap to top
+                    self.ui.settings_selection.select(Some(new_selection));
                 }
             }
+            // Action::SettingsUp => {
+            //     let roots_count = self.ui.get_roots().len();
+            //     if roots_count > 0 && self.ui.settings_selection.selected() > 0 {
+            //         self.ui.settings_selection -= 1;
+            //     }
+            // }
+            // Action::SettingsDown => {
+            //     let roots_count = self.ui.get_roots().len();
+            //     if roots_count > 0 && self.ui.settings_selection < roots_count - 1 {
+            //         self.ui.settings_selection += 1;
+            //     }
+            // }
             Action::RootAdd => {
                 self.ui.settings_mode = SettingsMode::AddRoot;
                 self.ui.new_root_input.select_all();
@@ -221,11 +241,11 @@ impl Concertus {
                     }
                 }
                 SettingsMode::RemoveRoot => {
-                    if let Err(e) = self.ui.remove_root(self.ui.settings_selection) {
+                    if let Err(e) = self.ui.remove_root() {
                         self.ui.set_error(e);
                     } else {
                         self.ui.settings_mode = SettingsMode::ViewRoots;
-                        self.ui.settings_selection = 0;
+                        self.ui.settings_selection.select(Some(0)); 
                         self.update_library()?;
                     }
                 }

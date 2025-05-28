@@ -48,7 +48,7 @@ pub struct UiState {
     error: Option<anyhow::Error>,
 
     pub settings_mode: SettingsMode,
-    pub settings_selection: usize,
+    pub settings_selection: ListState,
     pub new_root_input: TextArea<'static>,
 
     pub queue: VecDeque<Arc<QueueSong>>,
@@ -84,7 +84,7 @@ impl UiState {
             history: VecDeque::new(),
 
             settings_mode: SettingsMode::default(),
-            settings_selection: 0,
+            settings_selection: ListState::default().with_selected(Some(0)),
             new_root_input: new_textarea("Enter path to directory"),
 
             search: new_textarea("Enter search query"),
@@ -151,7 +151,6 @@ impl UiState {
                 self.pane = Pane::TrackList;
                 self.table_sort = TableSort::Title;
                 self.table_pos.select(Some(self.table_pos_cached));
-                *self.table_pos.offset_mut() = self.table_pos_cached.checked_sub(10).unwrap_or(0);
             }
             Mode::Album => {
                 self.mode = Mode::Album;
@@ -449,9 +448,9 @@ impl UiState {
             };
             self.table_pos.select(Some(new_pos));
 
-            if scroll_amount > 1 {
-                *self.table_pos.offset_mut() = new_pos.checked_sub(15).unwrap_or(0);
-            }
+            // if scroll_amount > 1 {
+            //     *self.table_pos.offset_mut() = new_pos.checked_sub(15).unwrap_or(0);
+            // }
         }
     }
 
@@ -745,24 +744,28 @@ impl UiState {
         Ok(())
     }
 
-    pub fn remove_root(&mut self, index: usize) -> Result<()> {
-        let roots = self.get_roots();
-        if index >= roots.len() {
-            return Err(anyhow!("Invalid root index!"));
+    pub fn remove_root(&mut self) -> Result<()> {
+        if let Some(selected) = self.settings_selection.selected() {
+            let roots = self.get_roots();
+            if selected >= roots.len() {
+                return Err(anyhow!("Invalid root index!"));
+            }
+
+            let db = self.library.get_db();
+            let mut lib = Library::init(db);
+
+            let bad_root = &roots[selected];
+            lib.delete_root(&bad_root)?;
         }
-
-        let db = self.library.get_db();
-        let mut lib = Library::init(db);
-
-        let bad_root = &roots[index];
-        lib.delete_root(&bad_root)?;
 
         Ok(())
     }
 
     pub fn enter_settings(&mut self) {
         self.settings_mode = SettingsMode::ViewRoots;
-        self.settings_selection = 0;
+        if !self.get_roots().is_empty() {
+            self.settings_selection.select(Some(0));
+        }
         self.new_root_input.select_all();
         self.new_root_input.cut();
         self.set_pane(Pane::Popup);

@@ -1,7 +1,7 @@
 use crate::{
     domain::{SimpleSong, SongInfo},
     get_readable_duration, truncate_at_last_space,
-    ui_state::{DisplayTheme, Mode, Pane, TableSort, UiState},
+    ui_state::{DisplayTheme, Mode, Pane, TableSort, UiState, GOOD_RED},
     DurationStyle,
 };
 use ratatui::{
@@ -51,7 +51,7 @@ impl StatefulWidget for SongTable {
         state: &mut Self::State,
     ) {
         match state.get_mode() {
-            &Mode::Album => AlbumResults.render(area, buf, state),
+            &Mode::Album => AlbumView.render(area, buf, state),
             &Mode::Queue => QueueTable.render(area, buf, state),
             _ => StandardTable.render(area, buf, state),
         }
@@ -163,8 +163,8 @@ impl StatefulWidget for QueueTable {
         let widths = get_widths(&state.get_mode());
 
         let table = Table::new(rows, widths)
-            .column_spacing(5)
-            .flex(Flex::SpaceAround)
+            .column_spacing(10)
+            .flex(Flex::Legacy)
             .block(
                 Block::new()
                     .title_top(Line::from(results).alignment(Alignment::Center))
@@ -182,8 +182,8 @@ impl StatefulWidget for QueueTable {
     }
 }
 
-pub struct AlbumResults;
-impl StatefulWidget for AlbumResults {
+pub struct AlbumView;
+impl StatefulWidget for AlbumView {
     type State = UiState;
     fn render(
         self,
@@ -203,6 +203,14 @@ impl StatefulWidget for AlbumResults {
         let album_title_raw = state.get_selected_album_title();
         let album_title_width = (area.width / 3) as usize;
         let album_title = truncate_at_last_space(album_title_raw, album_title_width);
+
+        let queued_songs = state
+            .queue
+            .iter()
+            .map(|s| s.get_id())
+            .collect::<HashSet<u64>>();
+
+        let now_playing = state.get_now_playing().map(|s| s.id);
 
         let year = album.year.unwrap_or(0);
 
@@ -225,8 +233,22 @@ impl StatefulWidget for AlbumResults {
         let rows = songs
             .iter()
             .map(|song| {
+                let title_cell = match (
+                    queued_songs.get(&song.id).is_some(),
+                    now_playing == Some(song.id),
+                ) {
+                    (true, false) => Cell::from(Line::from_iter([
+                        song.get_title().fg(theme.text_focused),
+                        " [queued]".fg(theme.text_faded).italic().into(),
+                    ])),
+                    (false, true) => Cell::from(Line::from_iter([
+                        song.get_title().fg(theme.text_focused),
+                        " ♫".fg(GOOD_RED).into(),
+                    ])),
+                    _ => Cell::from(Line::from_iter([song.get_title().fg(theme.text_focused)])),
+                };
+
                 let track_no_cell = get_track_discs(song, disc_count, theme);
-                let title_cell = Cell::from(song.get_title()).fg(theme.text_focused);
                 let artist_cell = Cell::from(song.get_artist()).fg(theme.text_focused);
                 let format = Cell::from(format!("[{}]", song.format)).fg(theme.text_secondary);
 
@@ -259,6 +281,15 @@ impl StatefulWidget for AlbumResults {
             Span::from(" Songs] ").fg(theme.text_faded),
         ]);
 
+        let block = Block::bordered()
+            .title_top(title_line)
+            .title_bottom(" [q] Queue Song • [Tab] Back ".fg(theme.text_faded))
+            .title_alignment(Alignment::Center)
+            .border_type(BorderType::Thick)
+            .border_style(Style::default().fg(theme.text_secondary))
+            .bg(theme.bg)
+            .padding(PADDING);
+
         let table = Table::new(rows, widths)
             .header(
                 Row::new(header)
@@ -266,17 +297,17 @@ impl StatefulWidget for AlbumResults {
                     .bottom_margin(1)
                     .bold(),
             )
-            .column_spacing(2)
-            .flex(Flex::SpaceAround)
-            .block(
-                Block::new()
-                    .title_top(title_line.alignment(Alignment::Center))
-                    .bg(theme.bg)
-                    .padding(PADDING),
-            )
+            .column_spacing(3)
+            .flex(Flex::Start)
+            .block(block)
             .highlight_symbol(SELECTOR)
             .highlight_spacing(HighlightSpacing::Always)
-            .row_highlight_style(theme.text_highlighted);
+            .row_highlight_style(
+                Style::default()
+                    .bg(theme.text_highlighted)
+                    .fg(Color::Black)
+                    .italic(),
+            );
 
         // RENDER THE TABLE
         StatefulWidget::render(table, area, buf, &mut state.table_pos);
@@ -295,11 +326,11 @@ fn get_widths(mode: &Mode) -> Vec<Constraint> {
         }
         Mode::Album => {
             vec![
-                Constraint::Length(5),
-                Constraint::Ratio(4, 10),
-                Constraint::Ratio(3, 10),
-                Constraint::Ratio(1, 10),
-                Constraint::Ratio(2, 10),
+                Constraint::Length(6),
+                Constraint::Max(40),
+                Constraint::Max(30),
+                Constraint::Fill(6),
+                Constraint::Max(8),
             ]
         }
         Mode::Queue => {
@@ -339,11 +370,11 @@ fn get_header<'a>(mode: &Mode, active: &TableSort) -> Vec<Text<'a>> {
         .collect(),
         Mode::Album => {
             vec![
-                Text::from(" "),
-                Text::from("Title"),
-                Text::from("Artist"),
-                Text::from("Format"),
-                Text::from("Duration").right_aligned(),
+                Text::default(),
+                Text::from("Title").underlined(),
+                Text::from("Artist").underlined(),
+                Text::from("Format").underlined(),
+                Text::from("Duration").right_aligned().underlined(),
             ]
         }
         _ => Vec::new(),

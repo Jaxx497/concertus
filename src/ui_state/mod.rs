@@ -12,6 +12,7 @@ pub use table_sort::TableSort;
 pub use theme::DisplayTheme;
 pub use ui_state::UiState;
 
+pub use theme::GOOD_RED;
 pub use ui_state::SettingsMode;
 
 const HISTORY_CAPACITY: usize = 50;

@@ -9,7 +9,7 @@ pub use widgets::Progress;
 pub use widgets::SearchBar;
 pub use widgets::SideBar;
 pub use widgets::SongTable;
-pub use widgets::StandardTable;
+// pub use widgets::StandardTable;
 
 use ratatui::widgets::Padding;
 pub(crate) const SEARCH_PADDING: Padding = Padding {

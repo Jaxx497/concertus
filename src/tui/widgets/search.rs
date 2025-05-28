@@ -3,8 +3,8 @@ use crate::{
     ui_state::{Pane, UiState},
 };
 use ratatui::{
-    style::{Style, Stylize},
-    widgets::{Block, StatefulWidget, Widget},
+    style::Stylize,
+    widgets::{Block, BorderType, StatefulWidget, Widget},
 };
 
 pub struct SearchBar;
@@ -21,7 +21,7 @@ impl StatefulWidget for SearchBar {
         let search = state.get_search_widget();
         search.set_block(
             Block::bordered()
-                .border_type(ratatui::widgets::BorderType::Rounded)
+                .border_type(BorderType::Thick)
                 .padding(SEARCH_PADDING)
                 .fg(theme.text_highlighted),
         );

@@ -1,18 +1,22 @@
 use crate::{
     strip_win_prefix,
-    ui_state::{Pane, SettingsMode, UiState},
+    ui_state::{Pane, SettingsMode, UiState, GOOD_RED},
 };
 use ratatui::{
-    layout::{Constraint, Layout, Margin},
-    style::{Color, Modifier, Style, Stylize},
-    text::{Line, Span},
-    widgets::{Block, BorderType, List, ListItem, Padding, Paragraph, StatefulWidget, Widget},
+    layout::{Constraint, Layout},
+    style::{Color, Style, Stylize},
+    text::Line,
+    widgets::{
+        Block, BorderType, HighlightSpacing, List, Padding, Paragraph, StatefulWidget, Widget, Wrap,
+    },
 };
 
-static PADDING: Padding = Padding {
+use super::SELECTOR;
+
+static POPUP_PADDING: Padding = Padding {
     left: 2,
     right: 2,
-    top: 1,
+    top: 2,
     bottom: 1,
 };
 
@@ -36,11 +40,13 @@ impl StatefulWidget for Settings {
         };
 
         let block = Block::bordered()
-            .border_type(BorderType::Double)
             .title(title)
             .title_bottom(get_help_text(&settings_mode))
             .title_alignment(ratatui::layout::Alignment::Center)
-            .padding(PADDING);
+            .border_type(BorderType::Double)
+            .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
+            .bg(Color::Rgb(25, 25, 25))
+            .padding(POPUP_PADDING);
 
         let inner = block.inner(area);
         block.render(area, buf);
@@ -64,38 +70,33 @@ fn get_help_text(mode: &SettingsMode) -> &'static str {
 fn render_roots_list(
     area: ratatui::prelude::Rect,
     buf: &mut ratatui::prelude::Buffer,
-    state: &UiState,
+    state: &mut UiState,
 ) {
     let roots = state.get_roots();
 
     if roots.is_empty() {
-        Paragraph::new("No music library roots configured.\nPress 'a' to add a directory.")
+        Paragraph::new("No music library configured.\nPress 'a' to add a parent directory.")
             .centered()
             .render(area, buf);
         return;
     }
 
-    let items: Vec<ListItem> = roots
+    let items: Vec<Line> = roots
         .iter()
-        .enumerate()
-        .map(|(idx, root)| {
-            let root = strip_win_prefix(root);
-
-            let content = if idx == state.settings_selection {
-                Line::from(vec![
-                    Span::from("→ ").fg(Color::Yellow),
-                    Span::from(root).fg(Color::White),
-                ])
-            } else {
-                Line::from(vec![Span::from("  "), Span::from(root).fg(Color::Gray)])
-            };
-            ListItem::new(content)
+        .map(|r| {
+            let root = strip_win_prefix(r);
+            Line::from(root)
         })
         .collect();
 
-    let list = List::new(items).highlight_style(Style::default().add_modifier(Modifier::BOLD));
+    let theme = state.get_theme(&Pane::Popup);
 
-    ratatui::prelude::Widget::render(list, area, buf);
+    let list = List::new(items)
+        .highlight_style(Style::default().fg(Color::Black).bg(theme.text_highlighted))
+        .highlight_symbol(SELECTOR)
+        .highlight_spacing(HighlightSpacing::Always);
+
+    ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.settings_selection);
 }
 
 fn render_add_root(
@@ -117,7 +118,13 @@ fn render_add_root(
     state.new_root_input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
-            .fg(theme.text_highlighted),
+            .fg(theme.text_highlighted)
+            .padding(Padding {
+                left: 1,
+                right: 1,
+                top: 0,
+                bottom: 0,
+            }),
     );
     state
         .new_root_input
@@ -138,22 +145,22 @@ fn render_remove_root(
 ) {
     let roots = state.get_roots();
 
-    if roots.is_empty() || state.settings_selection >= roots.len() {
+    if roots.is_empty() {
         Paragraph::new("No root selected")
             .centered()
             .render(area, buf);
         return;
     }
-
-    let selected_root = &roots[state.settings_selection];
+    let selected_root = &roots[state.settings_selection.selected().unwrap()];
+    let selected_root = strip_win_prefix(&selected_root);
 
     let warning = Paragraph::new(format!(
         "Are you sure you want to remove this root?\n\n{}\n\nThis will remove all songs from this directory from your library.",
         selected_root
     ))
-    .wrap(ratatui::widgets::Wrap { trim: true })
+    .wrap(Wrap { trim: true })
     .centered()
-    .fg(Color::Red);
+    .fg(GOOD_RED);
 
     warning.render(area, buf);
 }
