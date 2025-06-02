@@ -5,6 +5,7 @@ mod search;
 mod settings;
 mod sidebar;
 mod song_window;
+mod tracklist;
 mod waveform;
 
 pub use error::ErrorMsg;
@@ -17,5 +18,4 @@ pub use waveform::Waveform;
 
 const DUR_WIDTH: u16 = 5;
 const PAUSE_ICON: &str = "󰏤";
-const SELECTOR: &str = "⮞  ";
 const WAVEFORM_WIDGET_HEIGHT: f64 = 50.0;

@@ -11,7 +11,7 @@ const C: KeyModifiers = KeyModifiers::CONTROL;
 
 const SEEK_SMALL: usize = 5;
 const SEEK_LARGE: usize = 30;
-const SCROLL_MID: usize = 10;
+const SCROLL_MID: usize = 5;
 const SCROLL_XTRA: usize = 50;
 
 #[derive(PartialEq, Eq)]
@@ -92,7 +92,7 @@ fn global_commands(key: &KeyEvent, pane: &Pane) -> Option<Action> {
     match (key.modifiers, key.code) {
         (_, Esc) => Some(Action::SoftReset),
         (C, Char('c')) => Some(Action::QUIT),
-        (_, Char('`')) => Some(Action::ViewSettings),
+        (_, Char('`')) | (_, Char('~')) => Some(Action::ViewSettings),
         (C, Char('u')) | (_, F(5)) => Some(Action::UpdateLibrary),
         (C, Char(' ')) => Some(Action::TogglePause),
 

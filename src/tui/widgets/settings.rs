@@ -11,8 +11,6 @@ use ratatui::{
     },
 };
 
-use super::SELECTOR;
-
 static POPUP_PADDING: Padding = Padding {
     left: 2,
     right: 2,
@@ -93,7 +91,7 @@ fn render_roots_list(
 
     let list = List::new(items)
         .highlight_style(Style::default().fg(Color::Black).bg(theme.text_highlighted))
-        .highlight_symbol(SELECTOR)
+        // .highlight_symbol(SELECTOR)
         .highlight_spacing(HighlightSpacing::Always);
 
     ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.settings_selection);

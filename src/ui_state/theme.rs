@@ -1,4 +1,4 @@
-use ratatui::{style::Color, widgets::BorderType};
+use ratatui::{style::Color, widgets::Borders};
 
 const DARK_WHITE: Color = Color::Rgb(210, 210, 210);
 const MID_GRAY: Color = Color::Rgb(100, 100, 100);
@@ -10,8 +10,8 @@ const GOLD: Color = Color::Rgb(220, 220, 100);
 
 pub struct DisplayTheme {
     pub bg: Color,
-    pub border_type: BorderType,
     pub border: Color,
+    pub border_display: Borders,
     pub text_focused: Color,
     pub text_secondary: Color,
     pub text_faded: Color,
@@ -21,7 +21,6 @@ pub struct DisplayTheme {
 pub(crate) struct Theme {
     pub bg_focused: Color,
     pub bg_unfocused: Color,
-    pub border_type: BorderType,
     pub border_focused: Color,
     pub border_unfocused: Color,
     pub text_focused: Color,
@@ -40,6 +39,8 @@ impl Theme {
             text_unfocused: MID_GRAY,
             text_secondary: GOOD_RED,
             text_highlighted: GOLD,
+
+            border_focused: GOOD_RED,
             ..Default::default()
         }
     }
@@ -50,7 +51,6 @@ impl Default for Theme {
         Theme {
             bg_focused: Color::default(),
             bg_unfocused: Color::default(),
-            border_type: BorderType::default(),
             border_focused: Color::default(),
             border_unfocused: Color::default(),
             text_focused: Color::default(),

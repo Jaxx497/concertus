@@ -391,24 +391,16 @@ impl Database {
 
     pub(crate) fn set_root(&mut self, path: &PathBuf) -> Result<()> {
         self.conn.execute(SET_ROOT, params![path.to_str()])?;
-        // let tx = self.conn.transaction()?;
-        // {
-        //     let mut stmt = tx.prepare(SET_ROOT)?;
-        //     stmt.execute(params![path.to_str()])?;
-        // }
-        // tx.commit()?;
         Ok(())
     }
 
     pub(crate) fn delete_root(&mut self, path: &PathBuf) -> Result<()> {
         self.conn.execute(DELETE_ROOT, params![path.to_str()])?;
-
         Ok(())
     }
 
     pub(crate) fn update_play_count(&mut self, song: &Arc<SimpleSong>) -> Result<()> {
         let id = song.id.to_le_bytes();
-
         self.conn.execute(UPDATE_PLAY_COUNT, params![id, 1])?;
 
         Ok(())
@@ -421,14 +413,3 @@ impl Database {
         Ok(output)
     }
 }
-
-// impl Database {
-//     pub(crate) fn delete_db(&mut self) -> anyhow::Result<()> {
-//         let config_path = dirs::config_dir().unwrap().join(CONFIG_DIRECTORY);
-//
-//         match std::fs::remove_dir(config_path) {
-//             Ok(_) => Ok(()),
-//             Err(e) => Err(anyhow::anyhow!("Failed to delete directory. Error: {e}")),
-//         }
-//     }
-// }

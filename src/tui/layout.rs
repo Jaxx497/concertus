@@ -33,7 +33,7 @@ impl AppLayout {
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Length(40),
-                Constraint::Length(2),
+                Constraint::Length(1),
                 Constraint::Min(40),
             ])
             .areas(upper_block);

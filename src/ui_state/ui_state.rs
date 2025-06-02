@@ -12,8 +12,8 @@ use anyhow::{anyhow, Context, Error, Result};
 use fuzzy_matcher::FuzzyMatcher;
 use ratatui::{
     crossterm::event::KeyEvent,
-    style::Style,
-    widgets::{ListState, TableState},
+    style::{Color, Style},
+    widgets::{Borders, ListState, TableState},
 };
 use std::{
     collections::VecDeque,
@@ -349,7 +349,8 @@ impl UiState {
                 self.set_pane(Pane::TrackList);
             }
             None => {
-                self.set_mode(Mode::Power);
+                self.set_mode(Mode::Album);
+                self.set_pane(Pane::TrackList);
                 self.search.select_all();
                 self.search.cut();
             }
@@ -381,17 +382,13 @@ impl UiState {
         }
     }
 
-    pub fn get_selected_album_title(&self) -> &str {
-        let idx = self.album_pos.selected().unwrap_or(0);
-        &self.filtered_albums[idx].title
-    }
-
     pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
         match pane == &self.pane {
             true => DisplayTheme {
-                bg: self.theme.bg_focused,
-                border_type: self.theme.border_type,
+                bg: Color::default(),
+                // bg: self.theme.bg_focused,
                 border: self.theme.border_focused,
+                border_display: Borders::ALL,
                 text_focused: self.theme.text_focused,
                 text_secondary: self.theme.text_secondary,
                 text_faded: self.theme.text_unfocused,
@@ -399,9 +396,10 @@ impl UiState {
             },
 
             false => DisplayTheme {
-                bg: self.theme.bg_unfocused,
-                border_type: self.theme.border_type,
+                bg: Color::default(),
+                // bg: self.theme.bg_unfocused,
                 border: self.theme.border_unfocused,
+                border_display: Borders::NONE,
                 text_focused: self.theme.text_unfocused,
                 text_secondary: self.theme.text_unfocused,
                 text_faded: self.theme.text_unfocused,
@@ -433,24 +431,14 @@ impl UiState {
             let len = self.legal_songs.len();
             let selected_idx = self.table_pos.selected();
 
-            let (new_pos, scroll_amount) = match director {
-                Director::Up(x) => {
-                    let new_pos = selected_idx
-                        .map(|idx| ((idx + len - (x % len)) % len + len) % len)
-                        .unwrap_or(0);
-                    (new_pos, *x)
-                }
-                Director::Down(x) => {
-                    let new_pos = selected_idx.map(|idx| (idx + x) % len).unwrap_or(0);
-                    (new_pos, *x)
-                }
+            let new_pos = match director {
+                Director::Up(x) => selected_idx
+                    .map(|idx| ((idx + len - (x % len)) % len + len) % len)
+                    .unwrap_or(0),
+                Director::Down(x) => selected_idx.map(|idx| (idx + x) % len).unwrap_or(0),
                 _ => unreachable!(),
             };
             self.table_pos.select(Some(new_pos));
-
-            // if scroll_amount > 1 {
-            //     *self.table_pos.offset_mut() = new_pos.checked_sub(15).unwrap_or(0);
-            // }
         }
     }
 
@@ -695,7 +683,7 @@ impl UiState {
     pub(crate) fn load_history(&mut self) {
         self.history = self
             .library
-            .load_history(&self.legal_songs)
+            .load_history(&self.library.get_all_songs())
             .unwrap_or_default();
     }
 
