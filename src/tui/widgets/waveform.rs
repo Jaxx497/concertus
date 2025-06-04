@@ -72,7 +72,7 @@ impl StatefulWidget for Waveform {
                     let hgt = (*amp as f64 * WAVEFORM_WIDGET_HEIGHT).round();
                     let color = match (idx as f32 / wf_len as f32) < progress {
                         true => Color::Rgb(170, 0, 170),
-                        false => theme.bg,
+                        false => Color::default(),
                     };
 
                     match line_mode {

@@ -4,9 +4,10 @@ const DARK_WHITE: Color = Color::Rgb(210, 210, 210);
 const MID_GRAY: Color = Color::Rgb(100, 100, 100);
 const DARK_GRAY: Color = Color::Rgb(25, 25, 25);
 const DARK_GRAY_FADED: Color = Color::Rgb(10, 10, 10);
-pub static GOOD_RED: Color = Color::Rgb(255, 70, 70);
-const GOLD: Color = Color::Rgb(220, 220, 100);
-// const GOLD: Color = Color::Rgb(255, 200, 20);
+pub const GOOD_RED: Color = Color::Rgb(255, 70, 70);
+pub const GOOD_RED_DARK: Color = Color::Rgb(180, 50, 50);
+pub const GOLD: Color = Color::Rgb(220, 220, 100);
+pub const GOLD_FADED: Color = Color::Rgb(130, 130, 60);
 
 pub struct DisplayTheme {
     pub bg: Color,
@@ -25,8 +26,10 @@ pub(crate) struct Theme {
     pub border_unfocused: Color,
     pub text_focused: Color,
     pub text_secondary: Color,
+    pub text_secondary_u: Color,
     pub text_unfocused: Color,
     pub text_highlighted: Color,
+    pub text_highlighted_u: Color,
 }
 
 impl Theme {
@@ -38,25 +41,12 @@ impl Theme {
             text_focused: DARK_WHITE,
             text_unfocused: MID_GRAY,
             text_secondary: GOOD_RED,
+            text_secondary_u: GOOD_RED_DARK,
             text_highlighted: GOLD,
+            text_highlighted_u: GOLD_FADED,
 
-            border_focused: GOOD_RED,
-            ..Default::default()
-        }
-    }
-}
-
-impl Default for Theme {
-    fn default() -> Self {
-        Theme {
-            bg_focused: Color::default(),
-            bg_unfocused: Color::default(),
-            border_focused: Color::default(),
-            border_unfocused: Color::default(),
-            text_focused: Color::default(),
-            text_secondary: Color::default(),
-            text_unfocused: Color::default(),
-            text_highlighted: Color::default(),
+            border_focused: GOLD,
+            border_unfocused: Color::Rgb(50, 50, 50),
         }
     }
 }

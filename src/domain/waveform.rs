@@ -5,7 +5,7 @@ use std::{io::Cursor, path::Path, process::Command, time::Duration};
 const WF_LEN: usize = 500;
 const MIN_SAMPLES_PER_POINT: usize = 200; // Minimum for short files
 const MAX_SAMPLES_PER_POINT: usize = 5000; // Maximum for very long files
-const SMOOTHING_FACTOR: f32 = 0.3;
+const SMOOTHING_FACTOR: f32 = 0.2;
 
 /// Generate a waveform using ffmpeg by piping output directly to memory
 pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Vec<f32> {
@@ -86,14 +86,14 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
             "-ac",
             "1", // Convert to mono
             "-ar",
-            "44100", // Sample rate
+            "44100",
             "-af",
-            "highpass=f=500,volume=2,treble=gain=3", // Extreme filtering for visual effect
+            "highpass=f=300,volume=2,treble=gain=3", // Extreme filtering for visual effect
             "-loglevel",
-            "warning", // Reduce output noise
+            "warning",
             "-f",
-            "f32le", // Output format: 32-bit float PCM, little endian
-            "-",     // Output to stdout
+            "f32le",
+            "-",
         ])
         .output()
         .context("Failed to execute ffmpeg. Is it installed and in your PATH?")?;

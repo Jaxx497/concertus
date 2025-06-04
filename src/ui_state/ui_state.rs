@@ -12,7 +12,7 @@ use anyhow::{anyhow, Context, Error, Result};
 use fuzzy_matcher::FuzzyMatcher;
 use ratatui::{
     crossterm::event::KeyEvent,
-    style::{Color, Style},
+    style::Style,
     widgets::{Borders, ListState, TableState},
 };
 use std::{
@@ -49,7 +49,7 @@ pub struct UiState {
 
     pub settings_mode: SettingsMode,
     pub settings_selection: ListState,
-    pub new_root_input: TextArea<'static>,
+    pub root_input: TextArea<'static>,
 
     pub queue: VecDeque<Arc<QueueSong>>,
     pub history: VecDeque<Arc<SimpleSong>>,
@@ -69,7 +69,7 @@ impl UiState {
             library,
             player_state,
 
-            mode: Mode::Power,
+            mode: Mode::Album,
             pane: Pane::TrackList,
             theme: Theme::set_generic_theme(),
             table_sort: TableSort::Title,
@@ -85,7 +85,7 @@ impl UiState {
 
             settings_mode: SettingsMode::default(),
             settings_selection: ListState::default().with_selected(Some(0)),
-            new_root_input: new_textarea("Enter path to directory"),
+            root_input: new_textarea("Enter path to directory"),
 
             search: new_textarea("Enter search query"),
             table_pos: TableState::default()
@@ -385,8 +385,8 @@ impl UiState {
     pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
         match pane == &self.pane {
             true => DisplayTheme {
-                bg: Color::default(),
-                // bg: self.theme.bg_focused,
+                // bg: Color::default(),
+                bg: self.theme.bg_focused,
                 border: self.theme.border_focused,
                 border_display: Borders::ALL,
                 text_focused: self.theme.text_focused,
@@ -396,14 +396,14 @@ impl UiState {
             },
 
             false => DisplayTheme {
-                bg: Color::default(),
-                // bg: self.theme.bg_unfocused,
+                // bg: Color::default(),
+                bg: self.theme.bg_unfocused,
                 border: self.theme.border_unfocused,
                 border_display: Borders::NONE,
                 text_focused: self.theme.text_unfocused,
-                text_secondary: self.theme.text_unfocused,
+                text_secondary: self.theme.text_secondary_u,
                 text_faded: self.theme.text_unfocused,
-                text_highlighted: self.theme.text_unfocused,
+                text_highlighted: self.theme.text_highlighted_u,
             },
         }
     }
@@ -754,8 +754,8 @@ impl UiState {
         if !self.get_roots().is_empty() {
             self.settings_selection.select(Some(0));
         }
-        self.new_root_input.select_all();
-        self.new_root_input.cut();
+        self.root_input.select_all();
+        self.root_input.cut();
         self.set_pane(Pane::Popup);
     }
 }

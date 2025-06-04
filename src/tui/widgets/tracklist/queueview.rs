@@ -1,4 +1,4 @@
-use super::{get_widths, COLUMN_SPACING, PADDING, PADDING_NO_BORDER, SELECTOR};
+use super::{get_widths, COLUMN_SPACING, PADDING, SELECTOR};
 use crate::{
     domain::SongInfo,
     get_readable_duration,
@@ -47,18 +47,13 @@ impl StatefulWidget for QueueTable {
 
         let widths = get_widths(&state.get_mode());
 
-        let padding: Padding = match state.get_pane() {
-            Pane::TrackList => PADDING,
-            _ => PADDING_NO_BORDER,
-        };
-
         let block = Block::bordered()
             .title_top(Line::from(results).alignment(Alignment::Center))
             .borders(theme.border_display)
             .border_type(BorderType::Thick)
             .border_style(Style::default().fg(theme.border))
             .bg(theme.bg)
-            .padding(padding);
+            .padding(PADDING);
 
         let table = Table::new(rows, widths)
             .column_spacing(COLUMN_SPACING)

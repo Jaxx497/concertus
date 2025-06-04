@@ -1,4 +1,4 @@
-use super::{get_header, get_widths, COLUMN_SPACING, PADDING, PADDING_NO_BORDER, SELECTOR};
+use super::{get_header, get_widths, COLUMN_SPACING, PADDING, SELECTOR};
 use crate::{
     domain::SongInfo,
     ui_state::{Pane, TableSort, UiState},
@@ -57,24 +57,19 @@ impl StatefulWidget for StandardTable {
             .bottom_margin(1);
         let widths = get_widths(&state.get_mode());
 
-        let padding: Padding = match state.get_pane() {
-            Pane::TrackList => PADDING,
-            _ => PADDING_NO_BORDER,
-        };
+        let block = Block::bordered()
+            .title_top(Line::from(results).alignment(Alignment::Center))
+            .border_style(theme.border)
+            .border_type(BorderType::Thick)
+            .padding(PADDING)
+            .fg(theme.text_focused)
+            .bg(theme.bg);
 
         let table = Table::new(rows, widths)
             .column_spacing(COLUMN_SPACING)
             .header(header)
             .flex(Flex::Legacy)
-            .block(
-                Block::bordered()
-                    .title_top(Line::from(results).alignment(Alignment::Center))
-                    .borders(theme.border_display)
-                    .border_type(BorderType::Thick)
-                    .padding(padding)
-                    .fg(theme.text_focused)
-                    .bg(theme.bg),
-            )
+            .block(block)
             .row_highlight_style(
                 Style::default()
                     .bg(theme.text_highlighted)

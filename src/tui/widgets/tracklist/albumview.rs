@@ -1,7 +1,7 @@
 use crate::{
     domain::{SimpleSong, SongInfo},
     get_readable_duration, truncate_at_last_space,
-    ui_state::{DisplayTheme, Pane, UiState, GOOD_RED},
+    ui_state::{DisplayTheme, Pane, UiState},
     DurationStyle,
 };
 use ratatui::{
@@ -16,7 +16,7 @@ use std::{
     sync::LazyLock,
 };
 
-use super::{get_header, get_widths, COLUMN_SPACING, PADDING, PADDING_NO_BORDER, SELECTOR};
+use super::{get_header, get_widths, COLUMN_SPACING, PADDING, SELECTOR};
 
 static SUPERSCRIPT: std::sync::LazyLock<std::collections::HashMap<u32, &str>> =
     LazyLock::new(|| {
@@ -78,7 +78,7 @@ impl StatefulWidget for AlbumView {
                     ]),
                     (false, true) => Line::from_iter([
                         song.get_title().fg(theme.text_focused),
-                        " ♫".fg(GOOD_RED).into(),
+                        " ♫".fg(theme.text_secondary).into(),
                     ]),
                     _ => Line::from_iter([song.get_title().fg(theme.text_focused)]),
                 };
@@ -103,7 +103,7 @@ impl StatefulWidget for AlbumView {
         let year_str = album
             .year
             .filter(|y| *y != 0)
-            .map_or(String::new(), |y| format!(" [{y}] "));
+            .map_or(String::new(), |y| format!("[{y}]"));
 
         let title_line = Line::from_iter([
             Span::from(format!(" {} ", album_title))
@@ -118,13 +118,8 @@ impl StatefulWidget for AlbumView {
         let header = get_header(&state.get_mode(), &state.get_table_sort());
         let widths = get_widths(&state.get_mode());
 
-        let padding: Padding = match state.get_pane() {
-            Pane::TrackList => PADDING,
-            _ => PADDING_NO_BORDER,
-        };
-
         let keymaps = match state.get_pane() {
-            Pane::TrackList => " [q] Queue Song • [Tab] Back ".fg(theme.text_faded),
+            Pane::TrackList => " [q] Queue Song ✧ [Tab] Back ".fg(theme.text_faded),
             _ => "".into(),
         };
 
@@ -133,10 +128,9 @@ impl StatefulWidget for AlbumView {
             .title_bottom(keymaps)
             .title_alignment(Alignment::Center)
             .border_type(BorderType::Thick)
-            .borders(theme.border_display)
             .border_style(Style::default().fg(theme.border))
             .bg(theme.bg)
-            .padding(padding);
+            .padding(PADDING);
 
         let table = Table::new(rows, widths)
             .header(
@@ -171,7 +165,7 @@ fn get_track_discs(
         Some(t) => format!("{t:>2}"),
         None => "".into(),
     })
-    .fg(theme.text_focused);
+    .fg(theme.text_highlighted);
 
     let disc_no = Span::from(match disc_count {
         0..2 => "".to_string(),

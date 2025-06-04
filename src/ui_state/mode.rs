@@ -1,11 +1,11 @@
 #[derive(Default, PartialEq, Eq)]
 pub enum Mode {
-    Album,
+    Power,
     Queue,
     Search,
     QUIT,
     #[default]
-    Power,
+    Album,
 }
 
 impl PartialEq<Mode> for &Mode {

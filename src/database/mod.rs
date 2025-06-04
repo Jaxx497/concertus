@@ -306,11 +306,12 @@ impl Database {
         let blob: Vec<u8> = self
             .conn
             .query_row(GET_WAVEFORM, params![path], |row| row.get(0))?;
-        Ok(bincode::deserialize(&blob)?)
+        Ok(bincode::decode_from_slice(&blob, bincode::config::standard())?.0)
     }
 
     pub fn set_waveform(&mut self, id: u64, wf: &[f32]) -> Result<()> {
-        let serialized = bincode::serialize(wf)?;
+        // let serialized = bincode::serialize(wf)?;
+        let serialized = bincode::encode_to_vec(wf, bincode::config::standard())?;
 
         self.conn
             .execute(INSERT_WAVEFORM, params![id.to_le_bytes(), serialized])?;

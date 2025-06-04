@@ -14,12 +14,11 @@ use ratatui::{
 static POPUP_PADDING: Padding = Padding {
     left: 2,
     right: 2,
-    top: 2,
+    top: 1,
     bottom: 1,
 };
 
 pub struct Settings;
-
 impl StatefulWidget for Settings {
     type State = UiState;
 
@@ -74,6 +73,7 @@ fn render_roots_list(
 
     if roots.is_empty() {
         Paragraph::new("No music library configured.\nPress 'a' to add a parent directory.")
+            .wrap(Wrap { trim: true })
             .centered()
             .render(area, buf);
         return;
@@ -113,7 +113,7 @@ fn render_add_root(
 
     let theme = state.get_theme(&Pane::Popup);
 
-    state.new_root_input.set_block(
+    state.root_input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
             .fg(theme.text_highlighted)
@@ -125,10 +125,10 @@ fn render_add_root(
             }),
     );
     state
-        .new_root_input
+        .root_input
         .set_style(Style::new().fg(theme.text_focused));
 
-    state.new_root_input.render(chunks[1], buf);
+    state.root_input.render(chunks[1], buf);
 
     let example = Paragraph::new("Example: C:\\Music or /home/user/music")
         .fg(Color::DarkGray)

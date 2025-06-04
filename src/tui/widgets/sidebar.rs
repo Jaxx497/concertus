@@ -1,4 +1,4 @@
-use crate::ui_state::{AlbumDisplayItem, AlbumSort, Pane, UiState};
+use crate::ui_state::{AlbumDisplayItem, AlbumSort, Pane, UiState, GOLD_FADED};
 use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
@@ -42,7 +42,7 @@ impl StatefulWidget for SideBar {
                         true => Style::default()
                             .fg(theme.text_highlighted)
                             .add_modifier(Modifier::ITALIC | Modifier::UNDERLINED),
-                        false => Style::default().fg(theme.text_faded),
+                        false => Style::default().fg(GOLD_FADED),
                     };
 
                     ListItem::new(Span::from(format!("{}", artist)).italic().style(style))
@@ -116,7 +116,7 @@ impl StatefulWidget for SideBar {
         };
 
         let block = Block::bordered()
-            .borders(theme.border_display)
+            // .borders(theme.border_display)
             .border_type(BorderType::Thick)
             .border_style(theme.border)
             .bg(theme.bg)
@@ -127,31 +127,24 @@ impl StatefulWidget for SideBar {
                     .fg(theme.text_secondary),
             )
             .title_bottom(Line::from(keymaps).centered().fg(theme.text_faded))
-            .padding(get_padding(state.get_pane()));
+            .padding(Padding {
+                left: 3,
+                right: 4,
+                top: 1,
+                bottom: 1,
+            });
 
         let list = List::new(list_items)
             .block(block)
-            .highlight_style(Style::new().fg(Color::Black).bg(theme.text_highlighted))
+            .highlight_style(
+                Style::new()
+                    .fg(Color::Black)
+                    .bg(theme.text_highlighted)
+                    .italic(),
+            )
             .scroll_padding(4);
 
         list.render(area, buf, &mut display_state);
         *state.album_pos.offset_mut() = display_state.offset();
-    }
-}
-
-fn get_padding(pane: &Pane) -> Padding {
-    match pane {
-        Pane::SideBar => Padding {
-            left: 3,
-            right: 4,
-            top: 2,
-            bottom: 1,
-        },
-        _ => Padding {
-            left: 4,
-            right: 5,
-            top: 2,
-            bottom: 1,
-        },
     }
 }

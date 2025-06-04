@@ -25,7 +25,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
             ErrorMsg.render(error_win, f.buffer_mut(), state);
         }
         (true, None) => {
-            let settings_popup = centered_rect(40, 40, f.area());
+            let settings_popup = centered_rect(50, 50, f.area());
             Clear.render(settings_popup, f.buffer_mut());
             Settings.render(settings_popup, f.buffer_mut(), state);
         }

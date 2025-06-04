@@ -60,11 +60,10 @@ impl Concertus {
 
         match self.requires_setup {
             true => {
-
                 self.ui.set_pane(Pane::Popup);
                 self.ui.settings_mode = SettingsMode::AddRoot;
             }
-            false => ()
+            false => (),
         }
 
         // MAIN ROUTINE
@@ -129,7 +128,9 @@ impl Concertus {
         let lib_db = Arc::clone(&self.db);
         let mut updated_lib = Library::init(lib_db);
 
-        if !updated_lib.roots.is_empty() { self.requires_setup = false};
+        if !updated_lib.roots.is_empty() {
+            self.requires_setup = false
+        };
 
         // TODO: MAKE THIS OPTIONAL
         // updated_lib.update_db().unwrap();
@@ -184,76 +185,14 @@ impl Concertus {
             Action::QUIT            => self.ui.set_mode(Mode::QUIT),
 
             Action::ViewSettings    => self.activate_settings(),
-            
-            Action::SettingsUp => {
-                let roots_count = self.ui.get_roots().len();
-                if roots_count > 0 {
-                    let current = self.ui.settings_selection.selected().unwrap_or(0);
-                    let new_selection = if current > 0 {
-                        current - 1
-                    } else {
-                        roots_count - 1  // Wrap to bottom
-                    };
-                    self.ui.settings_selection.select(Some(new_selection));
-                }
-            }
-            Action::SettingsDown => {
-                let roots_count = self.ui.get_roots().len();
-                if roots_count > 0 {
-                    let current = self.ui.settings_selection.selected().unwrap_or(0);
-                    let new_selection = (current + 1) % roots_count;  // Wrap to top
-                    self.ui.settings_selection.select(Some(new_selection));
-                }
-            }
-            // Action::SettingsUp => {
-            //     let roots_count = self.ui.get_roots().len();
-            //     if roots_count > 0 && self.ui.settings_selection.selected() > 0 {
-            //         self.ui.settings_selection -= 1;
-            //     }
-            // }
-            // Action::SettingsDown => {
-            //     let roots_count = self.ui.get_roots().len();
-            //     if roots_count > 0 && self.ui.settings_selection < roots_count - 1 {
-            //         self.ui.settings_selection += 1;
-            //     }
-            // }
-            Action::RootAdd => {
-                self.ui.settings_mode = SettingsMode::AddRoot;
-                self.ui.new_root_input.select_all();
-                self.ui.new_root_input.cut();
-            }
-            Action::RootRemove => {
-                if !self.ui.get_roots().is_empty() {
-                    self.ui.settings_mode = SettingsMode::RemoveRoot;
-                }
-            }
-            Action::RootConfirm => match self.ui.settings_mode {
-                SettingsMode::AddRoot => {
-                    let path = self.ui.new_root_input.lines();
-                    let path = path[0].clone();
-                    if !path.is_empty() {
-                        if let Err(e) = self.ui.add_root(&path) {
-                            self.ui.set_error(e);
-                        } else {
-                            self.ui.settings_mode = SettingsMode::ViewRoots;
-                            self.update_library()?;
-                        }
-                    }
-                }
-                SettingsMode::RemoveRoot => {
-                    if let Err(e) = self.ui.remove_root() {
-                        self.ui.set_error(e);
-                    } else {
-                        self.ui.settings_mode = SettingsMode::ViewRoots;
-                        self.ui.settings_selection.select(Some(0)); 
-                        self.update_library()?;
-                    }
-                }
-                _ => {}
-            },
+            Action::SettingsUp      => self.settings_scroll_up(),
+            Action::SettingsDown    => self.settings_scroll_down(),
+            Action::RootAdd         => self.settings_add_root(),
+            Action::RootRemove      => self.settings_remove_root(),
+            Action::RootConfirm     => self.settings_root_confirm()?,
 
             Action::SettingsInput(key) => {
-                self.ui.new_root_input.input(key);
+                self.ui.root_input.input(key);
             }
             _ => (),
         }
@@ -398,7 +337,69 @@ impl Concertus {
             _ => {
                 self.ui.set_pane(Pane::Popup);
                 self.ui.settings_mode = SettingsMode::ViewRoots
-            },
+            }
+        }
+    }
+
+    fn settings_scroll_up(&mut self) {
+        let roots_count = self.ui.get_roots().len();
+        if roots_count > 0 {
+            let current = self.ui.settings_selection.selected().unwrap_or(0);
+            let new_selection = if current > 0 {
+                current - 1
+            } else {
+                roots_count - 1 // Wrap to bottom
+            };
+            self.ui.settings_selection.select(Some(new_selection));
+        }
+    }
+
+    fn settings_scroll_down(&mut self) {
+        let roots_count = self.ui.get_roots().len();
+        if roots_count > 0 {
+            let current = self.ui.settings_selection.selected().unwrap_or(0);
+            let new_selection = (current + 1) % roots_count; // Wrap to top
+            self.ui.settings_selection.select(Some(new_selection));
+        }
+    }
+
+    fn settings_add_root(&mut self) {
+        self.ui.settings_mode = SettingsMode::AddRoot;
+        self.ui.root_input.select_all();
+        self.ui.root_input.cut();
+    }
+
+    fn settings_root_confirm(&mut self) -> anyhow::Result<()> {
+        match self.ui.settings_mode {
+            SettingsMode::AddRoot => {
+                let path = self.ui.root_input.lines();
+                let path = path[0].clone();
+                if !path.is_empty() {
+                    if let Err(e) = self.ui.add_root(&path) {
+                        self.ui.set_error(e);
+                    } else {
+                        self.ui.settings_mode = SettingsMode::ViewRoots;
+                        self.update_library()?;
+                    }
+                }
+            }
+            SettingsMode::RemoveRoot => {
+                if let Err(e) = self.ui.remove_root() {
+                    self.ui.set_error(e);
+                } else {
+                    self.ui.settings_mode = SettingsMode::ViewRoots;
+                    self.ui.settings_selection.select(Some(0));
+                    self.update_library()?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn settings_remove_root(&mut self) {
+        if !self.ui.get_roots().is_empty() {
+            self.ui.settings_mode = SettingsMode::RemoveRoot;
         }
     }
 }

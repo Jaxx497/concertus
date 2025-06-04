@@ -51,12 +51,11 @@ or gstreamer. Metadata may be read by other readers if necessary.
 ## TODO 
 
 - Implement a playlist system (***)
-- Redesign UI
-- Come up with a default theme that isn't gross to look at
-- Maybe rework entire theme construct
+- Rework some of the theme construct
 - Search by album/artist (!)
     Should be simple, just need to do it
 - Ditch power mode (?)
+- Add more persistence (remember last selection)
 - Add more settings
     - Update on start
     - Theme changer

@@ -24,13 +24,6 @@ const PADDING: Padding = Padding {
     bottom: 1,
 };
 
-const PADDING_NO_BORDER: Padding = Padding {
-    left: 3,
-    right: 4,
-    top: 1,
-    bottom: 1,
-};
-
 pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
     match mode {
         Mode::Power | Mode::Search => {
@@ -45,7 +38,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
             vec![
                 Constraint::Length(6),
                 Constraint::Min(30),
-                Constraint::Fill(30),
+                Constraint::Max(30),
                 Constraint::Max(6),
                 Constraint::Max(7),
             ]
