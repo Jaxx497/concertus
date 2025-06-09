@@ -3,6 +3,7 @@ mod mode;
 mod pane;
 mod table_sort;
 mod theme;
+mod ui_snapshot;
 mod ui_state;
 
 pub use album_sort::AlbumSort;
@@ -10,6 +11,7 @@ pub use mode::Mode;
 pub use pane::Pane;
 pub use table_sort::TableSort;
 pub use theme::DisplayTheme;
+pub use ui_snapshot::UiSnapshot;
 pub use ui_state::UiState;
 
 pub use theme::*;

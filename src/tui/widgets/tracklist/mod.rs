@@ -37,10 +37,10 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
         Mode::Album => {
             vec![
                 Constraint::Length(6),
-                Constraint::Min(30),
+                Constraint::Min(25),
                 Constraint::Max(30),
                 Constraint::Max(6),
-                Constraint::Max(7),
+                Constraint::Length(7),
             ]
         }
         Mode::Queue => {

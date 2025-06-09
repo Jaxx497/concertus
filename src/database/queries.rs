@@ -141,3 +141,11 @@ pub const UPDATE_PLAY_COUNT: &str = "
         count = count + ?2 
         WHERE song_id = ?1
 ";
+
+pub const GET_SESSION_STATE: &str = "
+    SELECT value FROM session_state WHERE key = ?
+";
+
+pub const SET_SESSION_STATE: &str = "
+    INSERT OR REPLACE INTO session_state (key, value) VALUES (?, ?)
+";

@@ -85,7 +85,7 @@ impl StatefulWidget for AlbumView {
 
                 let track_no_cell = get_track_discs(song, disc_count, theme);
                 let artist_cell = Cell::from(song.get_artist()).fg(theme.text_focused);
-                let format = Cell::from(format!("[{}]", song.format)).fg(theme.text_secondary);
+                let format = Cell::from(format!("{}", song.format)).fg(theme.text_secondary);
                 let duration_str = get_readable_duration(song.duration, DurationStyle::Clean);
                 let duration_cell =
                     Cell::from(Text::from(duration_str).right_aligned()).fg(theme.text_focused);

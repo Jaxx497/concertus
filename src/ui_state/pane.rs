@@ -1,4 +1,4 @@
-#[derive(Default, PartialEq, Eq, Clone, Copy)]
+#[derive(Default, PartialEq, Eq)]
 pub enum Pane {
     SideBar,
     Search,

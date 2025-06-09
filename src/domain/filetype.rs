@@ -47,11 +47,11 @@ impl ToSql for FileType {
 impl Display for FileType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
-            FileType::MP3 => write!(f, "mp3"),
-            FileType::M4A => write!(f, "m4a"),
-            FileType::OGG => write!(f, "ogg"),
-            FileType::WAV => write!(f, "wav"),
-            FileType::FLAC => write!(f, "flac"),
+            FileType::MP3 => write!(f, "ᵐᵖ³"),
+            FileType::M4A => write!(f, "ᵐ⁴ᵃ"),
+            FileType::OGG => write!(f, "ᵒᵍᵍ"),
+            FileType::WAV => write!(f, "ʷᵃᵛ"),
+            FileType::FLAC => write!(f, "ᶠˡᵃᶜ"),
             FileType::ERR => write!(f, "ERR"),
         }
     }

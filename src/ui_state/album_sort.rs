@@ -1,4 +1,4 @@
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum AlbumSort {
     Artist,
     Title,
@@ -35,6 +35,15 @@ impl AlbumSort {
             AlbumSort::Artist => AlbumSort::Year,
             AlbumSort::Title => AlbumSort::Artist,
             AlbumSort::Year => AlbumSort::Title,
+        }
+    }
+
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "Artist" => AlbumSort::Artist,
+            "Title" => AlbumSort::Title,
+            "Year" => AlbumSort::Year,
+            _ => AlbumSort::Artist,
         }
     }
 }

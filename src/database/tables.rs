@@ -51,4 +51,9 @@ pub const CREATE_TABLES: &str = r"
         count INTEGER,
         FOREIGN KEY(song_id) REFERENCES songs(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS session_state(
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    );
 ";

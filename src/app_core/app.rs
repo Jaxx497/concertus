@@ -112,6 +112,7 @@ impl Concertus {
         let _ = self
             .library
             .set_history_db(&self.ui.history.make_contiguous());
+
         ratatui::restore();
 
         overwrite_line("Thank you for using concertus!\n\n");
@@ -145,6 +146,7 @@ impl Concertus {
         self.ui.sort_albums();
         self.ui.set_legal_songs();
         self.ui.load_history();
+        self.ui.restore_state().unwrap_or_else(|e| eprintln!("{e}"));
     }
 }
 
@@ -317,12 +319,14 @@ impl Concertus {
 
         // Do not index a value out of bounds if current selection
         // will be out of bounds after update
-        self.ui
-            .album_pos
-            .select(cached.map(|idx| match idx < updated_len {
-                true => idx,
-                false => updated_len.saturating_sub(1),
-            }));
+        if updated_len > 0 {
+            self.ui
+                .album_pos
+                .select(cached.map(|idx| match idx < updated_len {
+                    true => idx,
+                    false => updated_len.saturating_sub(1),
+                }))
+        }
 
         self.ui.set_legal_songs();
 
