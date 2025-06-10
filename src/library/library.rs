@@ -173,7 +173,8 @@ impl Library {
         paths
             .into_par_iter()
             .filter_map(|path| {
-                LongSong::build_song(&path)
+                // LongSong::build_song_ffprobe(&path)
+                LongSong::build_song_symphonia(&path)
                     // .map_err(|e| println!("Error in file: {}\nERROR: {e}", path.display()))
                     .ok()
             })

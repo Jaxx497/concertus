@@ -50,8 +50,6 @@ impl Concertus {
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
-        self._debug_startup();
-
         let mut terminal = ratatui::init();
         terminal.clear()?;
 

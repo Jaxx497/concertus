@@ -9,6 +9,7 @@ bincode = "2.0.1"
 byteorder = "*"
 dirs = "6.0.0"
 fuzzy-matcher = "*"
+mp4ameta = "*"
 ratatui = "*"
 rayon = "1.10.0"
 rodio = { version = "0.20.1", features = ["symphonia-all"] }

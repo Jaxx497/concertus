@@ -36,22 +36,17 @@ impl LongSong {
         }
     }
 
-    pub fn build_song<P: AsRef<Path>>(path_raw: P) -> Result<LongSong> {
+    pub fn build_song_symphonia<P: AsRef<Path>>(path_raw: P) -> Result<LongSong> {
         let path = path_raw.as_ref();
 
         let extension = path.extension();
-
         let format = match extension {
-            Some(n) if n == "mp3" => FileType::MP3,
-            Some(n) if n == "flac" => FileType::FLAC,
-            Some(n) if n == "m4a" => FileType::M4A,
-            Some(n) if n == "ogg" => FileType::OGG,
-            Some(n) if n == "wav" => FileType::WAV,
-            _ => {
+            Some(n) => FileType::from(n.to_str().unwrap()),
+            None => {
                 return Err(anyhow::format_err!(
                     "Unsuppored extension: {:?}",
                     path.extension()
-                ));
+                ))
             }
         };
 
@@ -74,9 +69,8 @@ impl LongSong {
 
         let mut song_info = LongSong::new(PathBuf::from(path));
 
-        song_info.id = calculate_signature(path)?;
-
         song_info.format = format;
+        song_info.id = calculate_signature(path)?;
 
         let track = probed.format.default_track().context("No default track")?;
 
@@ -120,6 +114,12 @@ impl LongSong {
                 .map(|stem| stem.to_string_lossy().into_owned())
                 .unwrap_or_default()
         }
+
+        if song_info.format == FileType::M4A {
+            let tag = mp4ameta::Tag::read_from_path(path).unwrap();
+            song_info.disc_no = tag.disc_number().map(u32::from);
+        }
+
         Ok(song_info)
     }
 

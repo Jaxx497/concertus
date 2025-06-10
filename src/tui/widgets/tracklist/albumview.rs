@@ -163,7 +163,7 @@ fn get_track_discs(
 ) -> Cell<'static> {
     let track_no = Span::from(match song.track_no {
         Some(t) => format!("{t:>2}"),
-        None => "".into(),
+        None => format!("{x:>2}", x = "󰇘"),
     })
     .fg(theme.text_highlighted);
 
