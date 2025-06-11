@@ -84,8 +84,6 @@ impl LongSong {
 
             song_info.sample_rate = sample_rate;
             song_info.duration = duration_raw;
-        } else {
-            println!("Total number of frames is not specified");
         }
 
         let metadata = match probed.metadata.get() {

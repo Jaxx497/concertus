@@ -1,25 +1,18 @@
 use super::{
-    theme::Theme, AlbumDisplayItem, AlbumSort, DisplayTheme, Mode, Pane, TableSort, UiSnapshot,
-    HISTORY_CAPACITY, MATCHER, MATCH_THRESHOLD,
+    new_textarea, playback::PlaybackCoordinator, search_state::SearchState, theme::Theme,
+    AlbumDisplayItem, AlbumSort, DisplayTheme, Mode, Pane, TableSort, UiSnapshot,
 };
 use crate::{
     domain::{Album, QueueSong, SimpleSong, SongInfo},
     key_handler::Director,
-    player::{PlaybackState, PlayerState},
+    player::PlayerState,
     strip_win_prefix, Database, Library,
 };
 use anyhow::{anyhow, Context, Error, Result};
-use fuzzy_matcher::FuzzyMatcher;
-use ratatui::{
-    crossterm::event::KeyEvent,
-    style::Style,
-    widgets::{Borders, ListState, TableState},
-};
+use ratatui::widgets::{Borders, ListState, TableState};
 use std::{
-    collections::VecDeque,
     ops::Index,
     sync::{Arc, Mutex},
-    time::Duration,
 };
 use tui_textarea::TextArea;
 
@@ -32,30 +25,26 @@ pub enum SettingsMode {
 }
 
 pub struct UiState {
-    library: Arc<Library>,
-    player_state: Arc<Mutex<PlayerState>>,
-
-    mode: Mode,
-    pane: Pane,
+    pub(super) library: Arc<Library>,
+    pub(super) mode: Mode,
+    pub(super) pane: Pane,
     theme: Theme,
     table_sort: TableSort,
     album_sort: AlbumSort,
     table_pos_cached: usize,
     album_pos_cached: usize,
 
-    waveform: Vec<f32>,
-
-    error: Option<anyhow::Error>,
+    pub(super) error: Option<anyhow::Error>,
 
     pub settings_mode: SettingsMode,
     pub settings_selection: ListState,
     pub root_input: TextArea<'static>,
 
-    pub queue: VecDeque<Arc<QueueSong>>,
-    pub history: VecDeque<Arc<SimpleSong>>,
+    pub playback: PlaybackCoordinator,
 
     // These have to be public for the widgets
-    pub search: TextArea<'static>,
+    // pub search: TextArea<'static>,
+    pub(super) search: SearchState,
     pub table_pos: TableState,
     pub album_pos: ListState,
     pub album_display_items: Vec<AlbumDisplayItem>,
@@ -67,30 +56,25 @@ impl UiState {
     pub fn new(library: Arc<Library>, player_state: Arc<Mutex<PlayerState>>) -> Self {
         UiState {
             library,
-            player_state,
 
             mode: Mode::Album,
             pane: Pane::TrackList,
             theme: Theme::set_generic_theme(),
+
             table_sort: TableSort::Title,
             album_sort: AlbumSort::Artist,
             table_pos_cached: 0,
             album_pos_cached: 0,
 
-            waveform: Vec::new(),
-
             error: None,
-            queue: VecDeque::new(),
-            history: VecDeque::new(),
+            playback: PlaybackCoordinator::new(player_state),
 
             settings_mode: SettingsMode::default(),
             settings_selection: ListState::default().with_selected(Some(0)),
             root_input: new_textarea("Enter path to directory"),
 
-            search: new_textarea("Enter search query"),
-            table_pos: TableState::default()
-                .with_selected(Some(0))
-                .with_selected_column(Some(0)),
+            search: SearchState::new(),
+            table_pos: TableState::default().with_selected(0),
             album_pos: ListState::default().with_selected(Some(0)),
             album_display_items: Vec::new(),
             legal_songs: Vec::new(),
@@ -116,10 +100,6 @@ impl UiState {
         }
 
         self.set_legal_songs();
-    }
-
-    pub fn update_player_state(&mut self, player_state: Arc<Mutex<PlayerState>>) {
-        self.player_state = player_state
     }
 
     pub fn get_pane(&self) -> &Pane {
@@ -163,7 +143,7 @@ impl UiState {
                 self.set_legal_songs();
             }
             Mode::Queue => {
-                if !self.queue.is_empty() {
+                if !self.playback.queue.is_empty() {
                     *self.table_pos.offset_mut() = 0;
                     self.mode = Mode::Queue;
                     self.pane = Pane::TrackList;
@@ -172,8 +152,8 @@ impl UiState {
             }
             Mode::Search => {
                 self.table_sort = TableSort::Title;
-                self.search.select_all();
-                self.search.cut();
+                self.search.input.select_all();
+                self.search.input.cut();
                 self.mode = Mode::Search;
                 self.pane = Pane::Search;
             }
@@ -198,15 +178,6 @@ impl UiState {
         &self.settings_mode
     }
 
-    pub fn check_player_error(&mut self) {
-        let mut state = self.player_state.lock().unwrap();
-
-        if let Some(e) = state.player_error.take() {
-            self.error = Some(e);
-            self.pane = Pane::Popup;
-        }
-    }
-
     pub fn get_table_sort(&self) -> &TableSort {
         &self.table_sort
     }
@@ -220,7 +191,7 @@ impl UiState {
         self.set_legal_songs();
     }
 
-    pub(crate) fn sort_albums(&mut self) {
+    fn sort_albums(&mut self) {
         self.filtered_albums = self.library.get_all_albums().to_vec();
 
         match self.album_sort {
@@ -355,8 +326,8 @@ impl UiState {
             None => {
                 self.set_mode(Mode::Album);
                 self.set_pane(Pane::TrackList);
-                self.search.select_all();
-                self.search.cut();
+                self.search.input.select_all();
+                self.search.input.cut();
             }
         }
         self.set_legal_songs();
@@ -368,6 +339,7 @@ impl UiState {
             return Err(anyhow!("No songs to select!"));
         }
 
+        // BUG: Using GOTO album on queue mode removes song from queue, need to fix this
         match self.mode {
             Mode::Power | Mode::Album | Mode::Search => {
                 let idx = self.table_pos.selected().unwrap();
@@ -376,7 +348,7 @@ impl UiState {
             Mode::Queue => self
                 .table_pos
                 .selected()
-                .and_then(|idx| self.queue.remove(idx))
+                .and_then(|idx| self.playback.queue.remove(idx))
                 .map(|s| {
                     self.set_legal_songs();
                     Arc::clone(&s.meta)
@@ -414,6 +386,46 @@ impl UiState {
 
     pub fn get_error(&self) -> &Option<Error> {
         &self.error
+    }
+
+    pub(crate) fn set_legal_songs(&mut self) {
+        match &self.mode {
+            Mode::Power => {
+                self.legal_songs = self.library.get_all_songs().to_vec();
+                self.sort_by_table_column();
+            }
+            Mode::Album => {
+                if let Some(idx) = self.album_pos.selected() {
+                    self.legal_songs = self.filtered_albums.index(idx).tracklist.clone();
+
+                    *self.table_pos.offset_mut() = 0;
+                }
+            }
+            Mode::Queue => {
+                self.playback.queue.make_contiguous();
+                self.legal_songs = self
+                    .playback
+                    .queue
+                    .as_slices()
+                    .0
+                    .iter()
+                    .map(|s| Arc::clone(&s.meta))
+                    .collect::<Vec<Arc<_>>>();
+            }
+            Mode::Search => match self.get_search_len() > 1 {
+                true => self.filter_songs_by_search(),
+                false => {
+                    self.legal_songs = self.library.get_all_songs().to_vec();
+                    self.sort_by_table_column();
+                }
+            },
+            _ => (),
+        }
+
+        // Autoselect first entry if necessary
+        if !self.legal_songs.is_empty() && self.table_pos.selected().is_none() {
+            self.table_pos.select(Some(0));
+        }
     }
 }
 
@@ -494,159 +506,7 @@ impl UiState {
     }
 }
 
-// SEARCH RELATED
 impl UiState {
-    pub fn get_search_widget(&mut self) -> &mut TextArea<'static> {
-        &mut self.search
-    }
-
-    pub fn get_search_len(&self) -> usize {
-        self.search.lines()[0].len()
-    }
-
-    pub fn send_search(&mut self) {
-        match !self.legal_songs.is_empty() {
-            true => self.set_pane(Pane::TrackList),
-            false => self.soft_reset(),
-        }
-    }
-
-    pub fn process_search(&mut self, k: KeyEvent) {
-        self.search.input(k);
-        self.set_legal_songs();
-        if self.legal_songs.is_empty() {
-            self.table_pos.select(None);
-        } else {
-            self.table_pos.select(Some(0));
-        }
-    }
-
-    pub fn read_search(&self) -> &str {
-        &self.search.lines()[0]
-    }
-
-    pub(crate) fn set_legal_songs(&mut self) {
-        match &self.mode {
-            Mode::Power => {
-                self.legal_songs = self.library.get_all_songs().to_vec();
-                self.sort_by_table_column();
-            }
-            Mode::Album => {
-                if let Some(idx) = self.album_pos.selected() {
-                    self.legal_songs = self.filtered_albums.index(idx).tracklist.clone();
-                }
-            }
-            Mode::Queue => {
-                self.queue.make_contiguous();
-                self.legal_songs = self
-                    .queue
-                    .as_slices()
-                    .0
-                    .iter()
-                    .map(|s| Arc::clone(&s.meta))
-                    .collect::<Vec<Arc<_>>>();
-            }
-            Mode::Search => match self.get_search_len() > 1 {
-                true => self.filter_songs_by_search(),
-                false => {
-                    self.legal_songs = self.library.get_all_songs().to_vec();
-                    self.sort_by_table_column();
-                }
-            },
-            _ => (),
-        }
-
-        // Autoselect first entry if necessary
-        if !self.legal_songs.is_empty() && self.table_pos.selected().is_none() {
-            self.table_pos.select(Some(0));
-        }
-    }
-
-    fn filter_songs_by_search(&mut self) {
-        let query = self.read_search().to_lowercase();
-
-        let mut scored_songs: Vec<(Arc<SimpleSong>, i64)> = self
-            .library
-            .get_all_songs()
-            .iter()
-            .filter_map(|song| {
-                MATCHER
-                    .fuzzy_match(&song.get_title().to_lowercase(), &query.as_str())
-                    .filter(|&score| score > MATCH_THRESHOLD)
-                    .map(|score| (song.clone(), score))
-            })
-            .collect();
-
-        scored_songs.sort_by(|a, b| b.1.cmp(&a.1));
-
-        self.legal_songs = scored_songs.into_iter().map(|i| i.0).collect();
-    }
-}
-
-// Player Related
-impl UiState {
-    pub fn get_now_playing(&self) -> Option<Arc<SimpleSong>> {
-        let state = self.player_state.lock().unwrap();
-        state.now_playing.clone()
-    }
-
-    pub fn get_playback_elapsed(&self) -> Duration {
-        let state = self.player_state.lock().unwrap();
-        state.elapsed
-    }
-
-    pub fn is_not_playing(&self) -> bool {
-        let state = self.player_state.lock().unwrap();
-        state.state == PlaybackState::Stopped
-    }
-
-    pub fn is_paused(&self) -> bool {
-        let state = self.player_state.lock().unwrap();
-        state.state == PlaybackState::Paused
-    }
-
-    pub fn get_waveform(&self) -> &[f32] {
-        self.waveform.as_slice()
-    }
-
-    pub fn clear_waveform(&mut self) {
-        self.waveform.clear();
-    }
-
-    pub fn set_waveform(&mut self, wf: Vec<f32>) {
-        self.waveform = wf
-    }
-}
-
-impl UiState {
-    pub fn queue_song(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
-        let simple_song = match song {
-            Some(s) => s,
-            None => self.get_selected_song()?,
-        };
-
-        let queue_song = self.make_playable_song(&simple_song)?;
-
-        self.queue.push_back(queue_song);
-
-        Ok(())
-    }
-
-    pub fn queue_album(&mut self) -> Result<()> {
-        let album = self
-            .album_pos
-            .selected()
-            .ok_or_else(|| anyhow::anyhow!("Illegal album selection!"))?;
-
-        let songs = self.filtered_albums.index(album).tracklist.clone();
-
-        for song in songs {
-            self.queue_song(Some(song))?;
-        }
-
-        Ok(())
-    }
-
     pub fn make_playable_song(&mut self, song: &Arc<SimpleSong>) -> Result<Arc<QueueSong>> {
         let path = self
             .library
@@ -662,54 +522,6 @@ impl UiState {
             meta: Arc::clone(&song),
             path,
         }))
-    }
-
-    pub fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {
-        self.queue.front().map(|q| &q.meta)
-    }
-
-    pub fn queue_is_empty(&self) -> bool {
-        self.queue.is_empty()
-    }
-
-    pub fn remove_from_queue(&mut self) -> Result<()> {
-        if Mode::Queue == self.mode {
-            self.table_pos
-                .selected()
-                .and_then(|idx| self.queue.remove(idx))
-                .map(|_| {
-                    self.set_legal_songs();
-                });
-        }
-        Ok(())
-    }
-
-    pub(crate) fn load_history(&mut self) {
-        self.history = self
-            .library
-            .load_history(&self.library.get_all_songs())
-            .unwrap_or_default();
-    }
-
-    pub fn add_to_history(&mut self, song: Arc<SimpleSong>) {
-        if let Some(last) = self.history.front() {
-            if last.id == song.id {
-                return;
-            }
-        }
-
-        self.history.push_front(song);
-
-        while self.history.len() > HISTORY_CAPACITY {
-            self.history.pop_back();
-        }
-    }
-
-    pub fn get_prev_song(&mut self) -> Option<Arc<SimpleSong>> {
-        match self.get_now_playing() {
-            Some(_) => self.history.remove(1),
-            None => self.history.remove(0),
-        }
     }
 }
 
@@ -805,12 +617,4 @@ impl UiState {
 
         Ok(())
     }
-}
-
-fn new_textarea(placeholder: &str) -> TextArea<'static> {
-    let mut search = TextArea::default();
-    search.set_cursor_line_style(Style::default());
-    search.set_placeholder_text(format!(" {placeholder}: "));
-
-    search
 }

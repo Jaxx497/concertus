@@ -84,8 +84,8 @@ impl Concertus {
 
             // Play next song if song in queue and current song has ended
             if self.ui.is_not_playing() {
-                if !self.ui.queue_is_empty() {
-                    if let Some(song) = self.ui.queue.pop_front() {
+                if !self.ui.playback.queue.is_empty() {
+                    if let Some(song) = self.ui.playback.queue.pop_front() {
                         if let Err(e) = self.play_song(song) {
                             self.ui.set_error(e);
                         };
@@ -109,7 +109,7 @@ impl Concertus {
         // TODO: Handle error for when deleted songs are still in history
         let _ = self
             .library
-            .set_history_db(&self.ui.history.make_contiguous());
+            .set_history_db(&self.ui.playback.history.make_contiguous());
 
         ratatui::restore();
 
@@ -141,10 +141,9 @@ impl Concertus {
 
     pub fn initialize_ui(&mut self) {
         self.ui.soft_reset();
-        self.ui.sort_albums();
-        self.ui.set_legal_songs();
+        self.ui.sync_library(Arc::clone(&self.library));
         self.ui.load_history();
-        self.ui.restore_state().unwrap_or_else(|e| eprintln!("{e}"));
+        let _ = self.ui.restore_state();
     }
 }
 
@@ -231,7 +230,7 @@ impl Concertus {
     }
 
     fn play_next(&mut self) -> Result<()> {
-        match self.ui.queue.pop_front() {
+        match self.ui.playback.queue.pop_front() {
             Some(song) => {
                 self.ui.add_to_history(Arc::clone(&song.meta));
                 self.play_song(song)?;
@@ -248,7 +247,7 @@ impl Concertus {
             Some(prev) => {
                 if let Some(now_playing) = self.ui.get_now_playing() {
                     let queue_song = self.ui.make_playable_song(&now_playing)?;
-                    self.ui.queue.push_front(queue_song);
+                    self.ui.playback.queue.push_front(queue_song);
                 }
                 let queue_song = self.ui.make_playable_song(&prev)?;
                 self.play_song(queue_song)?;
@@ -317,13 +316,12 @@ impl Concertus {
 
         // Do not index a value out of bounds if current selection
         // will be out of bounds after update
+
         if updated_len > 0 {
-            self.ui
-                .album_pos
-                .select(cached.map(|idx| match idx < updated_len {
-                    true => idx,
-                    false => updated_len.saturating_sub(1),
-                }))
+            self.ui.album_pos.select(match cached < Some(updated_len) {
+                true => cached,
+                false => Some(updated_len / 2),
+            })
         }
 
         self.ui.set_legal_songs();

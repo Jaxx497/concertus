@@ -1,6 +1,8 @@
 mod album_sort;
 mod mode;
 mod pane;
+mod playback;
+mod search_state;
 mod table_sort;
 mod theme;
 mod ui_snapshot;
@@ -17,12 +19,15 @@ pub use ui_state::UiState;
 pub use theme::*;
 pub use ui_state::SettingsMode;
 
-const HISTORY_CAPACITY: usize = 50;
-const MATCH_THRESHOLD: i64 = 50;
-static MATCHER: std::sync::LazyLock<fuzzy_matcher::skim::SkimMatcherV2> =
-    std::sync::LazyLock::new(|| fuzzy_matcher::skim::SkimMatcherV2::default());
-
 pub enum AlbumDisplayItem {
     Header(String),
     Album(usize),
+}
+
+fn new_textarea(placeholder: &str) -> tui_textarea::TextArea<'static> {
+    let mut search = tui_textarea::TextArea::default();
+    search.set_cursor_line_style(ratatui::style::Style::default());
+    search.set_placeholder_text(format!(" {placeholder}: "));
+
+    search
 }

@@ -26,25 +26,19 @@ or similar to make the proper modifications.
 ## Known bugs
 
 1. Symphonia Related*
-    1. m4a files rarely fail to play, but often disc numbers will not
-       be displayed.
-    2. FLAC will rarely cause crashes when seeking in a song,
-       functionality is enabled. 
+    1. FLAC will rarely cause crashes when seeking in a song,
+        functionality is enabled. 
         OGG files crash on seek without fail, functionality is
         disabled.
-    3. Symphonia does not have OPUS capabilities.
+    2. Symphonia does not have OPUS capabilities.
 
-2. Live updates can cause panics on occasion. It's almost always due
-    to the indexing on the sidebar. In most cases, you should be fine,
-    but not all cases are covered. 
-
-3. Accessing deleted songs - Accessing a deleted song through the
+2. Accessing deleted songs - Accessing a deleted song through the
    history will likely render the rest of the history playlist
     inaccessible
 
 *Symphonia is a major dependency of this project. Most of the
 playback related issues are due to upstream issues in the symphonia
-library. I will begin to look for alternative backends. Perhaps ffmpeg
+library. I will begin to look for alternative backends. Perhaps mpd
 or gstreamer. Metadata may be read by other readers if necessary.
 
 

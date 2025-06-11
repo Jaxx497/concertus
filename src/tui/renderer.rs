@@ -13,7 +13,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     let layout = AppLayout::new(f.area(), &state);
 
     SearchBar.render(layout.search_bar, f.buffer_mut(), state);
-    SideBar.render(layout.side_bar, f.buffer_mut(), state);
+    SideBar.render(layout.sidebar, f.buffer_mut(), state);
     SongTable.render(layout.song_window, f.buffer_mut(), state);
     Progress.render(layout.progress_bar, f.buffer_mut(), state);
 

@@ -2,7 +2,7 @@ use crate::ui_state::{Mode, UiState};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 pub struct AppLayout {
-    pub side_bar: Rect,
+    pub sidebar: Rect,
     pub search_bar: Rect,
     pub song_window: Rect,
     pub progress_bar: Rect,
@@ -29,7 +29,7 @@ impl AppLayout {
             ])
             .areas(area);
 
-        let [side_bar, _, upper_block] = Layout::default()
+        let [sidebar, _, upper_block] = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Length(40),
@@ -48,7 +48,7 @@ impl AppLayout {
             .areas(upper_block);
 
         AppLayout {
-            side_bar,
+            sidebar,
             search_bar,
             song_window,
             progress_bar,

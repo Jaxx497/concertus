@@ -54,7 +54,7 @@ impl StatefulWidget for AlbumView {
         let album = &album_list[album_idx];
         let album_title = truncate_at_last_space(&album.title, (area.width / 3) as usize);
 
-        let queued_ids: HashSet<u64> = state.queue.iter().map(|s| s.get_id()).collect();
+        let queued_ids: HashSet<u64> = state.playback.queue.iter().map(|s| s.get_id()).collect();
         let now_playing_id = state.get_now_playing().map(|s| s.id);
 
         let disc_count = album

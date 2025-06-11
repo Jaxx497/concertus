@@ -110,10 +110,6 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
     let pcm_data = output.stdout;
     let mut waveform = process_pcm_to_waveform(&pcm_data, samples_per_point)?;
 
-    // Apply non-linear scaling to better reflect perceived loudness
-    // apply_compression(&mut waveform);
-    //
-
     smooth_waveform(&mut waveform);
     // Normalize the waveform
     normalize_waveform(&mut waveform);

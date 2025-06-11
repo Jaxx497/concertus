@@ -8,6 +8,7 @@ use std::{collections::HashSet, sync::LazyLock, time::Duration};
 
 static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from(['\'', ';']));
 const C: KeyModifiers = KeyModifiers::CONTROL;
+const X: KeyModifiers = KeyModifiers::NONE;
 
 const SEEK_SMALL: usize = 5;
 const SEEK_LARGE: usize = 30;
@@ -92,8 +93,7 @@ fn global_commands(key: &KeyEvent, pane: &Pane) -> Option<Action> {
     match (key.modifiers, key.code) {
         (_, Esc) => Some(Action::SoftReset),
         (C, Char('c')) => Some(Action::QUIT),
-        (_, Char('`')) | (_, Char('~')) => Some(Action::ViewSettings),
-        (C, Char('u')) | (_, F(5)) => Some(Action::UpdateLibrary),
+        (_, Char('`')) => Some(Action::ViewSettings),
         (C, Char(' ')) => Some(Action::TogglePause),
 
         // Works on everything except search
@@ -116,11 +116,13 @@ fn global_commands(key: &KeyEvent, pane: &Pane) -> Option<Action> {
             (_, Char('j')) | (_, Down) => Some(Action::Scroll(Director::Down(1))),
             (_, Char('k')) | (_, Up) => Some(Action::Scroll(Director::Up(1))),
             (_, Char('d')) => Some(Action::Scroll(Director::Down(SCROLL_MID))),
-            (_, Char('u')) => Some(Action::Scroll(Director::Up(SCROLL_MID))),
+            (X, Char('u')) => Some(Action::Scroll(Director::Up(SCROLL_MID))),
             (_, Char('D')) => Some(Action::Scroll(Director::Down(SCROLL_XTRA))),
             (_, Char('U')) => Some(Action::Scroll(Director::Up(SCROLL_XTRA))),
             (_, Char('g')) => Some(Action::Scroll(Director::Top)),
             (_, Char('G')) => Some(Action::Scroll(Director::Bottom)),
+
+            (C, Char('u')) | (_, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
         },
