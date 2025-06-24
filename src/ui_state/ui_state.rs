@@ -1,53 +1,42 @@
 use super::{
-    new_textarea, playback::PlaybackCoordinator, search_state::SearchState, theme::Theme,
-    AlbumDisplayItem, AlbumSort, DisplayTheme, Mode, Pane, TableSort, UiSnapshot,
+    playback::PlaybackCoordinator, search_state::SearchState, settings::Settings, theme::Theme,
+    AlbumDisplayItem, AlbumSort, DisplayTheme, Mode, Pane, TableSort,
 };
 use crate::{
-    domain::{Album, QueueSong, SimpleSong, SongInfo},
+    domain::{Album, SimpleSong, SongInfo},
     key_handler::Director,
     player::PlayerState,
-    strip_win_prefix, Database, Library,
+    Library,
 };
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, Error, Result};
 use ratatui::widgets::{Borders, ListState, TableState};
 use std::{
     ops::Index,
     sync::{Arc, Mutex},
 };
-use tui_textarea::TextArea;
-
-#[derive(Default, PartialEq, Clone)]
-pub enum SettingsMode {
-    #[default]
-    ViewRoots,
-    AddRoot,
-    RemoveRoot,
-}
 
 pub struct UiState {
     pub(super) library: Arc<Library>,
-    pub(super) mode: Mode,
-    pub(super) pane: Pane,
-    theme: Theme,
-    table_sort: TableSort,
-    album_sort: AlbumSort,
-    table_pos_cached: usize,
-    album_pos_cached: usize,
+
+    pub(crate) playback: PlaybackCoordinator,
+    pub(super) search: SearchState,
 
     pub(super) error: Option<anyhow::Error>,
+    pub settings: Settings,
+    theme: Theme,
 
-    pub settings_mode: SettingsMode,
-    pub settings_selection: ListState,
-    pub root_input: TextArea<'static>,
+    table_sort: TableSort,
 
-    pub playback: PlaybackCoordinator,
-
-    // These have to be public for the widgets
-    // pub search: TextArea<'static>,
-    pub(super) search: SearchState,
-    pub table_pos: TableState,
-    pub album_pos: ListState,
+    pub(super) mode: Mode,
+    pub(super) pane: Pane,
+    pub(super) album_sort: AlbumSort,
     pub album_display_items: Vec<AlbumDisplayItem>,
+    pub album_pos: ListState,
+    album_pos_cached: usize,
+
+    pub table_pos: TableState,
+    table_pos_cached: usize,
+
     pub legal_songs: Vec<Arc<SimpleSong>>,
     pub filtered_albums: Vec<Album>,
 }
@@ -69,9 +58,7 @@ impl UiState {
             error: None,
             playback: PlaybackCoordinator::new(player_state),
 
-            settings_mode: SettingsMode::default(),
-            settings_selection: ListState::default().with_selected(Some(0)),
-            root_input: new_textarea("Enter path to directory"),
+            settings: Settings::new(),
 
             search: SearchState::new(),
             table_pos: TableState::default().with_selected(0),
@@ -143,7 +130,7 @@ impl UiState {
                 self.set_legal_songs();
             }
             Mode::Queue => {
-                if !self.playback.queue.is_empty() {
+                if !self.queue_is_empty() {
                     *self.table_pos.offset_mut() = 0;
                     self.mode = Mode::Queue;
                     self.pane = Pane::TrackList;
@@ -174,10 +161,6 @@ impl UiState {
         &self.album_sort
     }
 
-    pub fn get_settings_mode(&self) -> &SettingsMode {
-        &self.settings_mode
-    }
-
     pub fn get_table_sort(&self) -> &TableSort {
         &self.table_sort
     }
@@ -191,7 +174,7 @@ impl UiState {
         self.set_legal_songs();
     }
 
-    fn sort_albums(&mut self) {
+    pub(super) fn sort_albums(&mut self) {
         self.filtered_albums = self.library.get_all_albums().to_vec();
 
         match self.album_sort {
@@ -503,118 +486,5 @@ impl UiState {
             }
             _ => (),
         }
-    }
-}
-
-impl UiState {
-    pub fn make_playable_song(&mut self, song: &Arc<SimpleSong>) -> Result<Arc<QueueSong>> {
-        let path = self
-            .library
-            .get_path(song.id)
-            .context("Could not retrieve path from database!")?;
-
-        std::fs::metadata(&path).context(anyhow!(
-            "Invalid file path!\n\nUnable to find: \"{}\"",
-            strip_win_prefix(&path)
-        ))?;
-
-        Ok(Arc::new(QueueSong {
-            meta: Arc::clone(&song),
-            path,
-        }))
-    }
-}
-
-impl UiState {
-    pub fn get_roots(&self) -> Vec<String> {
-        let mut roots: Vec<String> = self
-            .library
-            .roots
-            .iter()
-            .map(|p| p.display().to_string())
-            .collect();
-        roots.sort();
-        roots
-    }
-
-    pub fn add_root(&mut self, path: &str) -> Result<()> {
-        let db = self.library.get_db();
-        let mut lib = Library::init(db);
-        lib.add_root(path)?;
-        lib.build_library()?;
-
-        self.library = Arc::new(lib);
-
-        Ok(())
-    }
-
-    pub fn remove_root(&mut self) -> Result<()> {
-        if let Some(selected) = self.settings_selection.selected() {
-            let roots = self.get_roots();
-            if selected >= roots.len() {
-                return Err(anyhow!("Invalid root index!"));
-            }
-
-            let db = self.library.get_db();
-            let mut lib = Library::init(db);
-
-            let bad_root = &roots[selected];
-            lib.delete_root(&bad_root)?;
-        }
-
-        Ok(())
-    }
-
-    pub fn enter_settings(&mut self) {
-        self.settings_mode = SettingsMode::ViewRoots;
-        if !self.get_roots().is_empty() {
-            self.settings_selection.select(Some(0));
-        }
-        self.root_input.select_all();
-        self.root_input.cut();
-        self.set_pane(Pane::Popup);
-    }
-
-    pub fn create_snapshot(&self) -> UiSnapshot {
-        UiSnapshot {
-            mode: self.mode.to_string(),
-            album_sort: self.album_sort.to_string(),
-            album_selection: self.album_pos.selected(),
-            song_selection: self.table_pos.selected(),
-        }
-    }
-
-    pub fn save_state(&self) -> Result<()> {
-        let mut db = Database::open()?;
-        let snapshot = self.create_snapshot();
-        db.save_ui_snapshot(&snapshot)?;
-        Ok(())
-    }
-
-    pub fn restore_state(&mut self) -> Result<()> {
-        let mut db = Database::open()?;
-
-        if let Some(snapshot) = db.load_ui_snapshot()? {
-            self.album_sort = AlbumSort::from_str(&snapshot.album_sort);
-
-            self.sort_albums();
-
-            if let Some(pos) = snapshot.album_selection {
-                if pos < self.filtered_albums.len() {
-                    self.album_pos.select(Some(pos));
-                }
-            }
-
-            let restored_mode = Mode::from_str(&snapshot.mode);
-            self.set_mode(restored_mode);
-
-            if let Some(pos) = snapshot.song_selection {
-                if pos < self.legal_songs.len() {
-                    self.table_pos.select(Some(pos));
-                }
-            }
-        }
-
-        Ok(())
     }
 }

@@ -59,7 +59,7 @@ impl Concertus {
         match self.requires_setup {
             true => {
                 self.ui.set_pane(Pane::Popup);
-                self.ui.settings_mode = SettingsMode::AddRoot;
+                self.ui.settings.settings_mode = SettingsMode::AddRoot;
             }
             false => (),
         }
@@ -84,7 +84,7 @@ impl Concertus {
 
             // Play next song if song in queue and current song has ended
             if self.ui.is_not_playing() {
-                if !self.ui.playback.queue.is_empty() {
+                if !self.ui.queue_is_empty() {
                     if let Some(song) = self.ui.playback.queue.pop_front() {
                         if let Err(e) = self.play_song(song) {
                             self.ui.set_error(e);
@@ -191,7 +191,7 @@ impl Concertus {
             Action::RootConfirm     => self.settings_root_confirm()?,
 
             Action::SettingsInput(key) => {
-                self.ui.root_input.input(key);
+                self.ui.settings.root_input.input(key);
             }
             _ => (),
         }
@@ -336,7 +336,7 @@ impl Concertus {
             Pane::Popup => self.ui.soft_reset(),
             _ => {
                 self.ui.set_pane(Pane::Popup);
-                self.ui.settings_mode = SettingsMode::ViewRoots
+                self.ui.settings.settings_mode = SettingsMode::ViewRoots
             }
         }
     }
@@ -344,41 +344,47 @@ impl Concertus {
     fn settings_scroll_up(&mut self) {
         let roots_count = self.ui.get_roots().len();
         if roots_count > 0 {
-            let current = self.ui.settings_selection.selected().unwrap_or(0);
+            let current = self.ui.settings.settings_selection.selected().unwrap_or(0);
             let new_selection = if current > 0 {
                 current - 1
             } else {
                 roots_count - 1 // Wrap to bottom
             };
-            self.ui.settings_selection.select(Some(new_selection));
+            self.ui
+                .settings
+                .settings_selection
+                .select(Some(new_selection));
         }
     }
 
     fn settings_scroll_down(&mut self) {
         let roots_count = self.ui.get_roots().len();
         if roots_count > 0 {
-            let current = self.ui.settings_selection.selected().unwrap_or(0);
+            let current = self.ui.settings.settings_selection.selected().unwrap_or(0);
             let new_selection = (current + 1) % roots_count; // Wrap to top
-            self.ui.settings_selection.select(Some(new_selection));
+            self.ui
+                .settings
+                .settings_selection
+                .select(Some(new_selection));
         }
     }
 
     fn settings_add_root(&mut self) {
-        self.ui.settings_mode = SettingsMode::AddRoot;
-        self.ui.root_input.select_all();
-        self.ui.root_input.cut();
+        self.ui.settings.settings_mode = SettingsMode::AddRoot;
+        self.ui.settings.root_input.select_all();
+        self.ui.settings.root_input.cut();
     }
 
     fn settings_root_confirm(&mut self) -> anyhow::Result<()> {
-        match self.ui.settings_mode {
+        match self.ui.settings.settings_mode {
             SettingsMode::AddRoot => {
-                let path = self.ui.root_input.lines();
+                let path = self.ui.settings.root_input.lines();
                 let path = path[0].clone();
                 if !path.is_empty() {
                     if let Err(e) = self.ui.add_root(&path) {
                         self.ui.set_error(e);
                     } else {
-                        self.ui.settings_mode = SettingsMode::ViewRoots;
+                        self.ui.settings.settings_mode = SettingsMode::ViewRoots;
                         self.update_library()?;
                     }
                 }
@@ -387,8 +393,8 @@ impl Concertus {
                 if let Err(e) = self.ui.remove_root() {
                     self.ui.set_error(e);
                 } else {
-                    self.ui.settings_mode = SettingsMode::ViewRoots;
-                    self.ui.settings_selection.select(Some(0));
+                    self.ui.settings.settings_mode = SettingsMode::ViewRoots;
+                    self.ui.settings.settings_selection.select(Some(0));
                     self.update_library()?;
                 }
             }
@@ -399,7 +405,7 @@ impl Concertus {
 
     fn settings_remove_root(&mut self) {
         if !self.ui.get_roots().is_empty() {
-            self.ui.settings_mode = SettingsMode::RemoveRoot;
+            self.ui.settings.settings_mode = SettingsMode::RemoveRoot;
         }
     }
 }

@@ -179,7 +179,7 @@ fn handle_popup_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match state.get_settings_mode() {
         SettingsMode::ViewRoots => match key.code {
             Char('a') => Some(Action::RootAdd),
-            Char('r') => Some(Action::RootRemove),
+            Char('d') => Some(Action::RootRemove),
             Up | Char('k') => Some(Action::SettingsUp),
             Down | Char('j') => Some(Action::SettingsDown),
             _ => None,

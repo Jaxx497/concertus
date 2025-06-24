@@ -2,8 +2,10 @@ use super::{Mode, Pane, UiState};
 use crate::{
     domain::{QueueSong, SimpleSong},
     player::{PlaybackState, PlayerState},
+    strip_win_prefix,
 };
-use anyhow::Result;
+use anyhow::anyhow;
+use anyhow::{Context, Result};
 use std::{
     collections::VecDeque,
     sync::{Arc, Mutex},
@@ -33,7 +35,7 @@ impl PlaybackCoordinator {
 //   QUEUE & HISTORY
 // =================
 impl UiState {
-    fn queue_is_empty(&self) -> bool {
+    pub fn queue_is_empty(&self) -> bool {
         self.playback.queue.is_empty()
     }
 
@@ -81,7 +83,7 @@ impl UiState {
             .unwrap_or_default();
     }
 
-    fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {
+    pub fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {
         self.playback.queue.front().map(|q| &q.meta)
     }
 
@@ -131,6 +133,23 @@ impl UiState {
     pub fn is_not_playing(&self) -> bool {
         let state = self.playback.player_state.lock().unwrap();
         state.state == PlaybackState::Stopped
+    }
+
+    pub fn make_playable_song(&mut self, song: &Arc<SimpleSong>) -> Result<Arc<QueueSong>> {
+        let path = self
+            .library
+            .get_path(song.id)
+            .context("Could not retrieve path from database!")?;
+
+        std::fs::metadata(&path).context(anyhow!(
+            "Invalid file path!\n\nUnable to find: \"{}\"",
+            strip_win_prefix(&path)
+        ))?;
+
+        Ok(Arc::new(QueueSong {
+            meta: Arc::clone(&song),
+            path,
+        }))
     }
 }
 

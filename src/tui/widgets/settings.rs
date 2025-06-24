@@ -58,7 +58,7 @@ impl StatefulWidget for Settings {
 
 fn get_help_text(mode: &SettingsMode) -> &'static str {
     match mode {
-        SettingsMode::ViewRoots => " [a]dd / [r]emove / [Esc] close ",
+        SettingsMode::ViewRoots => " [a]dd / [d]elete / [Esc] close ",
         SettingsMode::AddRoot => " [Enter] confirm / [Esc] cancel ",
         SettingsMode::RemoveRoot => " [Enter] confirm / [Esc] cancel ",
     }
@@ -94,7 +94,12 @@ fn render_roots_list(
         // .highlight_symbol(SELECTOR)
         .highlight_spacing(HighlightSpacing::Always);
 
-    ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.settings_selection);
+    ratatui::prelude::StatefulWidget::render(
+        list,
+        area,
+        buf,
+        &mut state.settings.settings_selection,
+    );
 }
 
 fn render_add_root(
@@ -113,7 +118,7 @@ fn render_add_root(
 
     let theme = state.get_theme(&Pane::Popup);
 
-    state.root_input.set_block(
+    state.settings.root_input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
             .fg(theme.text_highlighted)
@@ -125,10 +130,11 @@ fn render_add_root(
             }),
     );
     state
+        .settings
         .root_input
         .set_style(Style::new().fg(theme.text_focused));
 
-    state.root_input.render(chunks[1], buf);
+    state.settings.root_input.render(chunks[1], buf);
 
     let example = Paragraph::new("Example: C:\\Music or /home/user/music")
         .fg(Color::DarkGray)
@@ -149,7 +155,7 @@ fn render_remove_root(
             .render(area, buf);
         return;
     }
-    let selected_root = &roots[state.settings_selection.selected().unwrap()];
+    let selected_root = &roots[state.settings.settings_selection.selected().unwrap()];
     let selected_root = strip_win_prefix(&selected_root);
 
     let warning = Paragraph::new(format!(
