@@ -4,8 +4,7 @@ use crate::{
     player::{PlaybackState, PlayerState},
     strip_win_prefix,
 };
-use anyhow::anyhow;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use std::{
     collections::VecDeque,
     sync::{Arc, Mutex},
@@ -52,11 +51,12 @@ impl UiState {
 
     pub fn queue_album(&mut self) -> Result<()> {
         let album = self
+            .display_state
             .album_pos
             .selected()
             .ok_or_else(|| anyhow::anyhow!("Illegal album selection!"))?;
 
-        let songs = self.filtered_albums[album].tracklist.clone();
+        let songs = self.albums[album].tracklist.clone();
         for song in songs {
             self.queue_song(Some(song))?;
         }
@@ -95,8 +95,9 @@ impl UiState {
     }
 
     pub fn remove_from_queue(&mut self) -> Result<()> {
-        if Mode::Queue == self.mode {
-            self.table_pos
+        if Mode::Queue == self.display_state.mode {
+            self.display_state
+                .table_pos
                 .selected()
                 .and_then(|idx| self.playback.queue.remove(idx))
                 .map(|_| {
@@ -174,7 +175,7 @@ impl UiState {
 
         if let Some(e) = state.player_error.take() {
             self.error = Some(e);
-            self.pane = Pane::Popup;
+            self.display_state.pane = Pane::Popup;
         }
     }
 }

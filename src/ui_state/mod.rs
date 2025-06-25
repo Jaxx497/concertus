@@ -1,4 +1,5 @@
 mod album_sort;
+mod display_state;
 mod mode;
 mod pane;
 mod playback;
@@ -10,6 +11,7 @@ mod ui_snapshot;
 mod ui_state;
 
 pub use album_sort::AlbumSort;
+pub use display_state::DisplayState;
 pub use mode::Mode;
 pub use pane::Pane;
 pub use settings::SettingsMode;

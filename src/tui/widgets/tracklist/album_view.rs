@@ -43,15 +43,16 @@ impl StatefulWidget for AlbumView {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let album_list = &state.filtered_albums;
-        if album_list.is_empty() {
+        if state.albums.is_empty() {
             return;
         }
 
         let theme = &state.get_theme(&Pane::TrackList);
+        let album = state
+            .get_selected_album()
+            .unwrap_or(&state.albums[0])
+            .clone();
 
-        let album_idx = state.album_pos.selected().unwrap_or(0);
-        let album = &album_list[album_idx];
         let album_title = truncate_at_last_space(&album.title, (area.width / 3) as usize);
 
         let queued_ids: HashSet<u64> = state.playback.queue.iter().map(|s| s.get_id()).collect();
@@ -152,7 +153,7 @@ impl StatefulWidget for AlbumView {
             );
 
         // RENDER THE TABLE
-        StatefulWidget::render(table, area, buf, &mut state.table_pos);
+        StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }
 }
 

@@ -63,6 +63,6 @@ impl StatefulWidget for QueueTable {
             .row_highlight_style(theme.text_highlighted)
             .highlight_symbol(SELECTOR);
 
-        StatefulWidget::render(table, area, buf, &mut state.table_pos);
+        StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }
 }

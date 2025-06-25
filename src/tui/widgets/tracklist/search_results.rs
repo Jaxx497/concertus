@@ -79,6 +79,6 @@ impl StatefulWidget for StandardTable {
             .highlight_spacing(HighlightSpacing::Always)
             .highlight_symbol(SELECTOR);
 
-        StatefulWidget::render(table, area, buf, &mut state.table_pos);
+        StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }
 }

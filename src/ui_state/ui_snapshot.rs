@@ -52,11 +52,11 @@ impl UiSnapshot {
 impl UiState {
     pub fn create_snapshot(&self) -> UiSnapshot {
         UiSnapshot {
-            mode: self.mode.to_string(),
-            pane: self.pane.to_string(),
-            album_sort: self.album_sort.to_string(),
-            album_selection: self.album_pos.selected(),
-            song_selection: self.table_pos.selected(),
+            mode: self.display_state.mode.to_string(),
+            pane: self.display_state.pane.to_string(),
+            album_sort: self.display_state.album_sort.to_string(),
+            album_selection: self.display_state.album_pos.selected(),
+            song_selection: self.display_state.table_pos.selected(),
         }
     }
 
@@ -71,13 +71,13 @@ impl UiState {
         let mut db = Database::open()?;
 
         if let Some(snapshot) = db.load_ui_snapshot()? {
-            self.album_sort = AlbumSort::from_str(&snapshot.album_sort);
+            self.display_state.album_sort = AlbumSort::from_str(&snapshot.album_sort);
 
             self.sort_albums();
 
             if let Some(pos) = snapshot.album_selection {
-                if pos < self.filtered_albums.len() {
-                    self.album_pos.select(Some(pos));
+                if pos < self.albums.len() {
+                    self.display_state.album_pos.select(Some(pos));
                 }
             }
 
@@ -86,7 +86,7 @@ impl UiState {
 
             if let Some(pos) = snapshot.song_selection {
                 if pos < self.legal_songs.len() {
-                    self.table_pos.select(Some(pos));
+                    self.display_state.table_pos.select(Some(pos));
                 }
             }
         }

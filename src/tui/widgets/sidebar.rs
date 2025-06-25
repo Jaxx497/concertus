@@ -15,7 +15,7 @@ impl StatefulWidget for SideBar {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let albums = &state.filtered_albums;
+        let albums = &state.albums;
         let pane_title = format!(" ⟪ {} Albums! ⟫ ", albums.len());
         let pane_org = state.get_album_sort_string();
         let pane_org = format!("{pane_org:5} ");
@@ -24,13 +24,11 @@ impl StatefulWidget for SideBar {
 
         // Get the currently selected artist (if any)
         let selected_artist = state
-            .album_pos
-            .selected()
-            .and_then(|idx| albums.get(idx))
+            .get_selected_album()
             .map(|album| album.artist.as_str());
 
         // Create list items from display items
-        let display_items = &state.album_display_items;
+        let display_items = &state.display_state.album_headers;
 
         let list_items = display_items
             .iter()
@@ -70,9 +68,10 @@ impl StatefulWidget for SideBar {
             })
             .collect::<Vec<ListItem>>();
 
-        let display_selected = if let Some(album_idx) = state.album_pos.selected() {
+        let display_selected = if let Some(album_idx) = state.display_state.album_pos.selected() {
             state
-                .album_display_items
+                .display_state
+                .album_headers
                 .iter()
                 .position(|item| match item {
                     AlbumDisplayItem::Album(idx) => *idx == album_idx,
@@ -85,9 +84,9 @@ impl StatefulWidget for SideBar {
         // Create a temporary display state
         let mut display_state = ListState::default();
         display_state.select(display_selected);
-        *display_state.offset_mut() = state.album_pos.offset();
+        *display_state.offset_mut() = state.display_state.album_pos.offset();
 
-        let current_offset = state.album_pos.offset();
+        let current_offset = state.display_state.album_pos.offset();
         *display_state.offset_mut() = current_offset;
 
         // Ensure header is visible
@@ -145,6 +144,6 @@ impl StatefulWidget for SideBar {
             .scroll_padding(4);
 
         list.render(area, buf, &mut display_state);
-        *state.album_pos.offset_mut() = display_state.offset();
+        *state.display_state.album_pos.offset_mut() = display_state.offset();
     }
 }

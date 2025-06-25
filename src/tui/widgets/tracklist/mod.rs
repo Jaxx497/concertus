@@ -1,9 +1,9 @@
-mod albumview;
-mod queueview;
+mod album_view;
+mod queue_view;
 mod search_results;
 
-pub use albumview::AlbumView;
-pub use queueview::QueueTable;
+pub use album_view::AlbumView;
+pub use queue_view::QueueTable;
 pub use search_results::StandardTable;
 
 use crate::ui_state::{Mode, TableSort};

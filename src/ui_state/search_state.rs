@@ -1,12 +1,9 @@
-use std::sync::Arc;
-
+use super::{new_textarea, Pane, UiState};
+use crate::domain::{SimpleSong, SongInfo};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use ratatui::crossterm::event::KeyEvent;
+use std::sync::Arc;
 use tui_textarea::TextArea;
-
-use crate::domain::{SimpleSong, SongInfo};
-
-use super::{new_textarea, Pane, UiState};
 
 const MATCH_THRESHOLD: i64 = 50;
 
@@ -65,9 +62,9 @@ impl UiState {
         self.search.input.input(k);
         self.set_legal_songs();
         if self.legal_songs.is_empty() {
-            self.table_pos.select(None);
+            self.display_state.table_pos.select(None);
         } else {
-            self.table_pos.select(Some(0));
+            self.display_state.table_pos.select(Some(0));
         }
     }
 
