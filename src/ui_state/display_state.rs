@@ -8,17 +8,18 @@ use ratatui::widgets::{ListState, TableState};
 use std::{ops::Index, sync::Arc};
 
 pub struct DisplayState {
-    table_sort: TableSort,
+    mode: Mode,
+    pane: Pane,
 
-    pub(super) mode: Mode,
-    pub(super) pane: Pane,
+    table_sort: TableSort,
     pub(super) album_sort: AlbumSort,
 
-    pub album_pos: ListState,
-    album_pos_cached: usize,
-
+    pub sidebar_pos: ListState,
     pub table_pos: TableState,
+
+    sidebar_pos_cached: usize,
     table_pos_cached: usize,
+
     pub album_headers: Vec<AlbumDisplayItem>,
 }
 
@@ -31,8 +32,8 @@ impl DisplayState {
             album_sort: AlbumSort::Artist,
             table_pos: TableState::default().with_selected(0),
             table_pos_cached: 0,
-            album_pos: ListState::default().with_selected(Some(0)),
-            album_pos_cached: 0,
+            sidebar_pos: ListState::default().with_selected(Some(0)),
+            sidebar_pos_cached: 0,
             album_headers: Vec::new(),
         }
     }
@@ -61,11 +62,11 @@ impl UiState {
                     .unwrap_or(self.display_state.table_pos_cached)
             }
             Mode::Album => {
-                self.display_state.album_pos_cached = self
+                self.display_state.sidebar_pos_cached = self
                     .display_state
-                    .album_pos
+                    .sidebar_pos
                     .selected()
-                    .unwrap_or(self.display_state.album_pos_cached)
+                    .unwrap_or(self.display_state.sidebar_pos_cached)
             }
             _ => (),
         }
@@ -83,11 +84,11 @@ impl UiState {
                 self.display_state.mode = Mode::Album;
                 self.display_state.pane = Pane::SideBar;
                 match self.albums.is_empty() {
-                    true => self.display_state.album_pos.select(None),
+                    true => self.display_state.sidebar_pos.select(None),
                     false => self
                         .display_state
-                        .album_pos
-                        .select(Some(self.display_state.album_pos_cached)),
+                        .sidebar_pos
+                        .select(Some(self.display_state.sidebar_pos_cached)),
                 }
                 *self.display_state.table_pos.offset_mut() = 0;
                 self.set_legal_songs();
@@ -109,7 +110,9 @@ impl UiState {
             }
             Mode::QUIT => {
                 self.save_state().unwrap_or_else(|e| eprintln!("{e}"));
-
+                let _ = self
+                    .library
+                    .set_history_db(&self.playback.history.make_contiguous());
                 self.display_state.mode = Mode::QUIT;
             }
         }
@@ -143,7 +146,7 @@ impl UiState {
 
     pub fn get_selected_album(&self) -> Option<&Album> {
         self.display_state
-            .album_pos
+            .sidebar_pos
             .selected()
             .and_then(|idx| self.albums.get(idx))
     }
@@ -259,6 +262,43 @@ impl UiState {
         };
     }
 
+    pub(crate) fn go_to_album(&mut self) -> Result<()> {
+        let this_song = self.get_selected_song()?;
+        let this_album_title = this_song.get_album();
+
+        self.set_mode(Mode::Album);
+        self.set_pane(Pane::TrackList);
+
+        let mut this_album = None;
+        let mut album_idx = 0;
+        let mut track_idx = 0;
+
+        for (idx, album) in self.albums.iter().enumerate() {
+            if album.title.as_str() == this_album_title {
+                let tracklist = &album.tracklist;
+                for track in tracklist {
+                    if track.id == this_song.id {
+                        this_album = Some(album);
+                        album_idx = idx;
+                        break;
+                    }
+                    track_idx += 1;
+                }
+            }
+        }
+
+        self.legal_songs = this_album.unwrap().tracklist.clone();
+
+        // Select song and try to visually center it
+        self.display_state.table_pos.select(Some(track_idx));
+        *self.display_state.table_pos.offset_mut() = track_idx.checked_sub(20).unwrap_or(0);
+
+        // Select album and try to visually center it
+        self.display_state.sidebar_pos.select(Some(album_idx));
+
+        Ok(())
+    }
+
     pub(crate) fn set_legal_songs(&mut self) {
         match &self.display_state.mode {
             Mode::Power => {
@@ -266,7 +306,7 @@ impl UiState {
                 self.sort_by_table_column();
             }
             Mode::Album => {
-                if let Some(idx) = self.display_state.album_pos.selected() {
+                if let Some(idx) = self.display_state.sidebar_pos.selected() {
                     self.legal_songs = self.albums.index(idx).tracklist.clone();
 
                     *self.display_state.table_pos.offset_mut() = 0;
@@ -334,7 +374,7 @@ impl UiState {
 
         if *base_array > 0 {
             let len = base_array;
-            let selected_idx = self.display_state.album_pos.selected();
+            let selected_idx = self.display_state.sidebar_pos.selected();
             let new_pos = selected_idx
                 .map(|idx| match director {
                     Director::Up(x) => (idx + len - x) % len,
@@ -342,7 +382,7 @@ impl UiState {
                     _ => unreachable!(),
                 })
                 .unwrap_or(0);
-            self.display_state.album_pos.select(Some(new_pos));
+            self.display_state.sidebar_pos.select(Some(new_pos));
             if self.display_state.mode == Mode::Album {
                 self.set_legal_songs();
             }
@@ -354,8 +394,8 @@ impl UiState {
             Pane::TrackList => self.display_state.table_pos.select_first(),
             Pane::SideBar => {
                 match self.albums.is_empty() {
-                    true => self.display_state.album_pos.select(None),
-                    false => self.display_state.album_pos.select_first(),
+                    true => self.display_state.sidebar_pos.select(None),
+                    false => self.display_state.sidebar_pos.select_first(),
                 }
                 self.set_legal_songs();
             }
@@ -369,7 +409,7 @@ impl UiState {
             Pane::SideBar => {
                 *self.display_state.table_pos.offset_mut() = 0;
                 let len = self.albums.len().checked_sub(1);
-                self.display_state.album_pos.select(len);
+                self.display_state.sidebar_pos.select(len);
                 self.set_legal_songs();
             }
             _ => (),

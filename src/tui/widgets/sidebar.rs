@@ -68,7 +68,7 @@ impl StatefulWidget for SideBar {
             })
             .collect::<Vec<ListItem>>();
 
-        let display_selected = if let Some(album_idx) = state.display_state.album_pos.selected() {
+        let display_selected = if let Some(album_idx) = state.display_state.sidebar_pos.selected() {
             state
                 .display_state
                 .album_headers
@@ -84,9 +84,9 @@ impl StatefulWidget for SideBar {
         // Create a temporary display state
         let mut display_state = ListState::default();
         display_state.select(display_selected);
-        *display_state.offset_mut() = state.display_state.album_pos.offset();
+        *display_state.offset_mut() = state.display_state.sidebar_pos.offset();
 
-        let current_offset = state.display_state.album_pos.offset();
+        let current_offset = state.display_state.sidebar_pos.offset();
         *display_state.offset_mut() = current_offset;
 
         // Ensure header is visible
@@ -144,6 +144,6 @@ impl StatefulWidget for SideBar {
             .scroll_padding(4);
 
         list.render(area, buf, &mut display_state);
-        *state.display_state.album_pos.offset_mut() = display_state.offset();
+        *state.display_state.sidebar_pos.offset_mut() = display_state.offset();
     }
 }

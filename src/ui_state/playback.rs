@@ -1,4 +1,4 @@
-use super::{Mode, Pane, UiState};
+use super::{Mode, UiState};
 use crate::{
     domain::{QueueSong, SimpleSong},
     player::{PlaybackState, PlayerState},
@@ -52,7 +52,7 @@ impl UiState {
     pub fn queue_album(&mut self) -> Result<()> {
         let album = self
             .display_state
-            .album_pos
+            .sidebar_pos
             .selected()
             .ok_or_else(|| anyhow::anyhow!("Illegal album selection!"))?;
 
@@ -95,7 +95,7 @@ impl UiState {
     }
 
     pub fn remove_from_queue(&mut self) -> Result<()> {
-        if Mode::Queue == self.display_state.mode {
+        if Mode::Queue == *self.get_mode() {
             self.display_state
                 .table_pos
                 .selected()
@@ -113,7 +113,8 @@ impl UiState {
 // =============
 impl UiState {
     pub fn update_player_state(&mut self, player_state: Arc<Mutex<PlayerState>>) {
-        self.playback.player_state = player_state
+        self.playback.player_state = player_state;
+        self.check_player_error();
     }
 
     pub(crate) fn is_paused(&self) -> bool {
@@ -170,12 +171,17 @@ impl UiState {
         self.playback.waveform.clear();
     }
 
-    pub fn check_player_error(&mut self) {
-        let mut state = self.playback.player_state.lock().unwrap();
+    fn check_player_error(&mut self) {
+        let error = self
+            .playback
+            .player_state
+            .lock()
+            .unwrap()
+            .player_error
+            .take();
 
-        if let Some(e) = state.player_error.take() {
-            self.error = Some(e);
-            self.display_state.pane = Pane::Popup;
+        if let Some(e) = error {
+            self.set_error(e);
         }
     }
 }

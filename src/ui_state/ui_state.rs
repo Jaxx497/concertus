@@ -3,11 +3,11 @@ use super::{
     DisplayState, DisplayTheme, Mode, Pane,
 };
 use crate::{
-    domain::{Album, SimpleSong, SongInfo},
+    domain::{Album, SimpleSong},
     player::PlayerState,
     Library,
 };
-use anyhow::{Error, Result};
+use anyhow::Error;
 use ratatui::widgets::Borders;
 use std::sync::{Arc, Mutex};
 
@@ -48,11 +48,11 @@ impl UiState {
         self.sort_albums();
 
         match self.albums.is_empty() {
-            true => self.display_state.album_pos.select(None),
+            true => self.display_state.sidebar_pos.select(None),
             false => {
                 let album_len = self.albums.len();
-                if self.display_state.album_pos.selected().unwrap_or(0) > album_len {
-                    self.display_state.album_pos.select(Some(album_len - 1));
+                if self.display_state.sidebar_pos.selected().unwrap_or(0) > album_len {
+                    self.display_state.sidebar_pos.select(Some(album_len - 1));
                 };
             }
         }
@@ -63,43 +63,6 @@ impl UiState {
     pub fn set_error(&mut self, e: Error) {
         self.set_pane(Pane::Popup);
         self.error = Some(e);
-    }
-
-    pub fn go_to_album(&mut self) -> Result<()> {
-        let this_song = self.get_selected_song()?;
-        let this_album_title = this_song.get_album();
-
-        self.set_mode(Mode::Album);
-        self.set_pane(Pane::TrackList);
-
-        let mut this_album = None;
-        let mut album_idx = 0;
-        let mut track_idx = 0;
-
-        for (idx, album) in self.albums.iter().enumerate() {
-            if album.title.as_str() == this_album_title {
-                let tracklist = &album.tracklist;
-                for track in tracklist {
-                    if track.id == this_song.id {
-                        this_album = Some(album);
-                        album_idx = idx;
-                        break;
-                    }
-                    track_idx += 1;
-                }
-            }
-        }
-
-        self.legal_songs = this_album.unwrap().tracklist.clone();
-
-        // Select song and try to visually center it
-        self.display_state.table_pos.select(Some(track_idx));
-        *self.display_state.table_pos.offset_mut() = track_idx.checked_sub(20).unwrap_or(0);
-
-        // Select album and try to visually center it
-        self.display_state.album_pos.select(Some(album_idx));
-
-        Ok(())
     }
 
     pub fn soft_reset(&mut self) {
@@ -119,7 +82,7 @@ impl UiState {
     }
 
     pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
-        match pane == &self.display_state.pane {
+        match pane == self.get_pane() {
             true => DisplayTheme {
                 // bg: Color::default(),
                 bg: self.theme.bg_focused,

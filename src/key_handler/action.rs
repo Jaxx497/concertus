@@ -70,7 +70,8 @@ use KeyCode::*;
 
 #[rustfmt::skip]
 pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> {
-    
+   
+    let _mode = state.get_mode();
     let pane = state.get_pane();
 
     if let Some(action) = global_commands(&key_event, pane) {
@@ -109,6 +110,7 @@ fn global_commands(key: &KeyEvent, pane: &Pane) -> Option<Action> {
             (_, Char('P')) => Some(Action::SeekBack(SEEK_LARGE)),
 
             // NAVIGATION
+            (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
             (_, Char('/')) => Some(Action::ChangeMode(Mode::Search)),
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
 
@@ -149,11 +151,11 @@ fn handle_main_pane(key: &KeyEvent) -> Option<Action> {
 }
 
 fn handle_sidebar_pane(key: &KeyEvent) -> Option<Action> {
-    match key.code {
-        Char('q') => Some(Action::QueueAlbum),
-        Enter | Tab => Some(Action::ChangePane(Pane::TrackList)),
-        Left | Char('h') => Some(Action::ToggleAlbumSort(false)),
-        Right | Char('l') => Some(Action::ToggleAlbumSort(true)),
+    match (key.modifiers, key.code) {
+        (_, Char('q')) => Some(Action::QueueAlbum),
+        (_, Enter) | (_, Tab) => Some(Action::ChangePane(Pane::TrackList)),
+        (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
+        (C, Right) | (C, Char('l')) => Some(Action::ToggleAlbumSort(true)),
 
         _ => None,
     }

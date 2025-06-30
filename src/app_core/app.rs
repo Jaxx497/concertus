@@ -68,8 +68,6 @@ impl Concertus {
         loop {
             self.ui.update_player_state(self.player.get_shared_state());
 
-            self.ui.check_player_error();
-
             // Check for user input
             match key_handler::next_event()? {
                 Some(Event::Key(key)) if key.kind == KeyEventKind::Press => {
@@ -89,8 +87,7 @@ impl Concertus {
                         if let Err(e) = self.play_song(song) {
                             self.ui.set_error(e);
                         };
-                        // Prevents flickering on waveform widget during song change
-                        thread::sleep(Duration::from_millis(75));
+                        thread::sleep(Duration::from_millis(75)); // Prevents flickering on waveform widget during song change
                     }
                 }
                 self.ui.set_legal_songs();
@@ -104,15 +101,8 @@ impl Concertus {
                 break;
             }
         }
-        overwrite_line("Shutting down... do not close terminal!");
-
-        // TODO: Handle error for when deleted songs are still in history
-        let _ = self
-            .library
-            .set_history_db(&self.ui.playback.history.make_contiguous());
-
         ratatui::restore();
-
+        overwrite_line("Shutting down... do not close terminal!");
         overwrite_line("Thank you for using concertus!\n\n");
 
         Ok(())
@@ -302,8 +292,8 @@ impl Concertus {
         let lib_db = Arc::clone(&self.db);
         let mut updated_lib = Library::init(lib_db);
 
-        let cached = self.ui.display_state.album_pos.selected();
-        self.ui.display_state.album_pos.select(None);
+        let cached = self.ui.display_state.sidebar_pos.selected();
+        self.ui.display_state.sidebar_pos.select(None);
 
         // TODO: Alert user of changes on update
         updated_lib.update_db_by_root()?;
@@ -320,7 +310,7 @@ impl Concertus {
         if updated_len > 0 {
             self.ui
                 .display_state
-                .album_pos
+                .sidebar_pos
                 .select(match cached < Some(updated_len) {
                     true => cached,
                     false => Some(updated_len / 2),

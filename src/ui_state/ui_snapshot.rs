@@ -52,10 +52,10 @@ impl UiSnapshot {
 impl UiState {
     pub fn create_snapshot(&self) -> UiSnapshot {
         UiSnapshot {
-            mode: self.display_state.mode.to_string(),
-            pane: self.display_state.pane.to_string(),
+            mode: self.get_mode().to_string(),
+            pane: self.get_pane().to_string(),
             album_sort: self.display_state.album_sort.to_string(),
-            album_selection: self.display_state.album_pos.selected(),
+            album_selection: self.display_state.sidebar_pos.selected(),
             song_selection: self.display_state.table_pos.selected(),
         }
     }
@@ -77,7 +77,7 @@ impl UiState {
 
             if let Some(pos) = snapshot.album_selection {
                 if pos < self.albums.len() {
-                    self.display_state.album_pos.select(Some(pos));
+                    self.display_state.sidebar_pos.select(Some(pos));
                 }
             }
 
