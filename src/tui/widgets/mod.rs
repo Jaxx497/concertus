@@ -12,7 +12,7 @@ pub use error::ErrorMsg;
 pub use progress::Progress;
 pub use search::SearchBar;
 pub use settings::Settings;
-pub use sidebar::SideBar;
+pub use sidebar::SideBarHandler;
 pub use song_window::SongTable;
 pub use waveform::Waveform;
 

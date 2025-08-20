@@ -32,7 +32,7 @@ impl AppLayout {
         let [sidebar, _, upper_block] = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
-                Constraint::Length(40),
+                Constraint::Percentage(33),
                 Constraint::Length(1),
                 Constraint::Min(40),
             ])

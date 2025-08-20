@@ -1,5 +1,5 @@
 use crate::{
-    ui_state::{Mode, Pane, SettingsMode, UiState},
+    ui_state::{LibraryView, Mode, Pane, SettingsMode, UiState},
     REFRESH_RATE,
 };
 use anyhow::Result;
@@ -8,6 +8,7 @@ use std::{collections::HashSet, sync::LazyLock, time::Duration};
 
 static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from(['\'', ';']));
 const C: KeyModifiers = KeyModifiers::CONTROL;
+const S: KeyModifiers = KeyModifiers::SHIFT;
 const X: KeyModifiers = KeyModifiers::NONE;
 
 const SEEK_SMALL: usize = 5;
@@ -38,6 +39,7 @@ pub enum Action {
     SortColumnsNext,
     SortColumnsPrev,
     ToggleAlbumSort(bool),
+    ToggleSideBar,
     ChangeMode(Mode),
     ChangePane(Pane),
     GoToAlbum,
@@ -79,7 +81,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
     } 
 
     match pane {
-        Pane::TrackList => handle_main_pane(&key_event),
+        Pane::TrackList => handle_main_pane(&key_event, &state),
         Pane::Search    => handle_search_pane(&key_event),
         Pane::SideBar   => handle_sidebar_pane(&key_event),
         Pane::Popup     => handle_popup_pane(&key_event, state),
@@ -92,39 +94,41 @@ fn global_commands(key: &KeyEvent, pane: &Pane) -> Option<Action> {
 
     // Works on every pane, even search
     match (key.modifiers, key.code) {
-        (_, Esc) => Some(Action::SoftReset),
+        (X, Esc) => Some(Action::SoftReset),
         (C, Char('c')) => Some(Action::QUIT),
-        (_, Char('`')) => Some(Action::ViewSettings),
+        (X, Char('`')) => Some(Action::ViewSettings),
         (C, Char(' ')) => Some(Action::TogglePause),
 
         // Works on everything except search
         _ if (!in_search && !in_settings) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
-            (_, Char(' ')) => Some(Action::TogglePause),
+            (X, Char(' ')) => Some(Action::TogglePause),
             (C, Char('s')) => Some(Action::Stop),
             (C, Char('n')) => Some(Action::PlayNext),
             (C, Char('p')) => Some(Action::PlayPrev),
-            (_, Char('n')) => Some(Action::SeekForward(SEEK_SMALL)),
-            (_, Char('N')) => Some(Action::SeekForward(SEEK_LARGE)),
-            (_, Char('p')) => Some(Action::SeekBack(SEEK_SMALL)),
-            (_, Char('P')) => Some(Action::SeekBack(SEEK_LARGE)),
+            (X, Char('n')) => Some(Action::SeekForward(SEEK_SMALL)),
+            (S, Char('N')) => Some(Action::SeekForward(SEEK_LARGE)),
+            (X, Char('p')) => Some(Action::SeekBack(SEEK_SMALL)),
+            (S, Char('P')) => Some(Action::SeekBack(SEEK_LARGE)),
 
             // NAVIGATION
+            (X, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
             (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
-            (_, Char('/')) => Some(Action::ChangeMode(Mode::Search)),
+            (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
+            (X, Char('/')) => Some(Action::ChangeMode(Mode::Search)),
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
 
             // SCROLLING
-            (_, Char('j')) | (_, Down) => Some(Action::Scroll(Director::Down(1))),
-            (_, Char('k')) | (_, Up) => Some(Action::Scroll(Director::Up(1))),
-            (_, Char('d')) => Some(Action::Scroll(Director::Down(SCROLL_MID))),
+            (X, Char('j')) | (X, Down) => Some(Action::Scroll(Director::Down(1))),
+            (X, Char('k')) | (X, Up) => Some(Action::Scroll(Director::Up(1))),
+            (X, Char('d')) => Some(Action::Scroll(Director::Down(SCROLL_MID))),
             (X, Char('u')) => Some(Action::Scroll(Director::Up(SCROLL_MID))),
-            (_, Char('D')) => Some(Action::Scroll(Director::Down(SCROLL_XTRA))),
-            (_, Char('U')) => Some(Action::Scroll(Director::Up(SCROLL_XTRA))),
-            (_, Char('g')) => Some(Action::Scroll(Director::Top)),
-            (_, Char('G')) => Some(Action::Scroll(Director::Bottom)),
+            (S, Char('D')) => Some(Action::Scroll(Director::Down(SCROLL_XTRA))),
+            (S, Char('U')) => Some(Action::Scroll(Director::Up(SCROLL_XTRA))),
+            (X, Char('g')) => Some(Action::Scroll(Director::Top)),
+            (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
 
-            (C, Char('u')) | (_, F(5)) => Some(Action::UpdateLibrary),
+            (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
         },
@@ -132,28 +136,35 @@ fn global_commands(key: &KeyEvent, pane: &Pane) -> Option<Action> {
     }
 }
 
-fn handle_main_pane(key: &KeyEvent) -> Option<Action> {
+fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match (key.modifiers, key.code) {
         // QUEUEING SONGS
-        (_, Char('q')) => Some(Action::QueueSong),
-        (_, Char('x')) => Some(Action::RemoveFromQueue),
+        (X, Char('q')) => Some(Action::QueueSong),
+        (_, Char('Q')) => {
+            (state.get_mode() == Mode::Library(LibraryView::Albums)).then(|| Action::QueueAlbum)
+        }
+
+        (X, Char('x')) => Some(Action::RemoveFromQueue),
 
         (C, Char('a')) => Some(Action::GoToAlbum),
 
         // SORTING SONGS
-        (_, Left) | (_, Char('h')) => Some(Action::SortColumnsPrev),
-        (_, Right) | (_, Char('l')) => Some(Action::SortColumnsNext),
+        (X, Left) | (X, Char('h')) => Some(Action::SortColumnsPrev),
+        (X, Right) | (X, Char('l')) => Some(Action::SortColumnsNext),
 
-        (_, Enter) => Some(Action::Play),
-        (_, Tab) => Some(Action::ChangeMode(Mode::Album)),
+        (X, Enter) => Some(Action::Play),
+        (X, Tab) => Some(Action::ChangeMode(Mode::Library(
+            state.display_state.sidebar_view,
+        ))),
         _ => None,
     }
 }
 
 fn handle_sidebar_pane(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
-        (_, Char('q')) => Some(Action::QueueAlbum),
-        (_, Enter) | (_, Tab) => Some(Action::ChangePane(Pane::TrackList)),
+        (X, Char('q')) => Some(Action::QueueAlbum),
+        (X, Enter) | (X, Tab) => Some(Action::ChangePane(Pane::TrackList)),
+        (X, Char('l')) | (X, Char('h')) => Some(Action::ToggleSideBar),
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
         (C, Right) | (C, Char('l')) => Some(Action::ToggleAlbumSort(true)),
 

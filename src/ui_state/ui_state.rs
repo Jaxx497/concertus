@@ -1,9 +1,9 @@
 use super::{
     playback::PlaybackCoordinator, search_state::SearchState, settings::Settings, theme::Theme,
-    DisplayState, DisplayTheme, Mode, Pane,
+    DisplayState, DisplayTheme, LibraryView, Mode, Pane,
 };
 use crate::{
-    domain::{Album, SimpleSong},
+    domain::{Album, Playlist, SimpleSong},
     player::PlayerState,
     Library,
 };
@@ -22,6 +22,7 @@ pub struct UiState {
 
     pub albums: Vec<Album>,
     pub legal_songs: Vec<Arc<SimpleSong>>,
+    pub playlists: Vec<Playlist>,
 }
 
 impl UiState {
@@ -37,6 +38,7 @@ impl UiState {
 
             albums: Vec::new(),
             legal_songs: Vec::new(),
+            playlists: Vec::new(),
         }
     }
 }
@@ -46,7 +48,6 @@ impl UiState {
         self.library = library;
 
         self.sort_albums();
-
         match self.albums.is_empty() {
             true => self.display_state.sidebar_pos.select(None),
             false => {
@@ -57,6 +58,7 @@ impl UiState {
             }
         }
 
+        self.playlists = self.library.get_all_playlists().to_vec();
         self.set_legal_songs();
     }
 
@@ -72,7 +74,7 @@ impl UiState {
                 self.set_pane(Pane::TrackList);
             }
             None => {
-                self.set_mode(Mode::Album);
+                self.set_mode(Mode::Library(LibraryView::Albums));
                 self.set_pane(Pane::TrackList);
                 self.search.input.select_all();
                 self.search.input.cut();

@@ -2,7 +2,7 @@ use super::LEGAL_EXTENSION;
 use crate::{
     calculate_signature,
     database::Database,
-    domain::{Album, LongSong, SimpleSong, SongInfo},
+    domain::{Album, LongSong, Playlist, SimpleSong, SongInfo},
 };
 use anyhow::{anyhow, Context, Result};
 use rayon::prelude::*;
@@ -18,6 +18,7 @@ pub struct Library {
     pub roots: HashSet<PathBuf>,
     pub songs: Vec<Arc<SimpleSong>>,
     pub albums: Vec<Album>,
+    pub playlists: Vec<Playlist>,
 }
 
 impl Library {
@@ -27,6 +28,7 @@ impl Library {
             roots: HashSet::new(),
             songs: Vec::new(),
             albums: Vec::new(),
+            playlists: Vec::new(),
         }
     }
 
@@ -79,13 +81,11 @@ impl Library {
 
     /// Build the library based on the current state of the database.
     pub fn build_library(&mut self) -> Result<()> {
-        match self.roots.is_empty() {
-            true => {}
-            false => {
-                self.update_db_by_root()?;
-                self.collect_songs()?;
-                self.build_albums()?;
-            }
+        if !self.roots.is_empty() {
+            self.update_db_by_root()?;
+            self.collect_songs()?;
+            self.build_albums()?;
+            self.get_playlists()?;
         }
 
         Ok(())
@@ -172,12 +172,7 @@ impl Library {
     fn process_songs(paths: Vec<PathBuf>) -> Vec<LongSong> {
         paths
             .into_par_iter()
-            .filter_map(|path| {
-                // LongSong::build_song_ffprobe(&path)
-                LongSong::build_song_symphonia(&path)
-                    // .map_err(|e| println!("Error in file: {}\nERROR: {e}", path.display()))
-                    .ok()
-            })
+            .filter_map(|path| LongSong::build_song_symphonia(&path).ok())
             .collect::<Vec<LongSong>>()
     }
 
@@ -227,7 +222,7 @@ impl Library {
             album_lookup.insert((Arc::clone(artist_name), Arc::clone(album_name)), idx);
         }
 
-        // ASsign each song to it's proper album
+        // Assign each song to it's proper album
         for song in &self.songs {
             let key = (Arc::clone(&song.album_artist), Arc::clone(&song.album));
 
@@ -274,6 +269,12 @@ impl Library {
             self.albums.remove(idx);
         }
 
+        Ok(())
+    }
+
+    fn get_playlists(&mut self) -> Result<()> {
+        let mut db_lock = self.db.lock().unwrap();
+        self.playlists = db_lock.get_playlists()?;
         Ok(())
     }
 }
@@ -329,5 +330,9 @@ impl Library {
 
     pub fn get_all_albums(&self) -> &[Album] {
         &self.albums
+    }
+
+    pub fn get_all_playlists(&self) -> &[Playlist] {
+        &self.playlists
     }
 }

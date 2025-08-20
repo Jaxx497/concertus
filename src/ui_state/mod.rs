@@ -12,6 +12,7 @@ mod ui_state;
 
 pub use album_sort::AlbumSort;
 pub use display_state::DisplayState;
+pub use mode::LibraryView;
 pub use mode::Mode;
 pub use pane::Pane;
 pub use settings::SettingsMode;
@@ -25,6 +26,7 @@ pub use theme::*;
 pub enum AlbumDisplayItem {
     Header(String),
     Album(usize),
+    Playlist(usize),
 }
 
 fn new_textarea(placeholder: &str) -> tui_textarea::TextArea<'static> {

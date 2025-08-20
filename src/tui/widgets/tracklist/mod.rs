@@ -6,7 +6,7 @@ pub use album_view::AlbumView;
 pub use queue_view::QueueTable;
 pub use search_results::StandardTable;
 
-use crate::ui_state::{Mode, TableSort};
+use crate::ui_state::{LibraryView, Mode, TableSort};
 use ratatui::{
     layout::Constraint,
     style::{Color, Stylize},
@@ -34,7 +34,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
                 Constraint::Length(8),
             ]
         }
-        Mode::Album => {
+        Mode::Library(LibraryView::Albums) => {
             vec![
                 Constraint::Length(6),
                 Constraint::Min(25),
@@ -78,7 +78,7 @@ pub(super) fn get_header<'a>(mode: &Mode, active: &TableSort) -> Vec<Text<'a>> {
             _ => s.to_string().into(),
         })
         .collect(),
-        Mode::Album => {
+        Mode::Library(LibraryView::Albums) => {
             vec![
                 Text::default(),
                 Text::from("Title").underlined(),

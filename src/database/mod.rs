@@ -9,13 +9,12 @@ use std::{
     time::{Duration, UNIX_EPOCH},
 };
 
-pub mod queries;
+mod playlists;
+mod queries;
+mod snapshot;
 mod tables;
 
-use crate::{
-    domain::{LongSong, SimpleSong, SongInfo},
-    ui_state::UiSnapshot,
-};
+use crate::domain::{LongSong, SimpleSong, SongInfo};
 
 const CONFIG_DIRECTORY: &'static str = "Concertus";
 const DATABASE_FILENAME: &'static str = "concertus.db";
@@ -176,6 +175,13 @@ impl Database {
         Ok(())
     }
 
+    pub(crate) fn update_play_count(&mut self, song: &Arc<SimpleSong>) -> Result<()> {
+        let id = song.id.to_le_bytes();
+        self.conn.execute(UPDATE_PLAY_COUNT, params![id, 1])?;
+
+        Ok(())
+    }
+
     pub(crate) fn get_song_path(&mut self, id: u64) -> Result<String> {
         let output = self
             .conn
@@ -254,6 +260,7 @@ impl Database {
         Ok(map)
     }
 
+    /// Returns a hashmap of String: i64
     fn get_artist_map_name_to_id(&self) -> Result<HashMap<String, i64>> {
         let artist_map = self
             .conn
@@ -403,61 +410,10 @@ impl Database {
         Ok(())
     }
 
-    pub(crate) fn update_play_count(&mut self, song: &Arc<SimpleSong>) -> Result<()> {
-        let id = song.id.to_le_bytes();
-        self.conn.execute(UPDATE_PLAY_COUNT, params![id, 1])?;
-
-        Ok(())
-    }
-
     pub(crate) fn get_path(&mut self, id: u64) -> Result<String> {
         let output = self
             .conn
             .query_row(GET_PATH, [id.to_le_bytes()], |r| r.get(0))?;
         Ok(output)
-    }
-
-    pub fn save_session_state(&mut self, key: &str, value: &str) -> Result<()> {
-        self.conn.execute(SET_SESSION_STATE, params![key, value])?;
-        Ok(())
-    }
-
-    pub fn get_session_state(&mut self, key: &str) -> Result<Option<String>> {
-        match self.conn.query_row(GET_SESSION_STATE, params![key], |row| {
-            row.get::<_, String>(0)
-        }) {
-            Ok(value) => Ok(Some(value)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e.into()),
-        }
-    }
-
-    pub fn save_ui_snapshot(&mut self, snapshot: &UiSnapshot) -> Result<()> {
-        let tx = self.conn.transaction()?;
-        {
-            let mut stmt = tx.prepare(SET_SESSION_STATE)?;
-            for (key, value) in snapshot.to_pairs() {
-                stmt.execute(params![key, value])?;
-            }
-        }
-        tx.commit()?;
-        Ok(())
-    }
-
-    pub fn load_ui_snapshot(&mut self) -> Result<Option<UiSnapshot>> {
-        let mut stmt = self
-            .conn
-            .prepare("SELECT key, value FROM session_state WHERE key LIKE 'ui_%'")?;
-
-        let values: Vec<(String, String)> = stmt
-            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
-            .filter_map(Result::ok)
-            .collect();
-
-        if values.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(UiSnapshot::from_values(values)))
-        }
     }
 }

@@ -157,7 +157,8 @@ impl Concertus {
             Action::ChangePane(p)   => self.ui.set_pane(p),
             Action::SortColumnsNext => self.ui.next_song_column(),
             Action::SortColumnsPrev => self.ui.prev_song_column(),
-            Action::ToggleAlbumSort(next) => self.ui.toggle_album_sort(next),
+            Action::ToggleAlbumSort(next)   => self.ui.toggle_album_sort(next),
+            Action::ToggleSideBar   => self.ui.toggle_sidebar_view(),
 
             // Search Related
             Action::UpdateSearch(k) => self.ui.process_search(k),

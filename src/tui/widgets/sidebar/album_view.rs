@@ -5,8 +5,8 @@ use ratatui::{
     widgets::{Block, BorderType, List, ListItem, ListState, Padding, StatefulWidget},
 };
 
-pub struct SideBar;
-impl StatefulWidget for SideBar {
+pub struct SideBarAlbum;
+impl StatefulWidget for SideBarAlbum {
     type State = UiState;
 
     fn render(
@@ -65,6 +65,7 @@ impl StatefulWidget for SideBar {
 
                     ListItem::new(Line::from_iter([year_txt, separator, album_title]))
                 }
+                _ => unreachable!(),
             })
             .collect::<Vec<ListItem>>();
 

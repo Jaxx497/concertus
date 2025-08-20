@@ -32,8 +32,6 @@ pub const GET_ALL_SONGS: &str = "
         track_no ASC
 ";
 
-// KEEP AN EYE ON THIS
-// MIGHT REVERT TO INSERT OR IGNORE
 pub const INSERT_SONG: &str = "
     INSERT OR REPLACE INTO songs (
         id,
@@ -62,22 +60,6 @@ pub const INSERT_ALBUM: &str = "
     artist_id
 ) VALUES (?1, ?2)
 ";
-
-// pub const GET_SONGS: &str = "
-//     SELECT
-//         s.id,
-//         s.title as title,
-//         ar.name as artist,
-//         al.title as album,
-//         art_album.name as album_artist,
-//         s.track_no,
-//         s.disc_no,
-//         s.duration
-//     FROM songs s
-//     LEFT JOIN artists ar ON ar.id = s.artist_id
-//     LEFT JOIN albums al ON al.id = s.album_id;
-//     LEFT JOIN artists art_album ON art_album.id = al.artist_id
-// ";
 
 pub const GET_PATH: &str = "
     SELECT path FROM songs
@@ -146,6 +128,35 @@ pub const GET_SESSION_STATE: &str = "
     SELECT value FROM session_state WHERE key = ?
 ";
 
+pub const GET_UI_SNAPSHOT: &str = "
+    SELECT key, value 
+        FROM session_state 
+        WHERE key LIKE 'ui_%'";
+
 pub const SET_SESSION_STATE: &str = "
-    INSERT OR REPLACE INTO session_state (key, value) VALUES (?, ?)
+    INSERT OR REPLACE INTO session_state (key, value)
+        VALUES (?, ?)
+";
+
+pub const GET_PLAYLISTS: &str = "
+    SELECT id, name 
+        FROM playlists
+        ORDER BY updated_at DESC
+";
+
+pub const CREATE_NEW_PLAYLIST: &str = "
+    INSERT OR IGNORE INTO playlists (name, updated_at) 
+        VALUES (?, strftime('%s', 'now'))
+";
+
+pub const UPDATE_PLAYLIST: &str = "
+    UPDATE playlists
+        SET updated_at = strftime('%s', 'now')
+        WHERE id = ?
+";
+
+pub const ADD_SONG_TO_PLAYLIST: &str = "
+    UPDATE playlist_songs
+        SET song_id = ?1,
+        playlist_id = ?2,
 ";
