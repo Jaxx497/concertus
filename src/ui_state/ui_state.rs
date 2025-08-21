@@ -49,11 +49,11 @@ impl UiState {
 
         self.sort_albums();
         match self.albums.is_empty() {
-            true => self.display_state.sidebar_pos.select(None),
+            true => self.display_state.album_pos.select(None),
             false => {
                 let album_len = self.albums.len();
-                if self.display_state.sidebar_pos.selected().unwrap_or(0) > album_len {
-                    self.display_state.sidebar_pos.select(Some(album_len - 1));
+                if self.display_state.album_pos.selected().unwrap_or(0) > album_len {
+                    self.display_state.album_pos.select(Some(album_len - 1));
                 };
             }
         }

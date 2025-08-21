@@ -23,12 +23,6 @@ pub use ui_state::UiState;
 
 pub use theme::*;
 
-pub enum AlbumDisplayItem {
-    Header(String),
-    Album(usize),
-    Playlist(usize),
-}
-
 fn new_textarea(placeholder: &str) -> tui_textarea::TextArea<'static> {
     let mut search = tui_textarea::TextArea::default();
     search.set_cursor_line_style(ratatui::style::Style::default());

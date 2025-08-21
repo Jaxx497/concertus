@@ -293,8 +293,8 @@ impl Concertus {
         let lib_db = Arc::clone(&self.db);
         let mut updated_lib = Library::init(lib_db);
 
-        let cached = self.ui.display_state.sidebar_pos.selected();
-        self.ui.display_state.sidebar_pos.select(None);
+        let cached = self.ui.display_state.album_pos.selected();
+        self.ui.display_state.album_pos.select(None);
 
         // TODO: Alert user of changes on update
         updated_lib.update_db_by_root()?;
@@ -311,7 +311,7 @@ impl Concertus {
         if updated_len > 0 {
             self.ui
                 .display_state
-                .sidebar_pos
+                .album_pos
                 .select(match cached < Some(updated_len) {
                     true => cached,
                     false => Some(updated_len / 2),

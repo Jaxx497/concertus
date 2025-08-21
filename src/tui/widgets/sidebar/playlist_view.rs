@@ -4,7 +4,7 @@ use ratatui::{
     widgets::{Block, BorderType, List, ListItem, Padding, StatefulWidget},
 };
 
-use crate::ui_state::{Pane, UiState};
+use crate::ui_state::{Pane, UiState, GOLD_FADED};
 
 pub struct SideBarPlaylist;
 impl StatefulWidget for SideBarPlaylist {
@@ -19,12 +19,15 @@ impl StatefulWidget for SideBarPlaylist {
         let theme = &state.get_theme(&Pane::SideBar);
         let playlists = &state.playlists;
 
-        let list_items = playlists.iter().map(|p| ListItem::new(Span::from(&p.name)));
-
-        let pane_title = format!(" ⟪ {} Playlists! ⟫ ", playlists.len());
+        let list_items = playlists.iter().map(|p| {
+            ListItem::new(Line::from_iter([
+                Span::from(format!("{:<5} ", format!("[{}]", p.name.len()))).fg(GOLD_FADED),
+                Span::from(&p.name).fg(theme.text_secondary),
+            ]))
+        });
 
         let keymaps = match state.get_pane() {
-            Pane::SideBar => Line::from("[c] Create, [d] Delete")
+            Pane::SideBar => Line::from(" [c]reate 󰲸 | [d]elete 󰐓 ")
                 .centered()
                 .fg(theme.text_faded),
             _ => Line::default(),
@@ -34,12 +37,11 @@ impl StatefulWidget for SideBarPlaylist {
             .border_type(BorderType::Thick)
             .border_style(theme.border)
             .bg(theme.bg)
-            .title_top(Line::from(pane_title).left_aligned().fg(theme.text_focused))
-            // .title_top(
-            //     Line::from_iter([" 󰒿 ", &pane_org])
-            //         .right_aligned()
-            //         .fg(theme.text_secondary),
-            // )
+            .title_top(
+                Line::from(format!(" ⟪ {} Playlists! ⟫ ", playlists.len()))
+                    .left_aligned()
+                    .fg(theme.text_focused),
+            )
             .title_bottom(Line::from(keymaps).centered().fg(theme.text_faded))
             .padding(Padding {
                 left: 3,
@@ -58,6 +60,6 @@ impl StatefulWidget for SideBarPlaylist {
             )
             .scroll_padding(4);
 
-        list.render(area, buf, &mut state.display_state.sidebar_pos);
+        list.render(area, buf, &mut state.display_state.playlist_pos);
     }
 }

@@ -1,10 +1,13 @@
-use crate::ui_state::{AlbumDisplayItem, AlbumSort, Pane, UiState, GOLD_FADED};
+use crate::ui_state::{AlbumSort, Pane, UiState, GOLD_FADED};
 use ratatui::{
-    style::{Color, Modifier, Style, Stylize},
+    style::{Color, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, BorderType, List, ListItem, ListState, Padding, StatefulWidget},
+    widgets::{
+        Block, BorderType, HighlightSpacing, List, ListItem, ListState, Padding, StatefulWidget,
+    },
 };
 
+// album_view.rs
 pub struct SideBarAlbum;
 impl StatefulWidget for SideBarAlbum {
     type State = UiState;
@@ -15,96 +18,81 @@ impl StatefulWidget for SideBarAlbum {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let albums = &state.albums;
-        let pane_title = format!(" ⟪ {} Albums! ⟫ ", albums.len());
-        let pane_org = state.get_album_sort_string();
-        let pane_org = format!("{pane_org:5} ");
-
         let theme = &state.get_theme(&Pane::SideBar);
 
-        // Get the currently selected artist (if any)
-        let selected_artist = state
-            .get_selected_album()
-            .map(|album| album.artist.as_str());
+        let albums = &state.albums;
+        let pane_sort = state.get_album_sort_string();
+        let pane_sort = format!("{pane_sort:5} ");
 
-        // Create list items from display items
-        let display_items = &state.display_state.album_headers;
+        let selected_album_idx = state.display_state.album_pos.selected();
+        let selected_artist = state.get_selected_album().map(|a| a.artist.as_str());
 
-        let list_items = display_items
-            .iter()
-            .map(|item| match item {
-                AlbumDisplayItem::Header(artist) => {
-                    let is_selected_artist = selected_artist.map_or(false, |sel| sel == artist);
+        let mut list_items = Vec::new();
+        let mut current_artist = None;
+        let mut current_display_idx = 0;
+        let mut selected_display_idx = None;
 
-                    let style = match is_selected_artist {
+        for (idx, album) in albums.iter().enumerate() {
+            // Add header if artist changed (only for Artist sort)
+            if state.get_album_sort() == AlbumSort::Artist {
+                if current_artist.as_ref() != Some(&album.artist.as_str()) {
+                    let artist_str = album.artist.as_str();
+                    let is_selected_artist = selected_artist == Some(artist_str);
+
+                    // Match header style to selected album
+                    let header_style = match is_selected_artist {
                         true => Style::default()
                             .fg(theme.text_highlighted)
-                            .add_modifier(Modifier::ITALIC | Modifier::UNDERLINED),
+                            .italic()
+                            .underlined(),
                         false => Style::default().fg(GOLD_FADED),
                     };
 
-                    ListItem::new(Span::from(format!("{}", artist)).italic().style(style))
-                }
-                AlbumDisplayItem::Album(idx) => {
-                    let album = &albums[*idx];
+                    list_items.push(ListItem::new(Span::from(artist_str).style(header_style)));
 
-                    let year = match album.year {
-                        Some(y) => format!("{y}"),
-                        _ => String::from("----"),
-                    };
-
-                    let indent = match state.get_album_sort() == AlbumSort::Artist {
-                        true => "  ",
-                        false => "",
-                    };
-
-                    let year_txt =
-                        Span::from(format!("{}{: >4} ", indent, year)).fg(theme.text_secondary);
-                    let separator = Span::from("✧ ").fg(theme.text_faded);
-                    let album_title = Span::from(album.title.as_str()).fg(theme.text_focused);
-
-                    ListItem::new(Line::from_iter([year_txt, separator, album_title]))
-                }
-                _ => unreachable!(),
-            })
-            .collect::<Vec<ListItem>>();
-
-        let display_selected = if let Some(album_idx) = state.display_state.sidebar_pos.selected() {
-            state
-                .display_state
-                .album_headers
-                .iter()
-                .position(|item| match item {
-                    AlbumDisplayItem::Album(idx) => *idx == album_idx,
-                    _ => false,
-                })
-        } else {
-            None
-        };
-
-        // Create a temporary display state
-        let mut display_state = ListState::default();
-        display_state.select(display_selected);
-        *display_state.offset_mut() = state.display_state.sidebar_pos.offset();
-
-        let current_offset = state.display_state.sidebar_pos.offset();
-        *display_state.offset_mut() = current_offset;
-
-        // Ensure header is visible
-        if state.get_album_sort() == AlbumSort::Artist && display_selected.is_some() {
-            let display_idx = display_selected.unwrap();
-
-            // Get album header
-            let mut header_idx = display_idx;
-            while header_idx > 0 {
-                header_idx -= 1;
-                if let AlbumDisplayItem::Header(_) = display_items[header_idx] {
-                    break;
+                    current_artist = Some(artist_str);
+                    current_display_idx += 1;
                 }
             }
 
-            if header_idx < current_offset && display_idx >= current_offset {
-                *display_state.offset_mut() = header_idx;
+            // Build album item
+            let year = album.year.map_or("----".to_string(), |y| format!("{y}"));
+
+            let indent = match state.get_album_sort() == AlbumSort::Artist {
+                true => "  ",
+                false => "",
+            };
+
+            let is_selected = selected_album_idx == Some(idx);
+            if is_selected {
+                selected_display_idx = Some(current_display_idx);
+            }
+
+            // Don't apply selection styling here - let the List widget handle it
+            list_items.push(ListItem::new(Line::from_iter([
+                Span::from(format!("{}{: >4} ", indent, year)).fg(theme.text_secondary),
+                Span::from("✧ ").fg(theme.text_faded),
+                Span::from(album.title.as_str()).fg(theme.text_focused),
+            ])));
+
+            current_display_idx += 1;
+        }
+
+        // Temp state for rendering with display index
+        let mut render_state = ListState::default();
+        render_state.select(selected_display_idx);
+
+        // Sync offset to ensure selection is visible
+        if let Some(idx) = selected_display_idx {
+            let current_offset = state.display_state.album_pos.offset();
+            let visible_height = area.height.saturating_sub(4) as usize;
+
+            if idx < current_offset {
+                *render_state.offset_mut() = idx;
+            } else if idx >= current_offset + visible_height {
+                *render_state.offset_mut() = idx.saturating_sub(visible_height - 1);
+            } else {
+                *render_state.offset_mut() = current_offset;
             }
         }
 
@@ -116,13 +104,12 @@ impl StatefulWidget for SideBarAlbum {
         };
 
         let block = Block::bordered()
-            // .borders(theme.border_display)
             .border_type(BorderType::Thick)
             .border_style(theme.border)
             .bg(theme.bg)
-            .title_top(Line::from(pane_title).left_aligned().fg(theme.text_focused))
+            .title_top(format!(" ⟪ {} Albums! ⟫ ", albums.len()))
             .title_top(
-                Line::from_iter([" 󰒿 ", &pane_org])
+                Line::from_iter([" 󰒿 ", &pane_sort])
                     .right_aligned()
                     .fg(theme.text_secondary),
             )
@@ -142,9 +129,12 @@ impl StatefulWidget for SideBarAlbum {
                     .bg(theme.text_highlighted)
                     .italic(),
             )
-            .scroll_padding(4);
+            .scroll_padding(5)
+            .highlight_spacing(HighlightSpacing::Always); // We handle highlighting ourselves
 
-        list.render(area, buf, &mut display_state);
-        *state.display_state.sidebar_pos.offset_mut() = display_state.offset();
+        list.render(area, buf, &mut render_state);
+
+        // Sync offset back
+        *state.display_state.album_pos.offset_mut() = render_state.offset();
     }
 }

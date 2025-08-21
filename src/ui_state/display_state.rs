@@ -1,11 +1,11 @@
-use super::{AlbumDisplayItem, AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
+use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
     domain::{Album, SimpleSong, SongInfo},
     key_handler::Director,
 };
 use anyhow::{anyhow, Result};
 use ratatui::widgets::{ListState, TableState};
-use std::{ops::Index, sync::Arc};
+use std::sync::Arc;
 
 pub struct DisplayState {
     mode: Mode,
@@ -15,16 +15,11 @@ pub struct DisplayState {
     pub(super) album_sort: AlbumSort,
 
     pub sidebar_view: LibraryView,
-    pub sidebar_pos: ListState, // Active Position
+    pub album_pos: ListState,
+    pub playlist_pos: ListState,
     pub table_pos: TableState,
 
-    // Specific States
-    album_selection: Option<usize>,
-    playlist_selection: Option<usize>,
-
     table_pos_cached: usize,
-
-    pub album_headers: Vec<AlbumDisplayItem>,
 }
 
 impl DisplayState {
@@ -39,13 +34,11 @@ impl DisplayState {
             sidebar_view: LibraryView::Albums,
 
             table_pos: TableState::default().with_selected(0),
-            sidebar_pos: ListState::default().with_selected(Some(0)),
+
+            album_pos: ListState::default().with_selected(Some(0)),
+            playlist_pos: ListState::default().with_selected(Some(0)),
 
             table_pos_cached: 0,
-            album_selection: Some(0),
-            playlist_selection: Some(0),
-
-            album_headers: Vec::new(),
         }
     }
 }
@@ -76,12 +69,6 @@ impl UiState {
                     .selected()
                     .unwrap_or(self.display_state.table_pos_cached)
             }
-            Mode::Library(LibraryView::Albums) => {
-                self.display_state.album_selection = self.display_state.sidebar_pos.selected()
-            }
-            Mode::Library(LibraryView::Playlists) => {
-                self.display_state.playlist_selection = self.display_state.sidebar_pos.selected()
-            }
             _ => (),
         }
 
@@ -95,25 +82,32 @@ impl UiState {
                     .table_pos
                     .select(Some(self.display_state.table_pos_cached));
             }
-            Mode::Library(LibraryView::Albums) => {
-                self.display_state.sidebar_view = LibraryView::Albums;
-                self.display_state.mode = Mode::Library(self.display_state.sidebar_view);
+
+            Mode::Library(view) => {
+                self.display_state.sidebar_view = view;
+                self.display_state.mode = Mode::Library(view);
                 self.display_state.pane = Pane::SideBar;
-                match self.albums.is_empty() {
-                    true => self.display_state.sidebar_pos.select(None),
-                    false => self
-                        .display_state
-                        .sidebar_pos
-                        .select(self.display_state.album_selection),
+
+                // Ensure we have a valid selection for the view we're entering
+                match view {
+                    LibraryView::Albums => {
+                        if self.albums.is_empty() {
+                            self.display_state.album_pos.select(None);
+                        } else if self.display_state.album_pos.selected().is_none() {
+                            self.display_state.album_pos.select(Some(0));
+                        }
+                    }
+                    LibraryView::Playlists => {
+                        if self.playlists.is_empty() {
+                            self.display_state.playlist_pos.select(None);
+                        } else if self.display_state.playlist_pos.selected().is_none() {
+                            self.display_state.playlist_pos.select(Some(0));
+                        }
+                    }
                 }
+
                 *self.display_state.table_pos.offset_mut() = 0;
                 self.set_legal_songs();
-            }
-
-            Mode::Library(LibraryView::Playlists) => {
-                self.display_state.sidebar_view = LibraryView::Playlists;
-                self.display_state.mode = Mode::Library(self.display_state.sidebar_view);
-                self.display_state.pane = Pane::SideBar;
             }
             Mode::Queue => {
                 if !self.queue_is_empty() {
@@ -168,7 +162,14 @@ impl UiState {
 
     pub fn get_selected_album(&self) -> Option<&Album> {
         self.display_state
-            .sidebar_pos
+            .album_pos
+            .selected()
+            .and_then(|idx| self.albums.get(idx))
+    }
+
+    pub fn get_selected_playlist(&self) -> Option<&Album> {
+        self.display_state
+            .playlist_pos
             .selected()
             .and_then(|idx| self.albums.get(idx))
     }
@@ -215,41 +216,6 @@ impl UiState {
                 .albums
                 .sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase())),
             AlbumSort::Year => self.albums.sort_by(|a, b| a.year.cmp(&b.year)),
-        }
-
-        self.update_sidebar_view();
-    }
-
-    fn update_sidebar_view(&mut self) {
-        self.display_state.album_headers.clear();
-
-        match self.display_state.album_sort {
-            AlbumSort::Artist => {
-                let mut current_artist = None;
-                for (idx, album) in self.albums.iter().enumerate() {
-                    let artist_str = album.artist.as_str();
-
-                    // If new artist, add a header
-                    if current_artist.as_ref().map_or(true, |a| a != &artist_str) {
-                        self.display_state
-                            .album_headers
-                            .push(AlbumDisplayItem::Header(artist_str.to_string()));
-                        current_artist = Some(artist_str);
-                    }
-
-                    // Add the album entry
-                    self.display_state
-                        .album_headers
-                        .push(AlbumDisplayItem::Album(idx));
-                }
-            }
-            _ => {
-                for (idx, _) in self.albums.iter().enumerate() {
-                    self.display_state
-                        .album_headers
-                        .push(AlbumDisplayItem::Album(idx));
-                }
-            }
         }
     }
 
@@ -328,7 +294,7 @@ impl UiState {
         *self.display_state.table_pos.offset_mut() = track_idx.checked_sub(20).unwrap_or(0);
 
         // Select album and try to visually center it
-        self.display_state.sidebar_pos.select(Some(album_idx));
+        self.display_state.album_pos.select(Some(album_idx));
 
         Ok(())
     }
@@ -339,12 +305,24 @@ impl UiState {
                 self.legal_songs = self.library.get_all_songs().to_vec();
                 self.sort_by_table_column();
             }
-            Mode::Library(_) => {
-                // Mode::Library(LibraryView::Albums) => {
-                if let Some(idx) = self.display_state.sidebar_pos.selected() {
-                    self.legal_songs = self.albums.index(idx).tracklist.clone();
-                    *self.display_state.table_pos.offset_mut() = 0;
+            Mode::Library(view) => {
+                match view {
+                    LibraryView::Albums => {
+                        if let Some(idx) = self.display_state.album_pos.selected() {
+                            if let Some(album) = self.albums.get(idx) {
+                                self.legal_songs = album.tracklist.clone();
+                            }
+                        }
+                    }
+                    LibraryView::Playlists => {
+                        if let Some(idx) = self.display_state.playlist_pos.selected() {
+                            if let Some(playlist) = self.playlists.get(idx) {
+                                // self.legal_songs = playlist.tracks.clone();
+                            }
+                        }
+                    }
                 }
+                *self.display_state.table_pos.offset_mut() = 0;
             }
             Mode::Queue => {
                 self.playback.queue.make_contiguous();
@@ -376,14 +354,14 @@ impl UiState {
 
 impl UiState {
     pub fn scroll(&mut self, director: Director) {
-        match director {
-            Director::Top => self.scroll_to_top(),
-            Director::Bottom => self.scroll_to_bottom(),
-            _ => match &self.display_state.pane {
-                Pane::TrackList => self.scroll_tracklist(&director),
-                Pane::SideBar => self.scroll_sidebar(&director),
-                _ => (),
+        match self.display_state.pane {
+            Pane::SideBar => self.scroll_sidebar(&director),
+            Pane::TrackList => match director {
+                Director::Top => self.scroll_to_top(),
+                Director::Bottom => self.scroll_to_bottom(),
+                _ => self.scroll_tracklist(&director),
             },
+            _ => (),
         }
     }
 
@@ -404,35 +382,30 @@ impl UiState {
     }
 
     fn scroll_sidebar(&mut self, director: &Director) {
-        let base_array = &self.albums.len();
+        let (items_len, state) = match self.display_state.sidebar_view {
+            LibraryView::Albums => (self.albums.len(), &mut self.display_state.album_pos),
+            LibraryView::Playlists => (self.playlists.len(), &mut self.display_state.playlist_pos),
+        };
 
-        if *base_array > 0 {
-            let len = base_array;
-            let selected_idx = self.display_state.sidebar_pos.selected();
-            let new_pos = selected_idx
-                .map(|idx| match director {
-                    Director::Up(x) => (idx + len - x) % len,
-                    Director::Down(x) => (idx + x) % len,
-                    _ => unreachable!(),
-                })
-                .unwrap_or(0);
-            self.display_state.sidebar_pos.select(Some(new_pos));
-            if self.display_state.mode == Mode::Library(LibraryView::Albums) {
-                self.set_legal_songs();
-            }
+        if items_len == 0 {
+            return;
         }
+
+        let current = state.selected().unwrap_or(0);
+        let new_pos = match director {
+            Director::Up(x) => (current + items_len - x) % items_len,
+            Director::Down(x) => (current + x) % items_len,
+            Director::Top => 0,
+            Director::Bottom => items_len - 1,
+        };
+
+        state.select(Some(new_pos));
+        self.set_legal_songs();
     }
 
     fn scroll_to_top(&mut self) {
         match &self.display_state.pane {
             Pane::TrackList => self.display_state.table_pos.select_first(),
-            Pane::SideBar => {
-                match self.albums.is_empty() {
-                    true => self.display_state.sidebar_pos.select(None),
-                    false => self.display_state.sidebar_pos.select_first(),
-                }
-                self.set_legal_songs();
-            }
             _ => (),
         }
     }
@@ -440,12 +413,6 @@ impl UiState {
     fn scroll_to_bottom(&mut self) {
         match self.display_state.pane {
             Pane::TrackList => self.display_state.table_pos.select_last(),
-            Pane::SideBar => {
-                *self.display_state.table_pos.offset_mut() = 0;
-                let len = self.albums.len().checked_sub(1);
-                self.display_state.sidebar_pos.select(len);
-                self.set_legal_songs();
-            }
             _ => (),
         }
     }

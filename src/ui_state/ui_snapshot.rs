@@ -9,6 +9,7 @@ pub struct UiSnapshot {
     pub pane: String,
     pub album_sort: String,
     pub album_selection: Option<usize>,
+    pub playlist_selection: Option<usize>,
     pub song_selection: Option<usize>,
 }
 
@@ -22,6 +23,10 @@ impl UiSnapshot {
 
         if let Some(pos) = self.album_selection {
             pairs.push(("ui_album_pos", pos.to_string()));
+        }
+
+        if let Some(pos) = self.playlist_selection {
+            pairs.push(("ui_playlist_pos", pos.to_string()));
         }
 
         if let Some(pos) = self.song_selection {
@@ -40,6 +45,7 @@ impl UiSnapshot {
                 "ui_pane" => snapshot.pane = value,
                 "ui_album_sort" => snapshot.album_sort = value,
                 "ui_album_pos" => snapshot.album_selection = value.parse().ok(),
+                "ui_playlist_pos" => snapshot.playlist_selection = value.parse().ok(),
                 "ui_song_pos" => snapshot.song_selection = value.parse().ok(),
                 _ => {}
             }
@@ -55,7 +61,8 @@ impl UiState {
             mode: self.get_mode().to_string(),
             pane: self.get_pane().to_string(),
             album_sort: self.display_state.album_sort.to_string(),
-            album_selection: self.display_state.sidebar_pos.selected(),
+            album_selection: self.display_state.album_pos.selected(),
+            playlist_selection: self.display_state.playlist_pos.selected(),
             song_selection: self.display_state.table_pos.selected(),
         }
     }
@@ -71,18 +78,24 @@ impl UiState {
         let mut db = Database::open()?;
 
         if let Some(snapshot) = db.load_ui_snapshot()? {
+            self.set_mode(Mode::from_str(&snapshot.mode));
+            self.set_pane(Pane::from_str(&snapshot.pane));
+
             self.display_state.album_sort = AlbumSort::from_str(&snapshot.album_sort);
 
             self.sort_albums();
 
             if let Some(pos) = snapshot.album_selection {
                 if pos < self.albums.len() {
-                    self.display_state.sidebar_pos.select(Some(pos));
+                    self.display_state.album_pos.select(Some(pos));
                 }
             }
 
-            self.set_mode(Mode::from_str(&snapshot.mode));
-            self.set_pane(Pane::from_str(&snapshot.pane));
+            if let Some(pos) = snapshot.playlist_selection {
+                if pos < self.albums.len() {
+                    self.display_state.playlist_pos.select(Some(pos));
+                }
+            }
 
             if let Some(pos) = snapshot.song_selection {
                 if pos < self.legal_songs.len() {

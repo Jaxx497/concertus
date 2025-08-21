@@ -52,7 +52,7 @@ impl UiState {
     pub fn queue_album(&mut self) -> Result<()> {
         let album = self
             .display_state
-            .sidebar_pos
+            .album_pos
             .selected()
             .ok_or_else(|| anyhow::anyhow!("Illegal album selection!"))?;
 
