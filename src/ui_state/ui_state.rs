@@ -5,7 +5,10 @@ use super::{
 use crate::{
     domain::{Album, Playlist, SimpleSong},
     player::PlayerState,
-    ui_state::popup::{PopupState, PopupType},
+    ui_state::{
+        popup::{PopupState, PopupType},
+        LibraryView, Mode,
+    },
     Library,
 };
 use anyhow::Error;
@@ -71,7 +74,13 @@ impl UiState {
     }
 
     pub fn soft_reset(&mut self) {
-        self.close_popup();
+        if self.popup.is_open() {
+            self.close_popup();
+        }
+
+        if self.get_mode() == Mode::Search {
+            self.set_mode(Mode::Library(LibraryView::Albums));
+        }
 
         self.search.input.select_all();
         self.search.input.cut();

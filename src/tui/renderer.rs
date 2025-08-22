@@ -19,7 +19,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     Progress.render(layout.progress_bar, f.buffer_mut(), state);
 
     if state.popup.is_open() {
-        let popup_rect = centered_rect(30, 30, f.area());
+        let popup_rect = centered_rect(40, 40, f.area());
         Clear.render(popup_rect, f.buffer_mut());
 
         match &state.popup.current {

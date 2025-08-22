@@ -1,6 +1,6 @@
 use crate::{
     strip_win_prefix,
-    ui_state::{Pane, SettingsMode, UiState, GOOD_RED},
+    ui_state::{SettingsMode, UiState, GOOD_RED},
 };
 use ratatui::{
     layout::{Constraint, Layout},
@@ -93,7 +93,7 @@ fn render_roots_list(
         })
         .collect();
 
-    let theme = state.get_theme(&Pane::TrackList);
+    let theme = state.get_theme(state.get_pane());
 
     let list = List::new(items)
         .highlight_style(Style::default().fg(Color::Black).bg(theme.text_highlighted))
@@ -117,7 +117,7 @@ fn render_add_root(
 
     Paragraph::new("Enter the path to a directory containing music files:").render(chunks[0], buf);
 
-    let theme = state.get_theme(&Pane::TrackList);
+    let theme = state.get_theme(state.get_pane());
 
     state.popup.input.set_block(
         Block::bordered()

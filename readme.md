@@ -36,6 +36,8 @@ the users local config or appdata directory.
    history will likely render the rest of the history playlist
 inaccessible
 
+3. Waveforms may still generate even on songs that cannot play
+
 *Symphonia is a major dependency of this project. Most of the playback
 related issues are due to upstream issues in the symphonia library.
 Following the rollout of the playlist feature, alongside other small

@@ -71,6 +71,7 @@ impl Concertus {
     }
 
     pub(crate) fn activate_settings(&mut self) {
+        self.ui.popup.selection.select(Some(0));
         self.ui
             .show_popup(PopupType::Settings(SettingsMode::ViewRoots))
     }
