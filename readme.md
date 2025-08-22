@@ -1,55 +1,62 @@
-# Concertus - v0.0.3
+# Concertus - v0.0.4
 
-Concertus is a TUI music player written in Rust. 
+Concertus is a lightweight, simple to use TUI music player written in Rust.
+
+![concertus.png](https://i.postimg.cc/GmfgdZt7/concertus-img.png)
 
 ## Usage
 
-Simplicity is a wonderful thing. Concertus was inspired by many other
-TUI Projects, the unix philosophy, and the brilliance of n/vim. 
+Begin by assigning one or more 'root' (or 'parent') directories when
+promted. The root management window can be managed by pressing the ```
+` ``` key. Concertus will walk through the supplied folder(s), and
+create a library based on the valid files it finds.
 
-Begin by assigning one or more "root" directories of your files.
-Concertus will walk through these directories, building a
-representation of your library.
+It's recommended that users have ffmpeg and a nerd font installed for
+visual flare. Neither is mandatory however.
 
-The settings and root management window can be opened with the
-backtick [ ` ] and tilde [ ~ ] characters. 
+Concertus does not leverage any online capabilities, and strictly
+relies on the accurate and proper tagging. It's strongly recommended
+to utilize a tool like [MP3Tag](https://www.mp3tag.de/en/) to ensure
+the entries of one's library are accurate. Libraries can be live
+refreshed simply by pressing ```F5``` or ```Ctrl-u```
 
 ## Disclaimers
 
-Concertus never writes to user files, only a database stored in the
-config or appdata directory. 
-
-Concertus does not have any online capability. It relies entirely on
-the tags of a users library. It's recommended to use tools like MP3Tag
-or similar to make the proper modifications. 
+Concertus never writes to user files, only a SQLite database stored in
+the users local config or appdata directory. 
 
 ## Known bugs
 
 1. Symphonia Related*
-    1. FLAC will rarely cause crashes when seeking in a song,
-        functionality is enabled. 
-        OGG files crash on seek without fail, functionality is
-        disabled.
-    2. Symphonia does not have OPUS capabilities.
+    1. FLAC may cause crashes when seeking in a song. 
+    1. OGG files cannot utilize seek functionality.
+    1. Symphonia does not have OPUS capabilities.
 
 2. Accessing deleted songs - Accessing a deleted song through the
    history will likely render the rest of the history playlist
-    inaccessible
+inaccessible
 
-*Symphonia is a major dependency of this project. Most of the
-playback related issues are due to upstream issues in the symphonia
-library. I will begin to look for alternative backends. Perhaps mpd
-or gstreamer. Metadata may be read by other readers if necessary.
+*Symphonia is a major dependency of this project. Most of the playback
+related issues are due to upstream issues in the symphonia library.
+Following the rollout of the playlist feature, alongside other small
+QOL additions, new backend options will be explored.
 
+## Current Development Objectives
+- Implementing a playlist system
 
 ## TODO 
 
 - Fix history bug
-- Implement a playlist system (***)
-- Search by album/artist (!)
-    Should be simple, just need to do it
+- Search by album/artist (!) Should be simple, just need to do it
 - Ditch power mode (?)
 - Add more settings
     - Update on start?
 - Implement a secondary player backend (gstreamer?)
 
+
+## Other
+This project seeks to demonstrate my understanding of a series of
+programming fundamentals, including but not limited to
+multi-threading, atomics, string internment, database integration,
+de/serialization, hashing, persistence, modular design, view models,
+and state management. 

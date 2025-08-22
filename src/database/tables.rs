@@ -34,7 +34,7 @@ pub const CREATE_TABLES: &str = r"
     );
 
     CREATE TABLE IF NOT EXISTS waveforms(
-        song_id BLOB,
+        song_id BLOB PRIMARY KEY,
         waveform BLOB,
         FOREIGN KEY(song_id) REFERENCES songs(id) ON DELETE CASCADE
     );
@@ -47,7 +47,7 @@ pub const CREATE_TABLES: &str = r"
     );
 
     CREATE TABLE IF NOT EXISTS plays(
-        song_id BLOB UNIQUE NOT NULL,
+        song_id BLOB PRIMARY KEY,
         count INTEGER,
         FOREIGN KEY(song_id) REFERENCES songs(id) ON DELETE CASCADE
     );

@@ -23,11 +23,7 @@ impl StatefulWidget for ErrorMsg {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let err_str = state
-            .get_error()
-            .as_ref()
-            .unwrap_or(&anyhow::anyhow!("No error to display"))
-            .to_string();
+        let err_str = state.get_error().unwrap_or("No error to display");
 
         Paragraph::new(err_str)
             .wrap(Wrap { trim: true })

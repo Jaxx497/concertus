@@ -1,4 +1,5 @@
 mod error;
+mod playlist_popup;
 mod progress;
 mod progress_bar;
 mod search;
@@ -9,6 +10,7 @@ mod tracklist;
 mod waveform;
 
 pub use error::ErrorMsg;
+pub use playlist_popup::PlaylistPopup;
 pub use progress::Progress;
 pub use search::SearchBar;
 pub use settings::Settings;

@@ -1,7 +1,8 @@
 use super::widgets::Settings;
 use super::{widgets::SongTable, AppLayout};
 use super::{ErrorMsg, Progress, SearchBar, SideBar};
-use crate::ui_state::Pane;
+use crate::tui::widgets::PlaylistPopup;
+use crate::ui_state::PopupType;
 use crate::UiState;
 use ratatui::{
     layout::{Constraint, Layout, Rect},
@@ -17,19 +18,16 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     SongTable.render(layout.song_window, f.buffer_mut(), state);
     Progress.render(layout.progress_bar, f.buffer_mut(), state);
 
-    // POPUPS AND ERRORS
-    match (state.get_pane() == Pane::Popup, &state.get_error()) {
-        (true, Some(_)) => {
-            let error_win = centered_rect(40, 40, f.area());
-            Clear.render(error_win, f.buffer_mut());
-            ErrorMsg.render(error_win, f.buffer_mut(), state);
+    if state.popup.is_open() {
+        let popup_rect = centered_rect(30, 30, f.area());
+        Clear.render(popup_rect, f.buffer_mut());
+
+        match &state.popup.current {
+            PopupType::Playlist(_) => PlaylistPopup.render(popup_rect, f.buffer_mut(), state),
+            PopupType::Settings(_) => Settings.render(popup_rect, f.buffer_mut(), state),
+            PopupType::Error(_) => ErrorMsg.render(popup_rect, f.buffer_mut(), state),
+            _ => (),
         }
-        (true, None) => {
-            let settings_popup = centered_rect(50, 50, f.area());
-            Clear.render(settings_popup, f.buffer_mut());
-            Settings.render(settings_popup, f.buffer_mut(), state);
-        }
-        (false, _) => (),
     }
 }
 

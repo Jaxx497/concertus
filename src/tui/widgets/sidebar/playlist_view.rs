@@ -27,7 +27,7 @@ impl StatefulWidget for SideBarPlaylist {
         });
 
         let keymaps = match state.get_pane() {
-            Pane::SideBar => Line::from(" [c]reate 󰲸 | [d]elete 󰐓 ")
+            Pane::SideBar => Line::from(" [c]reate 󰲸 | [D]elete 󰐓 ")
                 .centered()
                 .fg(theme.text_faded),
             _ => Line::default(),
@@ -40,7 +40,7 @@ impl StatefulWidget for SideBarPlaylist {
             .title_top(
                 Line::from(format!(" ⟪ {} Playlists! ⟫ ", playlists.len()))
                     .left_aligned()
-                    .fg(theme.text_focused),
+                    .fg(theme.text_highlighted),
             )
             .title_bottom(Line::from(keymaps).centered().fg(theme.text_faded))
             .padding(Padding {

@@ -1,10 +1,10 @@
 use crate::{
     domain::{generate_waveform, QueueSong, SongInfo},
-    key_handler::{self, Action},
+    key_handler::{self},
     overwrite_line,
     player::PlayerController,
     tui,
-    ui_state::{Mode, Pane, SettingsMode, UiState},
+    ui_state::{Mode, PopupType, SettingsMode, UiState},
     Database, Library,
 };
 use anyhow::Result;
@@ -20,7 +20,7 @@ pub struct Concertus {
     db: Arc<Mutex<Database>>,
     library: Arc<Library>,
     pub(crate) ui: UiState,
-    player: PlayerController,
+    pub(crate) player: PlayerController,
     waveform_rec: Option<mpsc::Receiver<Vec<f32>>>,
     requires_setup: bool,
 }
@@ -58,8 +58,8 @@ impl Concertus {
 
         match self.requires_setup {
             true => {
-                self.ui.set_pane(Pane::Popup);
-                self.ui.settings.settings_mode = SettingsMode::AddRoot;
+                self.ui
+                    .show_popup(PopupType::Settings(SettingsMode::AddRoot));
             }
             false => (),
         }
@@ -138,59 +138,6 @@ impl Concertus {
 }
 
 impl Concertus {
-    #[rustfmt::skip]
-    fn handle_action(&mut self, action: Action) -> Result<()> {
-        match action {
-            // Player 
-            Action::Play            => self.play_selected_song()?,
-            Action::TogglePause     => self.player.toggle_playback()?,
-            Action::Stop            => self.player.stop()?,
-            Action::SeekForward(s)  => self.player.seek_forward(s)?,
-            Action::SeekBack(s)     => self.player.seek_back(s)?,
-            Action::PlayNext        => self.play_next()?,
-            Action::PlayPrev        => self.play_prev()?,
-
-            // UI 
-            Action::Scroll(s)       => self.ui.scroll(s),
-            Action::GoToAlbum       => self.ui.go_to_album()?,
-            Action::ChangeMode(m)   => self.ui.set_mode(m),
-            Action::ChangePane(p)   => self.ui.set_pane(p),
-            Action::SortColumnsNext => self.ui.next_song_column(),
-            Action::SortColumnsPrev => self.ui.prev_song_column(),
-            Action::ToggleAlbumSort(next)   => self.ui.toggle_album_sort(next),
-            Action::ToggleSideBar   => self.ui.toggle_sidebar_view(),
-
-            // Search Related
-            Action::UpdateSearch(k) => self.ui.process_search(k),
-            Action::SendSearch      => self.ui.send_search(),
-
-            // Queue
-            Action::QueueSong       => self.ui.queue_song(None)?,
-            Action::QueueAlbum      => self.ui.queue_album()?,
-            Action::RemoveFromQueue => self.ui.remove_from_queue()?,
-
-            // Ops
-            Action::SoftReset       => self.ui.soft_reset(),
-            Action::UpdateLibrary   => self.update_library()?,
-            Action::QUIT            => self.ui.set_mode(Mode::QUIT),
-
-            Action::ViewSettings    => self.activate_settings(),
-            Action::SettingsUp      => self.settings_scroll_up(),
-            Action::SettingsDown    => self.settings_scroll_down(),
-            Action::RootAdd         => self.settings_add_root(),
-            Action::RootRemove      => self.settings_remove_root(),
-            Action::RootConfirm     => self.settings_root_confirm()?,
-
-            Action::SettingsInput(key) => {
-                self.ui.settings.root_input.input(key);
-            }
-            _ => (),
-        }
-        Ok(())
-    }
-}
-
-impl Concertus {
     fn play_song(&mut self, song: Arc<QueueSong>) -> Result<()> {
         // Return from function early if selected song is already playing
         if let Some(now_playing) = self.ui.get_now_playing() {
@@ -211,7 +158,7 @@ impl Concertus {
         Ok(())
     }
 
-    fn play_selected_song(&mut self) -> Result<()> {
+    pub(crate) fn play_selected_song(&mut self) -> Result<()> {
         let song = self.ui.get_selected_song()?;
         let queue_song = self.ui.make_playable_song(&song)?;
 
@@ -220,7 +167,7 @@ impl Concertus {
         self.play_song(queue_song)
     }
 
-    fn play_next(&mut self) -> Result<()> {
+    pub(crate) fn play_next(&mut self) -> Result<()> {
         match self.ui.playback.queue.pop_front() {
             Some(song) => {
                 self.ui.add_to_history(Arc::clone(&song.meta));
@@ -233,7 +180,7 @@ impl Concertus {
         Ok(())
     }
 
-    fn play_prev(&mut self) -> Result<()> {
+    pub(crate) fn play_prev(&mut self) -> Result<()> {
         match self.ui.get_prev_song() {
             Some(prev) => {
                 if let Some(now_playing) = self.ui.get_now_playing() {

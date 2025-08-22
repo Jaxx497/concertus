@@ -1,5 +1,8 @@
 use super::{DUR_WIDTH, WAVEFORM_WIDGET_HEIGHT};
-use crate::{domain::SongInfo, get_readable_duration, ui_state::UiState, DurationStyle};
+use crate::{
+    domain::SongInfo, get_readable_duration, tui::widgets::PAUSE_ICON, ui_state::UiState,
+    DurationStyle,
+};
 use canvas::Context;
 use ratatui::{
     layout::{Alignment, Rect},
@@ -26,9 +29,14 @@ impl StatefulWidget for Waveform {
             .expect("Expected a song to be playing. [Widget: Waveform]");
         let theme = &state.get_theme(state.get_pane());
 
+        let separator = match state.is_paused() {
+            true => Span::from(format!(" {PAUSE_ICON} ")).fg(theme.text_focused),
+            false => Span::from(" ✧ ").fg(theme.text_faded),
+        };
+
         let playing_title = Line::from_iter([
             Span::from(np.get_title()).fg(theme.text_secondary),
-            Span::from(" ✧ ").fg(theme.text_faded),
+            separator,
             Span::from(np.get_artist()).fg(theme.text_faded),
         ]);
 

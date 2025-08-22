@@ -1,4 +1,9 @@
 mod root_mgmt;
 
-pub use root_mgmt::Settings;
-pub use root_mgmt::SettingsMode;
+#[derive(Default, PartialEq, Clone)]
+pub enum SettingsMode {
+    #[default]
+    ViewRoots,
+    AddRoot,
+    RemoveRoot,
+}

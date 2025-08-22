@@ -27,7 +27,7 @@ impl Player {
     }
 
     /// Play a song
-    /// Return an error if
+    /// Returns an error if
     pub(crate) fn play_song(&mut self, song: &Arc<QueueSong>) -> Result<()> {
         let file = std::fs::File::open(&song.path)?;
         let source = Decoder::new(std::io::BufReader::new(file))?;

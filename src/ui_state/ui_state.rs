@@ -1,10 +1,11 @@
 use super::{
-    playback::PlaybackCoordinator, search_state::SearchState, settings::Settings, theme::Theme,
-    DisplayState, DisplayTheme, LibraryView, Mode, Pane,
+    playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState,
+    DisplayTheme, Pane,
 };
 use crate::{
     domain::{Album, Playlist, SimpleSong},
     player::PlayerState,
+    ui_state::popup::{PopupState, PopupType},
     Library,
 };
 use anyhow::Error;
@@ -12,14 +13,18 @@ use ratatui::widgets::Borders;
 use std::sync::{Arc, Mutex};
 
 pub struct UiState {
+    // Backend Bleh
     pub(super) library: Arc<Library>,
-    pub(super) search: SearchState,
     pub(crate) playback: PlaybackCoordinator,
-    pub(crate) display_state: DisplayState,
-    pub(crate) settings: Settings,
-    theme: Theme,
-    pub(super) error: Option<anyhow::Error>,
 
+    // Visual Elements
+    pub(crate) popup: PopupState,
+    pub(super) search: SearchState,
+    // pub(crate) settings: Settings,
+    pub(crate) display_state: DisplayState,
+    theme: Theme,
+
+    // View models
     pub albums: Vec<Album>,
     pub legal_songs: Vec<Arc<SimpleSong>>,
     pub playlists: Vec<Playlist>,
@@ -32,10 +37,9 @@ impl UiState {
             search: SearchState::new(),
             display_state: DisplayState::new(),
             playback: PlaybackCoordinator::new(player_state),
-            settings: Settings::new(),
+            popup: PopupState::new(),
+            // settings: Settings::new(),
             theme: Theme::set_generic_theme(),
-            error: None,
-
             albums: Vec::new(),
             legal_songs: Vec::new(),
             playlists: Vec::new(),
@@ -63,23 +67,14 @@ impl UiState {
     }
 
     pub fn set_error(&mut self, e: Error) {
-        self.set_pane(Pane::Popup);
-        self.error = Some(e);
+        self.show_popup(PopupType::Error(e.to_string()));
     }
 
     pub fn soft_reset(&mut self) {
-        match &self.error {
-            Some(_) => {
-                self.error = None;
-                self.set_pane(Pane::TrackList);
-            }
-            None => {
-                self.set_mode(Mode::Library(LibraryView::Albums));
-                self.set_pane(Pane::TrackList);
-                self.search.input.select_all();
-                self.search.input.cut();
-            }
-        }
+        self.close_popup();
+
+        self.search.input.select_all();
+        self.search.input.cut();
         self.set_legal_songs();
     }
 
@@ -109,7 +104,10 @@ impl UiState {
         }
     }
 
-    pub fn get_error(&self) -> &Option<Error> {
-        &self.error
+    pub fn get_error(&self) -> Option<&str> {
+        match &self.popup.current {
+            PopupType::Error(e) => Some(e.as_str()),
+            _ => None,
+        }
     }
 }

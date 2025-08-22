@@ -1,5 +1,6 @@
 use crate::{
-    ui_state::{LibraryView, Mode, Pane, SettingsMode, UiState},
+    app_core::Concertus,
+    ui_state::{LibraryView, Mode, Pane, PlaylistAction, PopupType, SettingsMode, UiState},
     REFRESH_RATE,
 };
 use anyhow::Result;
@@ -45,6 +46,12 @@ pub enum Action {
     GoToAlbum,
     Scroll(Director),
 
+    // Playlists
+    CreatePlaylist,
+    CreatePlaylistConfirm,
+    PopupInput(KeyEvent),
+    ClosePopup,
+
     // Errors, Convenience & Other
     ViewSettings,
     SettingsUp,
@@ -73,35 +80,38 @@ use KeyCode::*;
 #[rustfmt::skip]
 pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> {
    
-    let _mode = state.get_mode();
     let pane = state.get_pane();
 
-    if let Some(action) = global_commands(&key_event, pane) {
+    if let Some(action) = global_commands(&key_event, &state) {
         return Some(action)
     } 
+
+    if state.popup.is_open() {
+        return handle_popup(&key_event, state)
+    };
 
     match pane {
         Pane::TrackList => handle_main_pane(&key_event, &state),
         Pane::Search    => handle_search_pane(&key_event),
         Pane::SideBar   => handle_sidebar_pane(&key_event),
-        Pane::Popup     => handle_popup_pane(&key_event, state),
+        _ => None
+
     }
 }
 
-fn global_commands(key: &KeyEvent, pane: &Pane) -> Option<Action> {
-    let in_search = pane == Pane::Search;
-    let in_settings = pane == Pane::Popup;
-
+fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
+    let pane = state.get_pane();
+    let popup_active = state.popup.is_open();
     // Works on every pane, even search
     match (key.modifiers, key.code) {
         (X, Esc) => Some(Action::SoftReset),
         (C, Char('c')) => Some(Action::QUIT),
-        (X, Char('`')) => Some(Action::ViewSettings),
         (C, Char(' ')) => Some(Action::TogglePause),
 
-        // Works on everything except search
-        _ if (!in_search && !in_settings) => match (key.modifiers, key.code) {
+        // Works on everything except search or popup
+        _ if ((pane != Pane::Search) && !popup_active) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
+            (X, Char('`')) => Some(Action::ViewSettings),
             (X, Char(' ')) => Some(Action::TogglePause),
             (C, Char('s')) => Some(Action::Stop),
             (C, Char('n')) => Some(Action::PlayNext),
@@ -163,8 +173,11 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
 fn handle_sidebar_pane(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
         (X, Char('q')) => Some(Action::QueueAlbum),
+        (X, Char('c')) => Some(Action::CreatePlaylist),
         (X, Enter) | (X, Tab) => Some(Action::ChangePane(Pane::TrackList)),
         (X, Char('l')) | (X, Char('h')) => Some(Action::ToggleSideBar),
+
+        // Change album sorting algorithm
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
         (C, Right) | (C, Char('l')) => Some(Action::ToggleAlbumSort(true)),
 
@@ -181,7 +194,7 @@ fn handle_search_pane(key: &KeyEvent) -> Option<Action> {
     }
 }
 
-fn handle_popup_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
+fn handle_popup(key: &KeyEvent, state: &UiState) -> Option<Action> {
     if let Some(_) = state.get_error() {
         match key.code {
             Char('?') | Char('`') | Enter | Esc => Some(Action::SoftReset),
@@ -189,24 +202,33 @@ fn handle_popup_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
         };
     }
 
-    match state.get_settings_mode() {
-        SettingsMode::ViewRoots => match key.code {
-            Char('a') => Some(Action::RootAdd),
-            Char('d') => Some(Action::RootRemove),
-            Up | Char('k') => Some(Action::SettingsUp),
-            Down | Char('j') => Some(Action::SettingsDown),
-            _ => None,
+    match &state.popup.current {
+        PopupType::Playlist(PlaylistAction::Create) => match key.code {
+            Esc => Some(Action::ClosePopup),
+            Enter => Some(Action::CreatePlaylistConfirm),
+            _ => Some(Action::PopupInput(*key)),
         },
-        SettingsMode::AddRoot => match key.code {
-            Esc => Some(Action::ViewSettings),
-            Enter => Some(Action::RootConfirm),
-            _ => Some(Action::SettingsInput(*key)),
+
+        PopupType::Settings(mode) => match mode {
+            SettingsMode::ViewRoots => match key.code {
+                Char('a') => Some(Action::RootAdd),
+                Char('d') => Some(Action::RootRemove),
+                Up | Char('k') => Some(Action::SettingsUp),
+                Down | Char('j') => Some(Action::SettingsDown),
+                _ => None,
+            },
+            SettingsMode::AddRoot => match key.code {
+                Esc => Some(Action::ViewSettings),
+                Enter => Some(Action::RootConfirm),
+                _ => Some(Action::SettingsInput(*key)),
+            },
+            SettingsMode::RemoveRoot => match key.code {
+                Esc => Some(Action::ViewSettings),
+                Enter => Some(Action::RootConfirm),
+                _ => None,
+            },
         },
-        SettingsMode::RemoveRoot => match key.code {
-            Esc => Some(Action::ViewSettings),
-            Enter => Some(Action::RootConfirm),
-            _ => None,
-        },
+        _ => None,
     }
 }
 
@@ -214,5 +236,77 @@ pub fn next_event() -> Result<Option<Event>> {
     match event::poll(Duration::from_millis(REFRESH_RATE))? {
         true => Ok(Some(event::read()?)),
         false => Ok(None),
+    }
+}
+
+impl Concertus {
+    #[rustfmt::skip]
+    pub fn handle_action(&mut self, action: Action) -> Result<()> {
+        match action {
+            // Player 
+            Action::Play            => self.play_selected_song()?,
+            Action::TogglePause     => self.player.toggle_playback()?,
+            Action::Stop            => self.player.stop()?,
+            Action::SeekForward(s)  => self.player.seek_forward(s)?,
+            Action::SeekBack(s)     => self.player.seek_back(s)?,
+            Action::PlayNext        => self.play_next()?,
+            Action::PlayPrev        => self.play_prev()?,
+
+            // UI 
+            Action::Scroll(s)       => self.ui.scroll(s),
+            Action::GoToAlbum       => self.ui.go_to_album()?,
+            Action::ChangeMode(m)   => self.ui.set_mode(m),
+            Action::ChangePane(p)   => self.ui.set_pane(p),
+            Action::SortColumnsNext => self.ui.next_song_column(),
+            Action::SortColumnsPrev => self.ui.prev_song_column(),
+            Action::ToggleAlbumSort(next)   => self.ui.toggle_album_sort(next),
+            Action::ToggleSideBar   => self.ui.toggle_sidebar_view(),
+
+            // Search Related
+            Action::UpdateSearch(k) => self.ui.process_search(k),
+            Action::SendSearch      => self.ui.send_search(),
+
+            //Playlist
+            Action::CreatePlaylist  =>  if self.ui.get_sidebar_view() == &LibraryView::Playlists {
+                self.ui.show_popup(PopupType::Playlist(PlaylistAction::Create));
+            }
+
+            Action::CreatePlaylistConfirm => {
+                let name = self.ui.popup.input.lines()[0].clone();
+                if let Err(e) = self.ui.create_playlist(&name) {
+                    self.ui.set_error(e);} else {
+                    self.ui.close_popup();
+                }
+            }
+
+            Action::PopupInput(key) => {
+                self.ui.popup.input.input(key);
+            }
+
+            Action::ClosePopup => self.ui.close_popup(),
+
+            // Queue
+            Action::QueueSong       => self.ui.queue_song(None)?,
+            Action::QueueAlbum      => self.ui.queue_album()?,
+            Action::RemoveFromQueue => self.ui.remove_from_queue()?,
+
+            // Ops
+            Action::SoftReset       => self.ui.soft_reset(),
+            Action::UpdateLibrary   => self.update_library()?,
+            Action::QUIT            => self.ui.set_mode(Mode::QUIT),
+
+            Action::ViewSettings    => self.activate_settings(),
+            Action::SettingsUp      => self.settings_scroll_up(),
+            Action::SettingsDown    => self.settings_scroll_down(),
+            Action::RootAdd         => self.settings_add_root(),
+            Action::RootRemove      => self.settings_remove_root(),
+            Action::RootConfirm     => self.settings_root_confirm()?,
+
+            Action::SettingsInput(key) => {
+                self.ui.popup.input.input(key);
+            }
+            _ => (),
+        }
+        Ok(())
     }
 }

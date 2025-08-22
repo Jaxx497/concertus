@@ -31,14 +31,15 @@ impl StatefulWidget for Settings {
         let settings_mode = state.get_settings_mode();
 
         let title = match settings_mode {
-            SettingsMode::ViewRoots => " Settings - Music Library Roots ",
-            SettingsMode::AddRoot => " Add New Root Directory ",
-            SettingsMode::RemoveRoot => " Remove Root Directory ",
+            Some(SettingsMode::ViewRoots) => " Settings - Music Library Roots ",
+            Some(SettingsMode::AddRoot) => " Add New Root Directory ",
+            Some(SettingsMode::RemoveRoot) => " Remove Root Directory ",
+            None => unreachable!(),
         };
 
         let block = Block::bordered()
             .title(title)
-            .title_bottom(get_help_text(&settings_mode))
+            .title_bottom(get_help_text(settings_mode))
             .title_alignment(ratatui::layout::Alignment::Center)
             .border_type(BorderType::Double)
             .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
@@ -49,18 +50,23 @@ impl StatefulWidget for Settings {
         block.render(area, buf);
 
         match settings_mode {
-            SettingsMode::ViewRoots => render_roots_list(inner, buf, state),
-            SettingsMode::AddRoot => render_add_root(inner, buf, state),
-            SettingsMode::RemoveRoot => render_remove_root(inner, buf, state),
+            Some(SettingsMode::ViewRoots) => render_roots_list(inner, buf, state),
+            Some(SettingsMode::AddRoot) => render_add_root(inner, buf, state),
+            Some(SettingsMode::RemoveRoot) => render_remove_root(inner, buf, state),
+            None => (),
         }
     }
 }
 
-fn get_help_text(mode: &SettingsMode) -> &'static str {
-    match mode {
-        SettingsMode::ViewRoots => " [a]dd / [d]elete / [Esc] close ",
-        SettingsMode::AddRoot => " [Enter] confirm / [Esc] cancel ",
-        SettingsMode::RemoveRoot => " [Enter] confirm / [Esc] cancel ",
+fn get_help_text(mode: Option<&SettingsMode>) -> &'static str {
+    if let Some(m) = mode {
+        match m {
+            SettingsMode::ViewRoots => " [a]dd / [d]elete / [Esc] close ",
+            SettingsMode::AddRoot => " [Enter] confirm / [Esc] cancel ",
+            SettingsMode::RemoveRoot => " [Enter] confirm / [Esc] cancel ",
+        }
+    } else {
+        unreachable!()
     }
 }
 
@@ -87,19 +93,14 @@ fn render_roots_list(
         })
         .collect();
 
-    let theme = state.get_theme(&Pane::Popup);
+    let theme = state.get_theme(&Pane::TrackList);
 
     let list = List::new(items)
         .highlight_style(Style::default().fg(Color::Black).bg(theme.text_highlighted))
         // .highlight_symbol(SELECTOR)
         .highlight_spacing(HighlightSpacing::Always);
 
-    ratatui::prelude::StatefulWidget::render(
-        list,
-        area,
-        buf,
-        &mut state.settings.settings_selection,
-    );
+    ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
 }
 
 fn render_add_root(
@@ -116,9 +117,9 @@ fn render_add_root(
 
     Paragraph::new("Enter the path to a directory containing music files:").render(chunks[0], buf);
 
-    let theme = state.get_theme(&Pane::Popup);
+    let theme = state.get_theme(&Pane::TrackList);
 
-    state.settings.root_input.set_block(
+    state.popup.input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
             .fg(theme.text_highlighted)
@@ -130,11 +131,11 @@ fn render_add_root(
             }),
     );
     state
-        .settings
-        .root_input
+        .popup
+        .input
         .set_style(Style::new().fg(theme.text_focused));
 
-    state.settings.root_input.render(chunks[1], buf);
+    state.popup.input.render(chunks[1], buf);
 
     let example = Paragraph::new("Example: C:\\Music or /home/user/music")
         .fg(Color::DarkGray)
@@ -155,7 +156,7 @@ fn render_remove_root(
             .render(area, buf);
         return;
     }
-    let selected_root = &roots[state.settings.settings_selection.selected().unwrap()];
+    let selected_root = &roots[state.popup.selection.selected().unwrap()];
     let selected_root = strip_win_prefix(&selected_root);
 
     let warning = Paragraph::new(format!(

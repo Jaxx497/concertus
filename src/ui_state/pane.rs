@@ -1,8 +1,8 @@
-#[derive(Default, PartialEq, Eq)]
+#[derive(Default, PartialEq, Eq, Clone)]
 pub enum Pane {
     SideBar,
     Search,
-    Popup,
+    Temp,
     #[default]
     TrackList,
 }
@@ -18,8 +18,8 @@ impl std::fmt::Display for Pane {
         match self {
             Pane::TrackList => write!(f, "tracklist"),
             Pane::SideBar => write!(f, "sidebar"),
-            Pane::Popup => write!(f, "popup"),
             Pane::Search => write!(f, "search"),
+            Pane::Temp => write!(f, "temp"),
         }
     }
 }
@@ -29,7 +29,6 @@ impl Pane {
         match s {
             "tracklist" => Pane::TrackList,
             "sidebar" => Pane::SideBar,
-            "popup" => Pane::Popup,
             "search" => Pane::Search,
             _ => Pane::TrackList,
         }
