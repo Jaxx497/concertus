@@ -1,19 +1,19 @@
 [package]
 name = "concertus"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-anyhow = "1.0.98"
+anyhow = "1.0.99"
 bincode = "2.0.1"
 byteorder = "*"
 dirs = "6.0.0"
 fuzzy-matcher = "*"
 mp4ameta = "*"
 ratatui = "*"
-rayon = "1.10.0"
-rodio = { version = "0.20.1", features = ["symphonia-all"] }
-rusqlite = { version = "0.36.0", features = ["bundled"] }
+rayon = "*"
+rodio = { version = "0.20.1", features = ["symphonia-all"]}
+rusqlite = { version = "0.37.0", features = ["bundled"] }
 symphonia = { version = "0.5.4", features = ["all"] }
 tui-textarea = "0.7.0"
 walkdir = "*"

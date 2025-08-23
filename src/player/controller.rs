@@ -3,8 +3,8 @@ use crate::domain::{QueueSong, SimpleSong};
 use anyhow::Result;
 use std::{
     sync::{
-        mpsc::{self, Sender},
         Arc, Mutex,
+        mpsc::{self, Sender},
     },
     thread::{self, JoinHandle},
     time::Duration,
@@ -51,7 +51,7 @@ impl PlayerController {
                     false => player.update_elapsed(),
                 }
                 // Lessen cpu intensity, but avoid stutters between songs
-                thread::sleep(Duration::from_millis(8))
+                thread::sleep(Duration::from_millis(10))
             }
         });
 

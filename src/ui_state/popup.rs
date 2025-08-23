@@ -1,7 +1,7 @@
 use ratatui::widgets::ListState;
 use tui_textarea::TextArea;
 
-use crate::ui_state::{new_textarea, playlist::PlaylistAction, Pane, SettingsMode, UiState};
+use crate::ui_state::{Pane, SettingsMode, UiState, new_textarea, playlist::PlaylistAction};
 
 #[derive(PartialEq)]
 pub enum PopupType {

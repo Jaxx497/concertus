@@ -67,6 +67,7 @@ pub enum Action {
     RootAdd,
     RootRemove,
     RootConfirm,
+
     // SettingsCancel,
     SettingsInput(KeyEvent),
 
@@ -137,8 +138,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
 
             // SCROLLING
-            (X, Char('j')) | (X, Down) => Some(Action::Scroll(Director::Down(1))),
-            (X, Char('k')) | (X, Up) => Some(Action::Scroll(Director::Up(1))),
+            (X, Char('j')) | (X, Down)  => Some(Action::Scroll(Director::Down(1))),
+            (X, Char('k')) | (X, Up)    => Some(Action::Scroll(Director::Up(1))),
             (X, Char('d')) => Some(Action::Scroll(Director::Down(SCROLL_MID))),
             (X, Char('u')) => Some(Action::Scroll(Director::Up(SCROLL_MID))),
             (S, Char('D')) => Some(Action::Scroll(Director::Down(SCROLL_XTRA))),
@@ -146,7 +147,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('g')) => Some(Action::Scroll(Director::Top)),
             (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
 
-            (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
+            (C, Char('u')) | (X, F(5))  => Some(Action::UpdateLibrary),
 
             _ => None,
         },
@@ -212,46 +213,60 @@ fn handle_popup(key: &KeyEvent, state: &UiState) -> Option<Action> {
         };
     }
 
+
     match &state.popup.current {
-        PopupType::Playlist(PlaylistAction::Create) => match key.code {
-            Esc => Some(Action::ClosePopup),
-            Enter => Some(Action::CreatePlaylistConfirm),
-            _ => Some(Action::PopupInput(*key)),
-        },
+        PopupType::Settings(s)  => handle_settings(key, s),
+        PopupType::Playlist(p)  => handle_playlist(key, p),
+        PopupType::Error(_)     => Some(Action::ClosePopup),
+        _ => None 
+    }
 
-        PopupType::Playlist(PlaylistAction::Delete) => match key.code {
-            Esc => Some(Action::ClosePopup),
-            Enter => Some(Action::DeletePlaylistConfirm),
-            _ => Some(Action::PopupInput(*key)),
-        },
+}
 
-        PopupType::Playlist(PlaylistAction::AddSong) => match key.code {
-                Up | Char('k') => Some(Action::PopupScrollUp),
-                Down | Char('j') => Some(Action::PopupScrollDown),
-                Enter | Char('a') => Some(Action::AddToPlaylistConfirm),
-                _ => None
-        }
-
-        PopupType::Settings(mode) => match mode {
-            SettingsMode::ViewRoots => match key.code {
+fn handle_settings(key: &KeyEvent, variant: &SettingsMode ) -> Option<Action> {
+    use SettingsMode::*;
+    match variant {
+            ViewRoots => match key.code {
                 Char('a') => Some(Action::RootAdd),
                 Char('d') => Some(Action::RootRemove),
                 Up | Char('k') => Some(Action::PopupScrollUp),
                 Down | Char('j') => Some(Action::PopupScrollDown),
                 _ => None,
             },
-            SettingsMode::AddRoot => match key.code {
+            AddRoot => match key.code {
                 Esc => Some(Action::ViewSettings),
                 Enter => Some(Action::RootConfirm),
                 _ => Some(Action::SettingsInput(*key)),
             },
-            SettingsMode::RemoveRoot => match key.code {
+            RemoveRoot => match key.code {
                 Esc => Some(Action::ViewSettings),
                 Enter => Some(Action::RootConfirm),
                 _ => None,
             },
+    }
+}
+
+fn handle_playlist(key: &KeyEvent, variant: &PlaylistAction) -> Option<Action> {
+    use PlaylistAction::*;    
+match variant {
+
+        Create => match key.code {
+            Esc => Some(Action::ClosePopup),
+            Enter => Some(Action::CreatePlaylistConfirm),
+            _ => Some(Action::PopupInput(*key)),
         },
-        _ => None,
+        Delete => match key.code {
+            Esc => Some(Action::ClosePopup),
+            Enter => Some(Action::DeletePlaylistConfirm),
+            _ => Some(Action::PopupInput(*key)),
+        },
+        AddSong => match key.code {
+                Up | Char('k') => Some(Action::PopupScrollUp),
+                Down | Char('j') => Some(Action::PopupScrollDown),
+                Enter | Char('a') => Some(Action::AddToPlaylistConfirm),
+                _ => None
+        },
+        Rename => todo!()
     }
 }
 
