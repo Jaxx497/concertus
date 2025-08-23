@@ -49,8 +49,8 @@ QOL additions, new backend options will be explored.
 ## TODO 
 
 - Fix history bug
+- Implement custom themeing
 - Search by album/artist (!) Should be simple, just need to do it
-- Ditch power mode (?)
 - Add more settings
     - Update on start?
 - Implement a secondary player backend (gstreamer?)

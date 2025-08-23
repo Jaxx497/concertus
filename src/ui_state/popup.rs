@@ -24,7 +24,7 @@ impl PopupState {
             current: PopupType::None,
             input: new_textarea(""),
             selection: ListState::default(),
-            cached: Pane::Temp,
+            cached: Pane::Popup,
         }
     }
 
@@ -71,16 +71,16 @@ impl PopupState {
 impl UiState {
     pub fn show_popup(&mut self, popup: PopupType) {
         self.popup.open(popup);
-        if self.popup.cached == Pane::Temp {
+        if self.popup.cached == Pane::Popup {
             let current_pane = self.get_pane().clone();
             self.popup.set_cached_pane(current_pane);
-            self.set_pane(Pane::Temp);
+            self.set_pane(Pane::Popup);
         }
     }
 
     pub fn close_popup(&mut self) {
         let pane = self.popup.close();
-        self.popup.cached = Pane::Temp;
+        self.popup.cached = Pane::Popup;
         self.set_pane(pane);
     }
 }

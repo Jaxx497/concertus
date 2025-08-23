@@ -71,29 +71,42 @@ impl Concertus {
     }
 
     pub(crate) fn activate_settings(&mut self) {
-        self.ui.popup.selection.select(Some(0));
+        match self.ui.get_roots().is_empty() {
+            true => self.ui.popup.selection.select(None),
+            false => self.ui.popup.selection.select(Some(0)),
+        }
         self.ui
             .show_popup(PopupType::Settings(SettingsMode::ViewRoots))
     }
 
-    pub(crate) fn settings_scroll_up(&mut self) {
-        let roots_count = self.ui.get_roots().len();
-        if roots_count > 0 {
+    pub(crate) fn popup_scroll_up(&mut self) {
+        let list_len = match self.ui.popup.current {
+            PopupType::Settings(_) => self.ui.get_roots().len(),
+            PopupType::Playlist(_) => self.ui.playlists.len(),
+            _ => return,
+        };
+
+        if list_len > 0 {
             let current = self.ui.popup.selection.selected().unwrap_or(0);
             let new_selection = if current > 0 {
                 current - 1
             } else {
-                roots_count - 1 // Wrap to bottom
+                list_len - 1 // Wrap to bottom
             };
             self.ui.popup.selection.select(Some(new_selection));
         }
     }
 
-    pub(crate) fn settings_scroll_down(&mut self) {
-        let roots_count = self.ui.get_roots().len();
-        if roots_count > 0 {
+    pub(crate) fn popup_scroll_down(&mut self) {
+        let list_len = match self.ui.popup.current {
+            PopupType::Settings(_) => self.ui.get_roots().len(),
+            PopupType::Playlist(_) => self.ui.playlists.len(),
+            _ => return,
+        };
+
+        if list_len > 0 {
             let current = self.ui.popup.selection.selected().unwrap_or(0);
-            let new_selection = (current + 1) % roots_count; // Wrap to top
+            let new_selection = (current + 1) % list_len; // Wrap to top
             self.ui.popup.selection.select(Some(new_selection));
         }
     }

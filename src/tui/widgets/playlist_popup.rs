@@ -1,9 +1,13 @@
 // tui/widgets/playlist_popup.rs
-use crate::ui_state::{PlaylistAction, PopupType, UiState};
+use crate::{
+    tui::widgets::POPUP_PADDING,
+    ui_state::{PlaylistAction, PopupType, UiState, GOLD},
+};
 use ratatui::{
     layout::{Constraint, Layout},
     style::{Color, Style, Stylize},
-    widgets::{Block, BorderType, Padding, Paragraph, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Block, BorderType, List, Padding, Paragraph, StatefulWidget, Widget, Wrap},
 };
 
 pub struct PlaylistPopup;
@@ -19,6 +23,8 @@ impl StatefulWidget for PlaylistPopup {
         if let PopupType::Playlist(action) = &state.popup.current {
             match action {
                 PlaylistAction::Create => render_create_popup(area, buf, state),
+                PlaylistAction::AddSong => render_add_song_popup(area, buf, state),
+                PlaylistAction::Delete => render_delete_popup(area, buf, state),
                 _ => (),
             }
         }
@@ -69,4 +75,56 @@ fn render_create_popup(
         .fg(Color::DarkGray)
         .centered()
         .render(chunks[2], buf);
+}
+
+fn render_add_song_popup(
+    area: ratatui::prelude::Rect,
+    buf: &mut ratatui::prelude::Buffer,
+    state: &mut UiState,
+) {
+    let list_items = state
+        .playlists
+        .iter()
+        .map(|p| {
+            let playlist_name = p.name.to_string();
+            Line::from(playlist_name)
+        })
+        .collect::<Vec<Line>>();
+
+    let block = Block::bordered()
+        // .title(title)
+        .title_bottom(" [Enter] confirm / [Esc] cancel ")
+        .title_alignment(ratatui::layout::Alignment::Center)
+        .border_type(BorderType::Double)
+        .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
+        .bg(Color::Rgb(25, 25, 25))
+        .padding(POPUP_PADDING);
+
+    let list = List::new(list_items)
+        .block(block)
+        .highlight_style(Style::new().fg(Color::Black).bg(GOLD));
+    ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
+}
+
+fn render_delete_popup(
+    area: ratatui::prelude::Rect,
+    buf: &mut ratatui::prelude::Buffer,
+    state: &mut UiState,
+) {
+    let block = Block::bordered()
+        // .title(title)
+        .title_bottom(" [Enter] confirm / [Esc] cancel ")
+        .title_alignment(ratatui::layout::Alignment::Center)
+        .border_type(BorderType::Double)
+        .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
+        .bg(Color::Rgb(25, 25, 25))
+        .padding(POPUP_PADDING);
+
+    if let Some(p) = state.get_selected_playlist() {
+        let warning = Paragraph::new(format!("Are you sure you want to delete [{}]?", p.name))
+            .block(block)
+            .wrap(Wrap { trim: true })
+            .centered();
+        warning.render(area, buf);
+    };
 }

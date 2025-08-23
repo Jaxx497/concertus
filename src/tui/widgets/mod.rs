@@ -21,3 +21,10 @@ pub use waveform::Waveform;
 const DUR_WIDTH: u16 = 5;
 const PAUSE_ICON: &str = "󰏤";
 const WAVEFORM_WIDGET_HEIGHT: f64 = 50.0;
+
+static POPUP_PADDING: ratatui::widgets::Padding = ratatui::widgets::Padding {
+    left: 2,
+    right: 2,
+    top: 1,
+    bottom: 1,
+};

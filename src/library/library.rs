@@ -2,7 +2,7 @@ use super::LEGAL_EXTENSION;
 use crate::{
     calculate_signature,
     database::Database,
-    domain::{Album, LongSong, Playlist, SimpleSong, SongInfo},
+    domain::{Album, LongSong, SimpleSong, SongInfo},
 };
 use anyhow::{anyhow, Context, Result};
 use rayon::prelude::*;
@@ -18,7 +18,6 @@ pub struct Library {
     pub roots: HashSet<PathBuf>,
     pub songs: Vec<Arc<SimpleSong>>,
     pub albums: Vec<Album>,
-    pub playlists: Vec<Playlist>,
 }
 
 impl Library {
@@ -28,7 +27,6 @@ impl Library {
             roots: HashSet::new(),
             songs: Vec::new(),
             albums: Vec::new(),
-            playlists: Vec::new(),
         }
     }
 
@@ -57,7 +55,7 @@ impl Library {
     pub fn add_root(&mut self, root: impl AsRef<Path>) -> Result<()> {
         let canon = PathBuf::from(root.as_ref())
             .canonicalize()
-            .map_err(|_| anyhow::format_err!("Path does not exist! {}", root.as_ref().display()))?;
+            .map_err(|_| anyhow!("Path does not exist! {}", root.as_ref().display()))?;
 
         if self.roots.insert(canon.clone()) {
             let mut db = self.db.lock().unwrap();
@@ -85,7 +83,6 @@ impl Library {
             self.update_db_by_root()?;
             self.collect_songs()?;
             self.build_albums()?;
-            self.get_playlists()?;
         }
 
         Ok(())
@@ -271,12 +268,6 @@ impl Library {
 
         Ok(())
     }
-
-    fn get_playlists(&mut self) -> Result<()> {
-        let mut db_lock = self.db.lock().unwrap();
-        self.playlists = db_lock.get_playlists()?;
-        Ok(())
-    }
 }
 
 // Waveform related
@@ -330,9 +321,5 @@ impl Library {
 
     pub fn get_all_albums(&self) -> &[Album] {
         &self.albums
-    }
-
-    pub fn get_all_playlists(&self) -> &[Playlist] {
-        &self.playlists
     }
 }

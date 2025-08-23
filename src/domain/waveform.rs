@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::{io::Cursor, path::Path, process::Command, time::Duration};
 
@@ -26,7 +26,7 @@ fn get_audio_duration<P: AsRef<Path>>(audio_path: P) -> Result<Duration> {
     let audio_path_str = audio_path
         .as_ref()
         .to_str()
-        .ok_or_else(|| anyhow::format_err!("Audio path contains invalid Unicode"))?;
+        .ok_or_else(|| anyhow!("Audio path contains invalid Unicode"))?;
 
     // Use ffprobe to get duration
     let output = Command::new("ffprobe")
@@ -43,7 +43,7 @@ fn get_audio_duration<P: AsRef<Path>>(audio_path: P) -> Result<Duration> {
         .context("Failed to execute ffprobe")?;
 
     if !output.status.success() {
-        return Err(anyhow::format_err!(
+        return Err(anyhow!(
             "ffprobe failed: {}",
             String::from_utf8_lossy(&output.stderr)
         ));
@@ -64,7 +64,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
         Ok(d) => d,
         Err(e) => {
             eprintln!("Warning: Couldn't determine audio duration: {}", e);
-            return Err(anyhow::anyhow!("Could not determine audio length"));
+            return Err(anyhow!("Could not determine audio length"));
         }
     };
 
@@ -75,7 +75,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
     let audio_path_str = audio_path
         .as_ref()
         .to_str()
-        .ok_or_else(|| anyhow::format_err!("Audio path contains invalid Unicode"))?;
+        .ok_or_else(|| anyhow!("Audio path contains invalid Unicode"))?;
 
     // Create a process to pipe audio data directly to memory using ffmpeg
     let mut cmd = Command::new("ffmpeg");
@@ -100,7 +100,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
 
     // Check for errors
     if !output.status.success() {
-        return Err(anyhow::format_err!(
+        return Err(anyhow!(
             "FFmpeg conversion failed: {}",
             String::from_utf8_lossy(&output.stderr)
         ));

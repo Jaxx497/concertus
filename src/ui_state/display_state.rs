@@ -1,6 +1,6 @@
 use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
-    domain::{Album, SimpleSong, SongInfo},
+    domain::{Album, Playlist, SimpleSong, SongInfo},
     key_handler::Director,
 };
 use anyhow::{anyhow, Result};
@@ -155,8 +155,8 @@ impl UiState {
                     self.set_legal_songs();
                     Arc::clone(&s.meta)
                 })
-                .ok_or_else(|| anyhow::anyhow!("Invalid Selection QUEUE MODE")),
-            _ => Err(anyhow::anyhow!("Invalid song")),
+                .ok_or_else(|| anyhow!("Invalid Selection QUEUE MODE")),
+            _ => Err(anyhow!("Invalid song")),
         }
     }
 
@@ -167,11 +167,11 @@ impl UiState {
             .and_then(|idx| self.albums.get(idx))
     }
 
-    pub fn get_selected_playlist(&self) -> Option<&Album> {
+    pub fn get_selected_playlist(&self) -> Option<&Playlist> {
         self.display_state
             .playlist_pos
             .selected()
-            .and_then(|idx| self.albums.get(idx))
+            .and_then(|idx| self.playlists.get(idx))
     }
 
     pub fn get_album_sort(&self) -> &AlbumSort {

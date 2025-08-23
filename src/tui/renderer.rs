@@ -19,9 +19,14 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     Progress.render(layout.progress_bar, f.buffer_mut(), state);
 
     if state.popup.is_open() {
-        let popup_rect = centered_rect(40, 40, f.area());
-        Clear.render(popup_rect, f.buffer_mut());
+        let popup_rect = match &state.popup.current {
+            PopupType::Playlist(_) => centered_rect(30, 30, f.area()),
+            PopupType::Settings(_) => centered_rect(30, 30, f.area()),
+            PopupType::Error(_) => centered_rect(40, 35, f.area()),
+            _ => centered_rect(30, 30, f.area()),
+        };
 
+        Clear.render(popup_rect, f.buffer_mut());
         match &state.popup.current {
             PopupType::Playlist(_) => PlaylistPopup.render(popup_rect, f.buffer_mut(), state),
             PopupType::Settings(_) => Settings.render(popup_rect, f.buffer_mut(), state),

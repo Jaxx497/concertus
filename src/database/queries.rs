@@ -155,8 +155,20 @@ pub const UPDATE_PLAYLIST: &str = "
         WHERE id = ?
 ";
 
+pub const DELETE_PLAYLIST: &str = "
+    DELETE FROM playlists
+        WHERE id = ?
+";
+
 pub const ADD_SONG_TO_PLAYLIST: &str = "
-    UPDATE playlist_songs
-        SET song_id = ?1,
-        playlist_id = ?2,
+    INSERT INTO playlist_songs (
+        song_id, 
+        playlist_id, 
+        position)
+    VALUES (
+        ?1, 
+        ?2, 
+        COALESCE((SELECT MAX(position) + 1
+        FROM playlist_songs WHERE playlist_id = ?2), 1)
+    )
 ";

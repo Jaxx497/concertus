@@ -7,7 +7,7 @@ use crate::{
     ui_state::{Mode, PopupType, SettingsMode, UiState},
     Database, Library,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use ratatui::crossterm::event::{Event, KeyEventKind};
 use std::{
     sync::{mpsc, Arc, Mutex},
@@ -147,7 +147,7 @@ impl Concertus {
         }
 
         if !std::fs::metadata(&song.path).is_ok() {
-            return Err(anyhow::anyhow!("File not found: {}", &song.path));
+            return Err(anyhow!("File not found: {}", &song.path));
         }
 
         self.ui.clear_waveform();
@@ -190,7 +190,7 @@ impl Concertus {
                 let queue_song = self.ui.make_playable_song(&prev)?;
                 self.play_song(queue_song)?;
             }
-            None => self.ui.set_error(anyhow::anyhow!("End of history!")),
+            None => self.ui.set_error(anyhow!("End of history!")),
         }
 
         self.ui.set_legal_songs();
@@ -231,7 +231,7 @@ impl Concertus {
                     return Ok(());
                 }
             }
-            return Err(anyhow::format_err!("Invalid waveform"));
+            return Err(anyhow!("Invalid waveform"));
         }
         Ok(())
     }

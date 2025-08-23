@@ -3,7 +3,7 @@ use crate::{
     ui_state::{LibraryView, Mode, Pane, PlaylistAction, PopupType, SettingsMode, UiState},
     REFRESH_RATE,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use std::{collections::HashSet, sync::LazyLock, time::Duration};
 
@@ -49,13 +49,21 @@ pub enum Action {
     // Playlists
     CreatePlaylist,
     CreatePlaylistConfirm,
+
+    DeletePlaylist,
+    DeletePlaylistConfirm,
+
+    AddToPlaylist,
+    AddToPlaylistConfirm,
+
     PopupInput(KeyEvent),
+
     ClosePopup,
+    PopupScrollUp,
+    PopupScrollDown,
 
     // Errors, Convenience & Other
     ViewSettings,
-    SettingsUp,
-    SettingsDown,
     RootAdd,
     RootRemove,
     RootConfirm,
@@ -100,7 +108,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
 }
 
 fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
-    let pane = state.get_pane();
+    let in_search = state.get_pane() == Pane::Search;
     let popup_active = state.popup.is_open();
     // Works on every pane, even search
     match (key.modifiers, key.code) {
@@ -109,7 +117,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (C, Char(' ')) => Some(Action::TogglePause),
 
         // Works on everything except search or popup
-        _ if ((pane != Pane::Search) && !popup_active) => match (key.modifiers, key.code) {
+        _ if (!in_search && !popup_active) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
             (X, Char('`')) => Some(Action::ViewSettings),
             (X, Char(' ')) => Some(Action::TogglePause),
@@ -122,7 +130,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('P')) => Some(Action::SeekBack(SEEK_LARGE)),
 
             // NAVIGATION
-            (X, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
+            // (X, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
             (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
             (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
             (X, Char('/')) => Some(Action::ChangeMode(Mode::Search)),
@@ -156,6 +164,7 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
         (X, Char('x')) => Some(Action::RemoveFromQueue),
 
+        (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
 
         // SORTING SONGS
@@ -180,6 +189,7 @@ fn handle_sidebar_pane(key: &KeyEvent) -> Option<Action> {
         // Change album sorting algorithm
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
         (C, Right) | (C, Char('l')) => Some(Action::ToggleAlbumSort(true)),
+        (C, Char('d')) => Some(Action::DeletePlaylist),
 
         _ => None,
     }
@@ -209,12 +219,25 @@ fn handle_popup(key: &KeyEvent, state: &UiState) -> Option<Action> {
             _ => Some(Action::PopupInput(*key)),
         },
 
+        PopupType::Playlist(PlaylistAction::Delete) => match key.code {
+            Esc => Some(Action::ClosePopup),
+            Enter => Some(Action::DeletePlaylistConfirm),
+            _ => Some(Action::PopupInput(*key)),
+        },
+
+        PopupType::Playlist(PlaylistAction::AddSong) => match key.code {
+                Up | Char('k') => Some(Action::PopupScrollUp),
+                Down | Char('j') => Some(Action::PopupScrollDown),
+                Enter | Char('a') => Some(Action::AddToPlaylistConfirm),
+                _ => None
+        }
+
         PopupType::Settings(mode) => match mode {
             SettingsMode::ViewRoots => match key.code {
                 Char('a') => Some(Action::RootAdd),
                 Char('d') => Some(Action::RootRemove),
-                Up | Char('k') => Some(Action::SettingsUp),
-                Down | Char('j') => Some(Action::SettingsDown),
+                Up | Char('k') => Some(Action::PopupScrollUp),
+                Down | Char('j') => Some(Action::PopupScrollDown),
                 _ => None,
             },
             SettingsMode::AddRoot => match key.code {
@@ -273,11 +296,36 @@ impl Concertus {
 
             Action::CreatePlaylistConfirm => {
                 let name = self.ui.popup.input.lines()[0].clone();
-                if let Err(e) = self.ui.create_playlist(&name) {
-                    self.ui.set_error(e);} else {
-                    self.ui.close_popup();
+                
+                // Prevent duplicates 
+                let playlist_names = self.ui.playlists.iter().map(|p| p.name.to_lowercase()).collect::<HashSet<_>>();
+
+                match playlist_names.contains(&name.to_lowercase()) {
+                    true => return Err(anyhow!("Playlist name already exists!")),
+                    false => {
+                        if let Err(e) = self.ui.create_playlist(&name) {
+                            self.ui.set_error(e);} else {
+                            self.ui.close_popup();
+                        }
+                    }
                 }
             }
+
+            Action::DeletePlaylist => {
+                self.ui.show_popup(PopupType::Playlist(PlaylistAction::Delete));
+            }
+
+            Action::DeletePlaylistConfirm => {
+                self.ui.delete_playlist()?;
+                self.ui.close_popup();
+            }
+
+            Action::AddToPlaylist => {
+                self.ui.popup.selection.select_first();
+                self.ui.show_popup(PopupType::Playlist(PlaylistAction::AddSong));
+            }
+
+            Action::AddToPlaylistConfirm => self.ui.add_to_playlist()?,
 
             Action::PopupInput(key) => {
                 self.ui.popup.input.input(key);
@@ -296,8 +344,8 @@ impl Concertus {
             Action::QUIT            => self.ui.set_mode(Mode::QUIT),
 
             Action::ViewSettings    => self.activate_settings(),
-            Action::SettingsUp      => self.settings_scroll_up(),
-            Action::SettingsDown    => self.settings_scroll_down(),
+            Action::PopupScrollUp      => self.popup_scroll_up(),
+            Action::PopupScrollDown    => self.popup_scroll_down(),
             Action::RootAdd         => self.settings_add_root(),
             Action::RootRemove      => self.settings_remove_root(),
             Action::RootConfirm     => self.settings_root_confirm()?,

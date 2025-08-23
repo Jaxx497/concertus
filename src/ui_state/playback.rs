@@ -54,7 +54,7 @@ impl UiState {
             .display_state
             .album_pos
             .selected()
-            .ok_or_else(|| anyhow::anyhow!("Illegal album selection!"))?;
+            .ok_or_else(|| anyhow!("Illegal album selection!"))?;
 
         let songs = self.albums[album].tracklist.clone();
         for song in songs {

@@ -2,7 +2,7 @@
 pub enum Pane {
     SideBar,
     Search,
-    Temp,
+    Popup,
     #[default]
     TrackList,
 }
@@ -19,7 +19,7 @@ impl std::fmt::Display for Pane {
             Pane::TrackList => write!(f, "tracklist"),
             Pane::SideBar => write!(f, "sidebar"),
             Pane::Search => write!(f, "search"),
-            Pane::Temp => write!(f, "temp"),
+            Pane::Popup => write!(f, "temp"),
         }
     }
 }

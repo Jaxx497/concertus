@@ -1,5 +1,6 @@
 use crate::{
     strip_win_prefix,
+    tui::widgets::POPUP_PADDING,
     ui_state::{SettingsMode, UiState, GOOD_RED},
 };
 use ratatui::{
@@ -9,13 +10,6 @@ use ratatui::{
     widgets::{
         Block, BorderType, HighlightSpacing, List, Padding, Paragraph, StatefulWidget, Widget, Wrap,
     },
-};
-
-static POPUP_PADDING: Padding = Padding {
-    left: 2,
-    right: 2,
-    top: 1,
-    bottom: 1,
 };
 
 pub struct Settings;
@@ -34,7 +28,7 @@ impl StatefulWidget for Settings {
             Some(SettingsMode::ViewRoots) => " Settings - Music Library Roots ",
             Some(SettingsMode::AddRoot) => " Add New Root Directory ",
             Some(SettingsMode::RemoveRoot) => " Remove Root Directory ",
-            None => unreachable!(),
+            None => return,
         };
 
         let block = Block::bordered()
@@ -97,7 +91,6 @@ fn render_roots_list(
 
     let list = List::new(items)
         .highlight_style(Style::default().fg(Color::Black).bg(theme.text_highlighted))
-        // .highlight_symbol(SELECTOR)
         .highlight_spacing(HighlightSpacing::Always);
 
     ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);

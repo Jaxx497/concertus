@@ -11,21 +11,20 @@ use crate::{
     },
     Library,
 };
-use anyhow::Error;
+use anyhow::{Error, Result};
 use ratatui::widgets::Borders;
 use std::sync::{Arc, Mutex};
 
 pub struct UiState {
-    // Backend Bleh
+    // Backend Modules
     pub(super) library: Arc<Library>,
     pub(crate) playback: PlaybackCoordinator,
 
     // Visual Elements
+    theme: Theme,
     pub(crate) popup: PopupState,
     pub(super) search: SearchState,
-    // pub(crate) settings: Settings,
     pub(crate) display_state: DisplayState,
-    theme: Theme,
 
     // View models
     pub albums: Vec<Album>,
@@ -41,7 +40,6 @@ impl UiState {
             display_state: DisplayState::new(),
             playback: PlaybackCoordinator::new(player_state),
             popup: PopupState::new(),
-            // settings: Settings::new(),
             theme: Theme::set_generic_theme(),
             albums: Vec::new(),
             legal_songs: Vec::new(),
@@ -51,7 +49,7 @@ impl UiState {
 }
 
 impl UiState {
-    pub fn sync_library(&mut self, library: Arc<Library>) {
+    pub fn sync_library(&mut self, library: Arc<Library>) -> Result<()> {
         self.library = library;
 
         self.sort_albums();
@@ -65,8 +63,10 @@ impl UiState {
             }
         }
 
-        self.playlists = self.library.get_all_playlists().to_vec();
+        self.get_playlists()?;
         self.set_legal_songs();
+
+        Ok(())
     }
 
     pub fn set_error(&mut self, e: Error) {
