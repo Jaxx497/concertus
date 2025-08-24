@@ -138,12 +138,6 @@ pub const SET_SESSION_STATE: &str = "
         VALUES (?, ?)
 ";
 
-pub const GET_PLAYLISTS: &str = "
-    SELECT id, name 
-        FROM playlists
-        ORDER BY updated_at DESC
-";
-
 pub const CREATE_NEW_PLAYLIST: &str = "
     INSERT OR IGNORE INTO playlists (name, updated_at) 
         VALUES (?, strftime('%s', 'now'))
@@ -171,4 +165,21 @@ pub const ADD_SONG_TO_PLAYLIST: &str = "
         COALESCE((SELECT MAX(position) + 1
         FROM playlist_songs WHERE playlist_id = ?2), 1)
     )
+";
+
+pub const GET_PLAYLISTS: &str = "
+    SELECT id, name 
+        FROM playlists
+        ORDER BY updated_at DESC
+";
+
+pub const PLAYLIST_BUILDER: &str = "
+    SELECT 
+        ps.song_id, 
+        p.id as playlist_id, 
+        p.name 
+    FROM playlists p
+    LEFT JOIN playlist_songs ps 
+        ON p.id = ps.playlist_id
+    ORDER BY p.updated_at DESC, COALESCE(ps.position, 0) ASC
 ";

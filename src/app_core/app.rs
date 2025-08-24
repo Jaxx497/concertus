@@ -126,12 +126,13 @@ impl Concertus {
         updated_lib.build_library().unwrap();
 
         self.library = Arc::new(updated_lib);
-        self.ui.sync_library(Arc::clone(&self.library));
+        if let Err(e) = self.ui.sync_library(Arc::clone(&self.library)) {
+            self.ui.set_error(e);
+        }
     }
 
     pub fn initialize_ui(&mut self) {
         self.ui.soft_reset();
-        self.ui.sync_library(Arc::clone(&self.library));
         self.ui.load_history();
         let _ = self.ui.restore_state();
     }
@@ -250,7 +251,9 @@ impl Concertus {
         let updated_len = updated_lib.albums.len();
 
         self.library = Arc::new(updated_lib);
-        self.ui.sync_library(Arc::clone(&self.library));
+        if let Err(e) = self.ui.sync_library(Arc::clone(&self.library)) {
+            self.ui.set_error(e);
+        }
 
         // Do not index a value out of bounds if current selection
         // will be out of bounds after update

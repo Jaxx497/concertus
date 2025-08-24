@@ -1,4 +1,5 @@
 use anyhow::Result;
+use indexmap::IndexMap;
 use queries::*;
 use rusqlite::{params, Connection};
 use std::{
@@ -111,7 +112,7 @@ impl Database {
         Ok(())
     }
 
-    pub(crate) fn get_all_songs(&mut self) -> Result<Vec<Arc<SimpleSong>>> {
+    pub(crate) fn get_all_songs(&mut self) -> Result<IndexMap<u64, Arc<SimpleSong>>> {
         self.set_album_map()?;
         self.set_artist_map()?;
 
@@ -155,7 +156,7 @@ impl Database {
                     format: row.get("format")?,
                 };
 
-                Ok(Arc::new(song))
+                Ok((hash, Arc::new(song)))
             })?
             .filter_map(Result::ok)
             .collect();
@@ -359,12 +360,9 @@ impl Database {
 
     pub fn import_history(
         &mut self,
-        songs: &[Arc<SimpleSong>],
+        song_map: &IndexMap<u64, Arc<SimpleSong>>,
     ) -> Result<VecDeque<Arc<SimpleSong>>> {
         let mut history = VecDeque::new();
-
-        let song_map: HashMap<u64, Arc<SimpleSong>> =
-            songs.iter().map(|s| (s.id, Arc::clone(s))).collect();
 
         let mut stmt = self.conn.prepare(LOAD_HISTORY)?;
         let rows = stmt.query_map([], |row| {

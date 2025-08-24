@@ -15,7 +15,7 @@ const X: KeyModifiers = KeyModifiers::NONE;
 const SEEK_SMALL: usize = 5;
 const SEEK_LARGE: usize = 30;
 const SCROLL_MID: usize = 5;
-const SCROLL_XTRA: usize = 50;
+const SCROLL_XTRA: usize = 20;
 
 #[derive(PartialEq, Eq)]
 pub enum Action {
@@ -319,7 +319,8 @@ impl Concertus {
                     true => return Err(anyhow!("Playlist name already exists!")),
                     false => {
                         if let Err(e) = self.ui.create_playlist(&name) {
-                            self.ui.set_error(e);} else {
+                            self.ui.set_error(e);
+                        } else {
                             self.ui.close_popup();
                         }
                     }

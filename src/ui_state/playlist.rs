@@ -1,4 +1,4 @@
-use crate::ui_state::UiState;
+use crate::{domain::Playlist, ui_state::UiState};
 use anyhow::{anyhow, Result};
 
 #[derive(PartialEq)]
@@ -11,9 +11,30 @@ pub enum PlaylistAction {
 
 impl UiState {
     pub fn get_playlists(&mut self) -> Result<()> {
-        let db = self.library.get_db();
-        let mut db_lock = db.lock().unwrap();
-        self.playlists = db_lock.get_playlists()?;
+        let playlist_db = {
+            let db = self.library.get_db();
+            let mut db_lock = db.lock().unwrap();
+            db_lock.build_playlists()?
+        };
+
+        let songs_map = self.library.get_songs_map();
+
+        self.playlists = playlist_db
+            .iter()
+            .map(|((id, name), track_ids)| {
+                let tracks = track_ids
+                    .iter()
+                    .filter_map(|&s_id| songs_map.get(&s_id).cloned())
+                    .collect();
+
+                Playlist {
+                    id: *id,
+                    name: name.to_string(),
+                    tracks,
+                }
+            })
+            .collect();
+
         Ok(())
     }
 
@@ -22,10 +43,13 @@ impl UiState {
             return Err(anyhow!("Playlist name cannot be empty!"));
         }
 
-        let db = self.library.get_db();
-        let mut db_lock = db.lock().unwrap();
-        db_lock.create_new_playlist(name)?;
-        self.playlists = db_lock.get_playlists()?;
+        {
+            let db = self.library.get_db();
+            let mut db_lock = db.lock().unwrap();
+            db_lock.create_playlist(name)?;
+        }
+        self.get_playlists()?;
+        // self.playlists = db_lock.get_playlists()?;
 
         Ok(())
     }
@@ -35,10 +59,14 @@ impl UiState {
 
         if let Some(idx) = current_playlist {
             let playlist_id = self.playlists[idx].id;
-            let db = self.library.get_db();
-            let mut db_lock = db.lock().unwrap();
-            db_lock.delete_playlist(playlist_id)?;
-            self.playlists = db_lock.get_playlists()?;
+            {
+                let db = self.library.get_db();
+                let mut db_lock = db.lock().unwrap();
+                db_lock.delete_playlist(playlist_id)?;
+            }
+
+            // self.playlists = db_lock.get_playlists()?;
+            self.get_playlists()?;
         }
 
         Ok(())
@@ -52,7 +80,6 @@ impl UiState {
             let db = self.library.get_db();
             let mut db_lock = db.lock().unwrap();
             db_lock.add_to_playlist(song_id, playlist_id)?;
-            db_lock.update_playlist(playlist_id)?;
 
             self.close_popup()
         } else {

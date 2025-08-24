@@ -79,7 +79,7 @@ impl UiState {
     pub(crate) fn load_history(&mut self) {
         self.playback.history = self
             .library
-            .load_history(&self.library.get_all_songs())
+            .load_history(&self.library.get_songs_map())
             .unwrap_or_default();
     }
 

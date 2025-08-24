@@ -5,6 +5,7 @@ use crate::{
     domain::{Album, LongSong, SimpleSong, SongInfo},
 };
 use anyhow::{anyhow, Context, Result};
+use indexmap::IndexMap;
 use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
@@ -16,7 +17,7 @@ use walkdir::WalkDir;
 pub struct Library {
     db: Arc<Mutex<Database>>,
     pub roots: HashSet<PathBuf>,
-    pub songs: Vec<Arc<SimpleSong>>,
+    pub songs: IndexMap<u64, Arc<SimpleSong>>,
     pub albums: Vec<Album>,
 }
 
@@ -25,7 +26,7 @@ impl Library {
         Library {
             db,
             roots: HashSet::new(),
-            songs: Vec::new(),
+            songs: IndexMap::new(),
             albums: Vec::new(),
         }
     }
@@ -202,6 +203,14 @@ impl Library {
         Ok(())
     }
 
+    pub fn get_songs_map(&self) -> &IndexMap<u64, Arc<SimpleSong>> {
+        &self.songs
+    }
+
+    pub fn get_song_by_id(&self, id: u64) -> Option<&Arc<SimpleSong>> {
+        self.songs.get(&id)
+    }
+
     fn build_albums(&mut self) -> Result<()> {
         let mut db = self.db.lock().unwrap();
         let aa_cache = db.get_album_map()?;
@@ -220,7 +229,7 @@ impl Library {
         }
 
         // Assign each song to it's proper album
-        for song in &self.songs {
+        for song in self.songs.values() {
             let key = (Arc::clone(&song.album_artist), Arc::clone(&song.album));
 
             let album_idx = match album_lookup.get(&key) {
@@ -306,7 +315,10 @@ impl Library {
             .unwrap_or_else(|e| eprintln!("Error: {e}"));
     }
 
-    pub fn load_history(&self, songs: &[Arc<SimpleSong>]) -> Result<VecDeque<Arc<SimpleSong>>> {
+    pub fn load_history(
+        &self,
+        songs: &IndexMap<u64, Arc<SimpleSong>>,
+    ) -> Result<VecDeque<Arc<SimpleSong>>> {
         let mut db = self.db.lock().unwrap();
 
         db.import_history(songs)
@@ -315,8 +327,8 @@ impl Library {
 
 // UI State
 impl Library {
-    pub fn get_all_songs(&self) -> &Vec<Arc<SimpleSong>> {
-        &self.songs
+    pub fn get_all_songs(&self) -> Vec<Arc<SimpleSong>> {
+        self.songs.values().cloned().collect()
     }
 
     pub fn get_all_albums(&self) -> &[Album] {

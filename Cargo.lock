@@ -228,6 +228,7 @@ dependencies = [
  "byteorder",
  "dirs",
  "fuzzy-matcher",
+ "indexmap",
  "mp4ameta",
  "ratatui",
  "rayon",

@@ -5,7 +5,7 @@ use std::sync::Arc;
 pub struct Playlist {
     pub id: i64,
     pub name: String,
-    // pub tracks: Vec<Arc<SimpleSong>>,
+    pub tracks: Vec<Arc<SimpleSong>>,
 }
 
 impl Playlist {
@@ -13,7 +13,7 @@ impl Playlist {
         Playlist {
             id,
             name,
-            // tracks: Vec::new(),
+            tracks: Vec::new(),
         }
     }
 }

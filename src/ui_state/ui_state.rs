@@ -1,15 +1,15 @@
 use super::{
-    playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState,
-    DisplayTheme, Pane,
+    DisplayState, DisplayTheme, Pane, playback::PlaybackCoordinator, search_state::SearchState,
+    theme::Theme,
 };
 use crate::{
+    Library,
     domain::{Album, Playlist, SimpleSong},
     player::PlayerState,
     ui_state::{
-        popup::{PopupState, PopupType},
         LibraryView, Mode,
+        popup::{PopupState, PopupType},
     },
-    Library,
 };
 use anyhow::{Error, Result};
 use ratatui::widgets::Borders;
