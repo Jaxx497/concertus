@@ -3,6 +3,7 @@ use crate::{
     calculate_signature,
     database::Database,
     domain::{Album, LongSong, SimpleSong, SongInfo},
+    expand_tilde,
 };
 use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
@@ -54,7 +55,8 @@ impl Library {
     }
 
     pub fn add_root(&mut self, root: impl AsRef<Path>) -> Result<()> {
-        let canon = PathBuf::from(root.as_ref())
+        let expanded_path = expand_tilde(root.as_ref())?;
+        let canon = PathBuf::from(expanded_path)
             .canonicalize()
             .map_err(|_| anyhow!("Path does not exist! {}", root.as_ref().display()))?;
 

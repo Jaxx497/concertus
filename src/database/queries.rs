@@ -175,6 +175,7 @@ pub const GET_PLAYLISTS: &str = "
 
 pub const PLAYLIST_BUILDER: &str = "
     SELECT 
+        ps.id,
         ps.song_id, 
         p.id as playlist_id, 
         p.name 
@@ -182,4 +183,9 @@ pub const PLAYLIST_BUILDER: &str = "
     LEFT JOIN playlist_songs ps 
         ON p.id = ps.playlist_id
     ORDER BY p.updated_at DESC, COALESCE(ps.position, 0) ASC
+";
+
+pub const REMOVE_SONG_FROM_PLAYLIST: &str = "
+    DELETE FROM playlist_songs
+    WHERE id = ?;
 ";

@@ -1,11 +1,10 @@
 use super::SimpleSong;
 use std::sync::Arc;
 
-#[derive(Clone)]
 pub struct Playlist {
     pub id: i64,
     pub name: String,
-    pub tracks: Vec<Arc<SimpleSong>>,
+    pub tracklist: Vec<PlaylistSong>,
 }
 
 impl Playlist {
@@ -13,7 +12,19 @@ impl Playlist {
         Playlist {
             id,
             name,
-            tracks: Vec::new(),
+            tracklist: Vec::new(),
         }
     }
+
+    pub fn get_tracks(&self) -> Vec<Arc<SimpleSong>> {
+        self.tracklist
+            .iter()
+            .map(|s| Arc::clone(&s.song))
+            .collect::<Vec<_>>()
+    }
+}
+
+pub struct PlaylistSong {
+    pub id: i64,
+    pub song: Arc<SimpleSong>,
 }

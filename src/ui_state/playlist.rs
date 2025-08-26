@@ -1,4 +1,7 @@
-use crate::{domain::Playlist, ui_state::UiState};
+use crate::{
+    domain::{Playlist, PlaylistSong},
+    ui_state::UiState,
+};
 use anyhow::{anyhow, Result};
 
 #[derive(PartialEq)]
@@ -22,15 +25,23 @@ impl UiState {
         self.playlists = playlist_db
             .iter()
             .map(|((id, name), track_ids)| {
-                let tracks = track_ids
+                let tracklist = track_ids
                     .iter()
-                    .filter_map(|&s_id| songs_map.get(&s_id).cloned())
+                    .filter_map(|&s_id| {
+                        let ps_id = s_id.0;
+                        let simple_song = songs_map.get(&s_id.1).unwrap().clone();
+
+                        Some(PlaylistSong {
+                            id: ps_id,
+                            song: simple_song,
+                        })
+                    })
                     .collect();
 
                 Playlist {
                     id: *id,
                     name: name.to_string(),
-                    tracks,
+                    tracklist,
                 }
             })
             .collect();

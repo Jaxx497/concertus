@@ -50,14 +50,29 @@ impl UiState {
         Ok(())
     }
 
-    pub fn queue_album(&mut self) -> Result<()> {
-        let album = self
-            .display_state
-            .album_pos
-            .selected()
-            .ok_or_else(|| anyhow!("Illegal album selection!"))?;
+    pub fn queue_entity(&mut self) -> Result<()> {
+        let songs = match self.get_mode() {
+            Mode::Library(LibraryView::Albums) => {
+                let album_idx = self
+                    .display_state
+                    .album_pos
+                    .selected()
+                    .ok_or_else(|| anyhow!("Illegal album selection!"))?;
 
-        let songs = self.albums[album].tracklist.clone();
+                self.albums[album_idx].tracklist.clone()
+            }
+            Mode::Library(LibraryView::Playlists) => {
+                let playlist_idx = self
+                    .display_state
+                    .playlist_pos
+                    .selected()
+                    .ok_or_else(|| anyhow!("Illegal playlist selection!"))?;
+
+                self.playlists[playlist_idx].get_tracks()
+            }
+            _ => return Ok(()),
+        };
+
         for song in songs {
             self.queue_song(Some(song))?;
         }
@@ -98,18 +113,36 @@ impl UiState {
     pub fn remove_song(&mut self) -> Result<()> {
         match *self.get_mode() {
             Mode::Library(LibraryView::Playlists) => {
-                let song_idx = self.display_state.table_pos.selected().unwrap_or(0);
-                let playlist_id = if let Some(p) = self.get_selected_playlist() {
-                    p.id
-                } else {
-                    return Err(anyhow!("Invalid playlist selection"));
-                };
+                let song_idx = self
+                    .display_state
+                    .table_pos
+                    .selected()
+                    .ok_or_else(|| anyhow!("No song selected"))?;
 
-                for p in &mut self.playlists {
-                    if p.id == playlist_id {
-                        p.tracks.remove(song_idx);
-                    };
-                }
+                let playlist_id = self
+                    .get_selected_playlist()
+                    .ok_or_else(|| anyhow!("No playlist selected"))?
+                    .id;
+
+                let playlist = self
+                    .playlists
+                    .iter_mut()
+                    .find(|p| p.id == playlist_id)
+                    .ok_or_else(|| anyhow!("Playlist not found"))?;
+
+                let ps_id = playlist
+                    .tracklist
+                    .get(song_idx)
+                    .ok_or_else(|| anyhow!("Invalid song selection"))?
+                    .id;
+
+                self.library
+                    .get_db()
+                    .lock()
+                    .map_err(|_| anyhow!("Failed to acquire database lock"))?
+                    .remove_from_playlist(ps_id)?;
+
+                playlist.tracklist.remove(song_idx);
             }
             Mode::Queue => {
                 self.display_state

@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use ratatui::crossterm::{
     cursor::MoveToColumn,
     style::Print,
@@ -7,7 +8,7 @@ use ratatui::crossterm::{
 use std::{
     fs,
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
     time::{Duration, UNIX_EPOCH},
 };
 use ui_state::UiState;
@@ -124,4 +125,25 @@ pub fn overwrite_line(message: &str) {
         .execute(Print(message))
         .unwrap();
     stdout.flush().unwrap();
+}
+
+pub fn expand_tilde<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
+    let path = path.as_ref();
+    let path_str = path.to_string_lossy();
+
+    if !path_str.starts_with('~') {
+        return Ok(path.to_path_buf());
+    }
+
+    if path_str == "~" {
+        return Err(anyhow!("Setting the home directory would read every file in your system. Please provide a more specific path!"));
+    }
+
+    if path_str.starts_with("~") || path_str.starts_with("~\\") {
+        let home =
+            dirs::home_dir().ok_or_else(|| anyhow!("Could not determine home directory!"))?;
+        return Ok(home.join(&path_str[2..]));
+    }
+
+    Err(anyhow!("Error reading directory with tilde (~)"))
 }

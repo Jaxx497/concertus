@@ -28,10 +28,13 @@ pub enum Action {
     SeekForward(usize),
     SeekBack(usize),
 
-    // Queue Controls
+    // Queue & Playlist Actions 
     QueueSong,
-    QueueAlbum,
+    QueueEntity,
     RemoveSong,
+
+    AddToPlaylist,
+    AddToPlaylistConfirm,
 
     // Updating App State
     UpdateLibrary,
@@ -53,8 +56,6 @@ pub enum Action {
     DeletePlaylist,
     DeletePlaylistConfirm,
 
-    AddToPlaylist,
-    AddToPlaylistConfirm,
 
     PopupInput(KeyEvent),
 
@@ -159,7 +160,7 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
         // QUEUEING SONGS
         (X, Char('q')) => Some(Action::QueueSong),
         (_, Char('Q')) => {
-            (state.get_mode() == Mode::Library(LibraryView::Albums)).then(|| Action::QueueAlbum)
+            (state.get_mode() == Mode::Library(LibraryView::Albums)).then(|| Action::QueueEntity)
         }
 
         (X, Char('x')) => Some(Action::RemoveSong),
@@ -181,7 +182,7 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
 fn handle_sidebar_pane(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
-        (X, Char('q')) => Some(Action::QueueAlbum),
+        (X, Char('q')) | (C, Enter) => Some(Action::QueueEntity),
         (X, Char('c')) => Some(Action::CreatePlaylist),
         (X, Enter) | (X, Tab) => Some(Action::ChangePane(Pane::TrackList)),
         (X, Char('l')) | (X, Char('h')) => Some(Action::ToggleSideBar),
@@ -350,7 +351,7 @@ impl Concertus {
 
             // Queue
             Action::QueueSong       => self.ui.queue_song(None)?,
-            Action::QueueAlbum      => self.ui.queue_album()?,
+            Action::QueueEntity      => self.ui.queue_entity()?,
             Action::RemoveSong      => self.ui.remove_song()?,
 
             // Ops

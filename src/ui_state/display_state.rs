@@ -306,7 +306,7 @@ impl UiState {
                     LibraryView::Playlists => {
                         if let Some(idx) = self.display_state.playlist_pos.selected() {
                             if let Some(playlist) = self.playlists.get(idx) {
-                                self.legal_songs = playlist.tracks.clone();
+                                self.legal_songs = playlist.get_tracks()
                             }
                         } else {
                             self.legal_songs.clear()

@@ -1,11 +1,11 @@
-mod album_view;
-mod playlist_view;
-mod queue_view;
+mod album_tracklist;
+mod playlist_tracklist;
+mod queue_tracklist;
 mod search_results;
 
-pub use album_view::AlbumView;
-pub use playlist_view::PlaylistView;
-pub use queue_view::QueueTable;
+pub use album_tracklist::AlbumView;
+pub use playlist_tracklist::PlaylistView;
+pub use queue_tracklist::QueueTable;
 pub use search_results::StandardTable;
 
 use crate::ui_state::{LibraryView, Mode, Pane, TableSort};
@@ -18,7 +18,6 @@ use ratatui::{
 
 const COLUMN_SPACING: u16 = 2;
 const SELECTOR: &str = "⮞  ";
-const keymaps: &str = " [q]ueue song | [a]dd to playlist ";
 
 const PADDING: Padding = Padding {
     left: 2,
