@@ -54,7 +54,7 @@ fn render_create_popup(
     block.render(area, buf);
 
     let chunks = Layout::vertical([
-        Constraint::Length(2),
+        Constraint::Length(3),
         Constraint::Length(3),
         Constraint::Min(1),
     ])
@@ -74,6 +74,7 @@ fn render_create_popup(
     Paragraph::new("Tip: Choose a descriptive name like 'Workout Mix' or 'Chill Vibes'")
         .fg(Color::DarkGray)
         .centered()
+        .wrap(Wrap { trim: true })
         .render(chunks[2], buf);
 }
 
@@ -92,7 +93,7 @@ fn render_add_song_popup(
         .collect::<Vec<Line>>();
 
     let block = Block::bordered()
-        // .title(title)
+        .title(" Select Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)

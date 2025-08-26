@@ -1,15 +1,15 @@
 use super::{
-    DisplayState, DisplayTheme, Pane, playback::PlaybackCoordinator, search_state::SearchState,
-    theme::Theme,
+    playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState,
+    DisplayTheme, Pane,
 };
 use crate::{
-    Library,
     domain::{Album, Playlist, SimpleSong},
     player::PlayerState,
     ui_state::{
-        LibraryView, Mode,
         popup::{PopupState, PopupType},
+        LibraryView, Mode,
     },
+    Library,
 };
 use anyhow::{Error, Result};
 use ratatui::widgets::Borders;
@@ -104,7 +104,7 @@ impl UiState {
                 // bg: Color::default(),
                 bg: self.theme.bg_unfocused,
                 border: self.theme.border_unfocused,
-                border_display: Borders::NONE,
+                border_display: Borders::ALL,
                 text_focused: self.theme.text_unfocused,
                 text_secondary: self.theme.text_secondary_u,
                 text_faded: self.theme.text_unfocused,

@@ -1,6 +1,7 @@
 use crate::{
     domain::{SimpleSong, SongInfo},
     get_readable_duration, truncate_at_last_space,
+    tui::widgets::tracklist::get_keymaps,
     ui_state::{DisplayTheme, Pane, UiState},
     DurationStyle,
 };
@@ -119,14 +120,9 @@ impl StatefulWidget for AlbumView {
         let header = get_header(&state.get_mode(), &state.get_table_sort());
         let widths = get_widths(&state.get_mode());
 
-        let keymaps = match state.get_pane() {
-            Pane::TrackList => " [q] Queue Song ✧ [Tab] Back ".fg(theme.text_faded),
-            _ => "".into(),
-        };
-
         let block = Block::bordered()
             .title_top(title_line)
-            .title_bottom(keymaps)
+            .title_bottom(get_keymaps(state.get_pane()).fg(theme.text_faded))
             .title_alignment(Alignment::Center)
             .border_type(BorderType::Thick)
             .border_style(Style::default().fg(theme.border))

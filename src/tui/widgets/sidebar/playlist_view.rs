@@ -21,7 +21,7 @@ impl StatefulWidget for SideBarPlaylist {
 
         let list_items = playlists.iter().map(|p| {
             ListItem::new(Line::from_iter([
-                Span::from(format!("{:<5} ", format!("[{}]", p.id))).fg(GOLD_FADED),
+                Span::from(format!("{:<5} ", format!("[{}]", p.tracks.len()))).fg(GOLD_FADED),
                 Span::from(&p.name).fg(theme.text_secondary),
             ]))
         });

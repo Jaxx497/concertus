@@ -31,7 +31,7 @@ pub enum Action {
     // Queue Controls
     QueueSong,
     QueueAlbum,
-    RemoveFromQueue,
+    RemoveSong,
 
     // Updating App State
     UpdateLibrary,
@@ -131,7 +131,6 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('P')) => Some(Action::SeekBack(SEEK_LARGE)),
 
             // NAVIGATION
-            // (X, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
             (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
             (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
             (X, Char('/')) => Some(Action::ChangeMode(Mode::Search)),
@@ -163,7 +162,7 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (state.get_mode() == Mode::Library(LibraryView::Albums)).then(|| Action::QueueAlbum)
         }
 
-        (X, Char('x')) => Some(Action::RemoveFromQueue),
+        (X, Char('x')) => Some(Action::RemoveSong),
 
         (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
@@ -352,7 +351,7 @@ impl Concertus {
             // Queue
             Action::QueueSong       => self.ui.queue_song(None)?,
             Action::QueueAlbum      => self.ui.queue_album()?,
-            Action::RemoveFromQueue => self.ui.remove_from_queue()?,
+            Action::RemoveSong      => self.ui.remove_song()?,
 
             // Ops
             Action::SoftReset       => self.ui.soft_reset(),

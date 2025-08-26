@@ -49,7 +49,10 @@ impl UiState {
             db_lock.create_playlist(name)?;
         }
         self.get_playlists()?;
-        // self.playlists = db_lock.get_playlists()?;
+
+        if self.display_state.playlist_pos.selected() == None {
+            self.display_state.playlist_pos.select_first();
+        }
 
         Ok(())
     }

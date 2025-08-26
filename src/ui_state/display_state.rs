@@ -140,23 +140,12 @@ impl UiState {
             return Err(anyhow!("No songs to select!"));
         }
 
-        // BUG: Using GOTO album on queue mode removes song from queue, need to fix this
         match self.display_state.mode {
-            Mode::Power | Mode::Library(LibraryView::Albums) | Mode::Search => {
+            Mode::Power | Mode::Library(_) | Mode::Search | Mode::Queue => {
                 let idx = self.display_state.table_pos.selected().unwrap();
                 Ok(Arc::clone(&self.legal_songs[idx]))
             }
-            Mode::Queue => self
-                .display_state
-                .table_pos
-                .selected()
-                .and_then(|idx| self.playback.queue.remove(idx))
-                .map(|s| {
-                    self.set_legal_songs();
-                    Arc::clone(&s.meta)
-                })
-                .ok_or_else(|| anyhow!("Invalid Selection QUEUE MODE")),
-            _ => Err(anyhow!("Invalid song")),
+            Mode::QUIT => unreachable!(),
         }
     }
 
@@ -317,8 +306,10 @@ impl UiState {
                     LibraryView::Playlists => {
                         if let Some(idx) = self.display_state.playlist_pos.selected() {
                             if let Some(playlist) = self.playlists.get(idx) {
-                                // self.legal_songs = playlist.tracks.clone();
+                                self.legal_songs = playlist.tracks.clone();
                             }
+                        } else {
+                            self.legal_songs.clear()
                         }
                     }
                 }

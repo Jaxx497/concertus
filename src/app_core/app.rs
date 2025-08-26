@@ -161,10 +161,14 @@ impl Concertus {
 
     pub(crate) fn play_selected_song(&mut self) -> Result<()> {
         let song = self.ui.get_selected_song()?;
+
+        if self.ui.get_mode() == &Mode::Queue {
+            self.ui.remove_song()?;
+        }
+
         let queue_song = self.ui.make_playable_song(&song)?;
 
         self.ui.add_to_history(Arc::clone(&song));
-
         self.play_song(queue_song)
     }
 

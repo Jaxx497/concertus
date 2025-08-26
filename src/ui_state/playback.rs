@@ -3,6 +3,7 @@ use crate::{
     domain::{QueueSong, SimpleSong},
     player::{PlaybackState, PlayerState},
     strip_win_prefix,
+    ui_state::LibraryView,
 };
 use anyhow::{anyhow, Context, Result};
 use std::{
@@ -94,16 +95,32 @@ impl UiState {
         }
     }
 
-    pub fn remove_from_queue(&mut self) -> Result<()> {
-        if Mode::Queue == *self.get_mode() {
-            self.display_state
-                .table_pos
-                .selected()
-                .and_then(|idx| self.playback.queue.remove(idx))
-                .map(|_| {
-                    self.set_legal_songs();
-                });
-        }
+    pub fn remove_song(&mut self) -> Result<()> {
+        match *self.get_mode() {
+            Mode::Library(LibraryView::Playlists) => {
+                let song_idx = self.display_state.table_pos.selected().unwrap_or(0);
+                let playlist_id = if let Some(p) = self.get_selected_playlist() {
+                    p.id
+                } else {
+                    return Err(anyhow!("Invalid playlist selection"));
+                };
+
+                for p in &mut self.playlists {
+                    if p.id == playlist_id {
+                        p.tracks.remove(song_idx);
+                    };
+                }
+            }
+            Mode::Queue => {
+                self.display_state
+                    .table_pos
+                    .selected()
+                    .and_then(|idx| self.playback.queue.remove(idx));
+            }
+            _ => (),
+        };
+
+        self.set_legal_songs();
         Ok(())
     }
 }

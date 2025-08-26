@@ -1,12 +1,14 @@
 mod album_view;
+mod playlist_view;
 mod queue_view;
 mod search_results;
 
 pub use album_view::AlbumView;
+pub use playlist_view::PlaylistView;
 pub use queue_view::QueueTable;
 pub use search_results::StandardTable;
 
-use crate::ui_state::{LibraryView, Mode, TableSort};
+use crate::ui_state::{LibraryView, Mode, Pane, TableSort};
 use ratatui::{
     layout::Constraint,
     style::{Color, Stylize},
@@ -16,6 +18,7 @@ use ratatui::{
 
 const COLUMN_SPACING: u16 = 2;
 const SELECTOR: &str = "⮞  ";
+const keymaps: &str = " [q]ueue song | [a]dd to playlist ";
 
 const PADDING: Padding = Padding {
     left: 2,
@@ -43,7 +46,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
                 Constraint::Length(7),
             ]
         }
-        Mode::Queue => {
+        Mode::Library(LibraryView::Playlists) | Mode::Queue => {
             vec![
                 Constraint::Min(3),
                 Constraint::Min(30),
@@ -88,5 +91,12 @@ pub(super) fn get_header<'a>(mode: &Mode, active: &TableSort) -> Vec<Text<'a>> {
             ]
         }
         _ => Vec::new(),
+    }
+}
+
+pub fn get_keymaps(pane: &Pane) -> &'static str {
+    match pane {
+        &Pane::TrackList => " [q]ueue Song ✧ [a]dd to Playlist ✧ [Tab] Back ",
+        _ => "",
     }
 }

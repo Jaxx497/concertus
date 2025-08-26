@@ -20,8 +20,8 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
 
     if state.popup.is_open() {
         let popup_rect = match &state.popup.current {
-            PopupType::Playlist(_) => centered_rect(30, 30, f.area()),
-            PopupType::Settings(_) => centered_rect(30, 30, f.area()),
+            PopupType::Playlist(_) => centered_rect(30, 40, f.area()),
+            PopupType::Settings(_) => centered_rect(30, 40, f.area()),
             PopupType::Error(_) => centered_rect(40, 35, f.area()),
             _ => centered_rect(30, 30, f.area()),
         };
@@ -51,10 +51,3 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     ])
     .split(popup_layout[1])[1]
 }
-
-// fn get_up_next(state: &UiState) -> ratatui::text::Line<'_> {
-//     ratatui::text::Line::from(match state.peek_queue() {
-//         Some(s) => &s.title,
-//         _ => "",
-//     })
-// }
