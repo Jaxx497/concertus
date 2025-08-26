@@ -1,6 +1,6 @@
-use super::tracklist::{AlbumView, QueueTable, StandardTable};
+use super::tracklist::{AlbumView, StandardTable};
 use crate::{
-    tui::widgets::tracklist::PlaylistView,
+    tui::widgets::tracklist::GenericView,
     ui_state::{LibraryView, Mode, UiState},
 };
 use ratatui::widgets::StatefulWidget;
@@ -17,8 +17,9 @@ impl StatefulWidget for SongTable {
     ) {
         match state.get_mode() {
             &Mode::Library(LibraryView::Albums) => AlbumView.render(area, buf, state),
-            &Mode::Library(LibraryView::Playlists) => PlaylistView.render(area, buf, state),
-            &Mode::Queue => QueueTable.render(area, buf, state),
+            &Mode::Library(LibraryView::Playlists) | &Mode::Queue => {
+                GenericView.render(area, buf, state)
+            }
             _ => StandardTable.render(area, buf, state),
         }
     }

@@ -1,19 +1,17 @@
 mod album_tracklist;
-mod playlist_tracklist;
-mod queue_tracklist;
+mod generic_tracklist;
 mod search_results;
 
 pub use album_tracklist::AlbumView;
-pub use playlist_tracklist::PlaylistView;
-pub use queue_tracklist::QueueTable;
+pub use generic_tracklist::GenericView;
 pub use search_results::StandardTable;
 
-use crate::ui_state::{LibraryView, Mode, Pane, TableSort};
+use crate::ui_state::{LibraryView, Mode, Pane, TableSort, UiState};
 use ratatui::{
-    layout::Constraint,
-    style::{Color, Stylize},
-    text::{Span, Text},
-    widgets::Padding,
+    layout::{Alignment, Constraint, Flex},
+    style::{Color, Style, Stylize},
+    text::{Line, Span, Text},
+    widgets::{Block, BorderType, HighlightSpacing, Padding, Row, Table},
 };
 
 const COLUMN_SPACING: u16 = 2;
@@ -47,7 +45,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
         }
         Mode::Library(LibraryView::Playlists) | Mode::Queue => {
             vec![
-                Constraint::Min(3),
+                Constraint::Min(6),
                 Constraint::Min(30),
                 Constraint::Fill(30),
                 Constraint::Max(5),
@@ -80,7 +78,7 @@ pub(super) fn get_header<'a>(mode: &Mode, active: &TableSort) -> Vec<Text<'a>> {
             _ => s.to_string().into(),
         })
         .collect(),
-        Mode::Library(LibraryView::Albums) => {
+        Mode::Library(_) | Mode::Queue => {
             vec![
                 Text::default(),
                 Text::from("Title").underlined(),
@@ -95,7 +93,45 @@ pub(super) fn get_header<'a>(mode: &Mode, active: &TableSort) -> Vec<Text<'a>> {
 
 pub fn get_keymaps(pane: &Pane) -> &'static str {
     match pane {
-        &Pane::TrackList => " [q]ueue Song ✧ [a]dd to Playlist ✧ [Tab] Back ",
+        &Pane::TrackList => " [q]ueue song ✧ [a]dd to playlist ✧ [x] remove ",
         _ => "",
     }
+}
+
+pub fn create_standard_table<'a>(rows: Vec<Row<'a>>, title: String, state: &UiState) -> Table<'a> {
+    let pane = state.get_pane();
+    let mode = state.get_mode();
+    let theme = state.get_theme(&Pane::TrackList);
+
+    let header = get_header(mode, &TableSort::Title);
+    let widths = get_widths(mode);
+    let keymaps = get_keymaps(pane);
+
+    let block = Block::bordered()
+        .title_top(Line::from(title).alignment(Alignment::Center))
+        .title_bottom(Line::from(keymaps.fg(theme.text_faded)).alignment(Alignment::Center))
+        .borders(theme.border_display)
+        .border_type(BorderType::Thick)
+        .border_style(theme.border)
+        .bg(theme.bg)
+        .padding(PADDING);
+
+    Table::new(rows, widths)
+        .block(block)
+        .header(
+            Row::new(header)
+                .fg(theme.text_secondary)
+                .bottom_margin(1)
+                .bold(),
+        )
+        .column_spacing(COLUMN_SPACING)
+        .flex(Flex::SpaceBetween)
+        .highlight_symbol(SELECTOR)
+        .highlight_spacing(HighlightSpacing::Always)
+        .row_highlight_style(
+            Style::new()
+                .fg(Color::Black)
+                .bg(theme.text_highlighted)
+                .italic(),
+        )
 }
