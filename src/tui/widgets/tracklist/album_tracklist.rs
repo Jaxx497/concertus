@@ -51,12 +51,13 @@ impl StatefulWidget for AlbumView {
                 let is_playing = now_playing_id == Some(song.id);
 
                 let track_no = CellFactory::get_track_discs(theme, song, disc_count);
-                let title = CellFactory::title_cell(theme, song, is_playing, is_queued);
+                let icon = CellFactory::status_cell(song, state);
+                let title = CellFactory::title_cell(theme, song);
                 let artist = CellFactory::artist_cell(theme, song);
                 let format = CellFactory::filetype_cell(theme, song);
                 let duration = CellFactory::duration_cell(theme, song);
 
-                Row::new([track_no, title.into(), artist, format, duration])
+                Row::new([track_no, icon, title.into(), artist, format, duration])
             })
             .collect::<Vec<Row>>();
 

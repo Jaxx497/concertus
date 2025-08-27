@@ -27,24 +27,26 @@ impl StatefulWidget for GenericView {
 
         let title = format!(" {} Size: {} Songs ", pretitle, songs.len());
 
-        let now_playing = state.get_now_playing().map(|s| s.id);
+        // let now_playing = state.get_now_playing().map(|s| s.id);
 
-        let queued_ids: HashSet<u64> = state.playback.queue.iter().map(|s| s.get_id()).collect();
-
+        // let queued_ids: HashSet<u64> = state.playback.queue.iter().map(|s| s.get_id()).collect();
+        //
         let rows = songs
             .iter()
             .enumerate()
             .map(|(idx, song)| {
-                let playing = now_playing == Some(song.id);
-                let queued = queued_ids.contains(&song.id);
+                // let playing = now_playing == Some(song.id);
+                // let queued = queued_ids.contains(&song.id);
 
                 let index = CellFactory::index_cell(&theme, idx);
-                let title = CellFactory::title_cell(&theme, song, playing, queued);
+                let icon = CellFactory::status_cell(song, state);
+                let title = CellFactory::title_cell(&theme, song);
+                // let title = CellFactory::title_cell(&theme, song, playing, queued);
                 let artist = CellFactory::artist_cell(&theme, song);
                 let filetype = CellFactory::filetype_cell(&theme, song);
                 let duration = CellFactory::duration_cell(&theme, song);
 
-                Row::new([index, title, artist, filetype, duration])
+                Row::new([index, icon, title, artist, filetype, duration])
             })
             .collect::<Vec<Row>>();
 

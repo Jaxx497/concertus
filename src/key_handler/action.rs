@@ -49,6 +49,7 @@ pub enum Action {
     GoToAlbum,
     Scroll(Director),
     BulkSelect,
+    ClearBulkSelect,
 
     // Playlists
     CreatePlaylist,
@@ -165,7 +166,9 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
             state.display_state.sidebar_view,
         ))),
 
-        (_, Char('v')) => Some(Action::BulkSelect),
+        (X, Char('v')) => Some(Action::BulkSelect),
+        (C, Char('v')) => Some(Action::ClearBulkSelect),
+
         (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
 
@@ -352,10 +355,11 @@ impl Concertus {
 
             // Queue
             Action::QueueSong       => self.ui.queue_check(None)?,
-            Action::QueueEntity      => self.ui.queue_entity()?,
+            Action::QueueEntity     => self.ui.queue_entity()?,
             Action::RemoveSong      => self.ui.remove_song()?,
 
             Action::BulkSelect      => self.ui.add_to_bulk_select()?,
+            Action::ClearBulkSelect => self.ui.clear_bulk_sel(),
             
 
             // Ops
@@ -364,8 +368,8 @@ impl Concertus {
             Action::QUIT            => self.ui.set_mode(Mode::QUIT),
 
             Action::ViewSettings    => self.activate_settings(),
-            Action::PopupScrollUp      => self.popup_scroll_up(),
-            Action::PopupScrollDown    => self.popup_scroll_down(),
+            Action::PopupScrollUp   => self.popup_scroll_up(),
+            Action::PopupScrollDown => self.popup_scroll_down(),
             Action::RootAdd         => self.settings_add_root(),
             Action::RootRemove      => self.settings_remove_root(),
             Action::RootConfirm     => self.settings_root_confirm()?,

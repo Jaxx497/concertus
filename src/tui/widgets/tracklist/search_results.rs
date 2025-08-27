@@ -1,12 +1,10 @@
-use super::{get_header, get_widths, COLUMN_SPACING, PADDING, SELECTOR};
 use crate::{
     domain::SongInfo,
     tui::widgets::tracklist::create_standard_table,
     ui_state::{Pane, TableSort, UiState},
 };
 use ratatui::{
-    layout::{Alignment, Flex},
-    style::{Color, Style, Stylize},
+    style::Stylize,
     text::Line,
     widgets::{StatefulWidget, *},
 };

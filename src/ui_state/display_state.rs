@@ -154,12 +154,10 @@ impl UiState {
 
     pub fn add_to_bulk_select(&mut self) -> Result<()> {
         let song = self.get_selected_song()?;
-        let song_clone = Arc::clone(&song);
 
-        if !self.display_state.bulk_select.insert(song) {
-            self.display_state.bulk_select.swap_remove(&song_clone)
-        } else {
-            false
+        match self.display_state.bulk_select.contains(&song) {
+            true => self.display_state.bulk_select.swap_remove(&song),
+            false => self.display_state.bulk_select.insert(song),
         };
 
         Ok(())

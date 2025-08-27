@@ -95,7 +95,7 @@ impl UiState {
         if let Some(playlist_idx) = self.popup.selection.selected() {
             let playlist_id = self.playlists.get(playlist_idx).unwrap().id;
 
-            match self.display_state.bulk_select.is_empty() {
+            match self.get_bulk_sel().is_empty() {
                 true => {
                     let song_id = self.get_selected_song()?.id;
 
@@ -104,18 +104,13 @@ impl UiState {
                     db_lock.add_to_playlist(song_id, playlist_id)?;
                 }
                 false => {
-                    let song_ids = self
-                        .display_state
-                        .bulk_select
-                        .iter()
-                        .map(|s| s.id)
-                        .collect::<Vec<_>>();
+                    let song_ids = self.get_bulk_sel().iter().map(|s| s.id).collect::<Vec<_>>();
 
                     let db = self.library.get_db();
                     let mut db_lock = db.lock().unwrap();
 
                     db_lock.add_to_playlist_bulk(song_ids, playlist_id)?;
-                    self.display_state.bulk_select.clear();
+                    self.clear_bulk_sel();
                 }
             }
 

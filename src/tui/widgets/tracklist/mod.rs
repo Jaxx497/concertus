@@ -3,7 +3,7 @@ mod generic_tracklist;
 mod search_results;
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     sync::{Arc, LazyLock},
 };
 
@@ -47,6 +47,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
         Mode::Library(_) | Mode::Queue => {
             vec![
                 Constraint::Length(6),
+                Constraint::Length(1),
                 Constraint::Min(25),
                 Constraint::Max(30),
                 Constraint::Max(6),
@@ -81,6 +82,7 @@ pub(super) fn get_header<'a>(state: &UiState, active: &TableSort) -> Row<'a> {
         .collect(),
         Mode::Library(_) | Mode::Queue => {
             vec![
+                Text::default(),
                 Text::default(),
                 Text::from("Title").underlined(),
                 Text::from("Artist").underlined(),
@@ -143,24 +145,49 @@ pub fn create_standard_table<'a>(
 pub struct CellFactory;
 
 impl CellFactory {
+    pub fn status_cell(song: &Arc<SimpleSong>, state: &UiState) -> Cell<'static> {
+        let theme = state.get_theme(&Pane::TrackList);
+
+        let is_playing = state.get_now_playing().map(|s| s.id) == Some(song.id);
+
+        let is_queued = state
+            .playback
+            .queue
+            .iter()
+            .map(|s| s.get_id())
+            .collect::<HashSet<_>>()
+            .contains(&song.id);
+        let is_bulk_selected = state.get_bulk_sel().contains(song);
+
+        Cell::from(if is_playing {
+            "♫".fg(theme.text_secondary)
+        } else if is_bulk_selected {
+            "".fg(theme.text_highlighted)
+        } else if is_queued {
+            "".fg(theme.text_highlighted)
+        } else {
+            "".into()
+        })
+    }
+
     pub fn title_cell(
         theme: &DisplayTheme,
         song: &Arc<SimpleSong>,
-        playing: bool,
-        queued: bool,
+        // playing: bool,
+        // queued: bool,
     ) -> Cell<'static> {
-        let title = match (queued, playing) {
-            (true, false) => Line::from_iter([
-                song.get_title().to_string().fg(theme.text_focused),
-                " [queued]".fg(theme.text_faded).italic().into(),
-            ]),
-            (false, true) => Line::from_iter([
-                song.get_title().to_string().fg(theme.text_focused),
-                " ♫".fg(theme.text_secondary).into(),
-            ]),
-            _ => Line::from(song.get_title().to_string().fg(theme.text_focused)),
-        };
-        Cell::from(title)
+        // let title = match (queued, playing) {
+        //     (true, false) => Line::from_iter([
+        //         song.get_title().to_string().fg(theme.text_focused),
+        //         " [queued]".fg(theme.text_faded).italic().into(),
+        //     ]),
+        //     (false, true) => Line::from_iter([
+        //         song.get_title().to_string().fg(theme.text_focused),
+        //         " ♫".fg(theme.text_secondary).into(),
+        //     ]),
+        //     _ => Line::from(song.get_title().to_string().fg(theme.text_focused)),
+        // };
+        Cell::from(song.get_title().to_string().fg(theme.text_focused))
     }
 
     pub fn artist_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {

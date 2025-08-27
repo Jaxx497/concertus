@@ -85,10 +85,16 @@ impl Database {
         Ok(())
     }
 
-    pub fn remove_from_playlist(&mut self, ps_id: i64) -> Result<()> {
-        self.conn
-            .execute(REMOVE_SONG_FROM_PLAYLIST, params![ps_id])?;
+    pub fn remove_from_playlist(&mut self, ps_id: &[i64]) -> Result<()> {
+        let tx = self.conn.transaction()?;
+        {
+            let mut stmt = tx.prepare(REMOVE_SONG_FROM_PLAYLIST)?;
+            for id in ps_id {
+                stmt.execute(params![id])?;
+            }
+        }
 
+        tx.commit()?;
         Ok(())
     }
 

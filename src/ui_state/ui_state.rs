@@ -12,6 +12,7 @@ use crate::{
     Library,
 };
 use anyhow::{Error, Result};
+use indexmap::IndexSet;
 use ratatui::widgets::Borders;
 use std::sync::{Arc, Mutex};
 
@@ -82,6 +83,7 @@ impl UiState {
             self.set_mode(Mode::Library(LibraryView::Albums));
         }
 
+        self.clear_bulk_sel();
         self.search.input.select_all();
         self.search.input.cut();
         self.set_legal_songs();
@@ -118,5 +120,17 @@ impl UiState {
             PopupType::Error(e) => Some(e.as_str()),
             _ => None,
         }
+    }
+
+    pub fn get_bulk_sel(&self) -> &IndexSet<Arc<SimpleSong>> {
+        &self.display_state.bulk_select
+    }
+
+    pub fn bulk_select_empty(&self) -> bool {
+        self.display_state.bulk_select.is_empty()
+    }
+
+    pub fn clear_bulk_sel(&mut self) {
+        self.display_state.bulk_select.clear();
     }
 }

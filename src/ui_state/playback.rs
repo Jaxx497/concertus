@@ -7,7 +7,7 @@ use crate::{
 };
 use anyhow::{anyhow, Context, Result};
 use std::{
-    collections::VecDeque,
+    collections::{HashSet, VecDeque},
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -40,7 +40,7 @@ impl UiState {
     }
 
     pub fn queue_check(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
-        match self.display_state.bulk_select.is_empty() {
+        match self.bulk_select_empty() {
             true => self.queue_song(song),
             false => self.queue_entity(),
         }
@@ -60,14 +60,14 @@ impl UiState {
     pub fn queue_entity(&mut self) -> Result<()> {
         let songs;
 
-        if !self.display_state.bulk_select.is_empty() {
+        if !self.get_bulk_sel().is_empty() {
             songs = self
                 .display_state
                 .bulk_select
                 .clone()
                 .into_iter()
                 .collect::<Vec<Arc<SimpleSong>>>();
-            self.display_state.bulk_select.clear();
+            self.clear_bulk_sel();
         } else {
             songs = match self.get_mode() {
                 Mode::Library(LibraryView::Albums) => {
@@ -130,6 +130,16 @@ impl UiState {
     }
 
     pub fn remove_song(&mut self) -> Result<()> {
+        match self.bulk_select_empty() {
+            true => self.remove_song_single()?,
+            false => self.remove_song_bulk()?,
+        }
+
+        self.set_legal_songs();
+        Ok(())
+    }
+
+    pub fn remove_song_single(&mut self) -> Result<()> {
         match *self.get_mode() {
             Mode::Library(LibraryView::Playlists) => {
                 let song_idx = self
@@ -159,7 +169,7 @@ impl UiState {
                     .get_db()
                     .lock()
                     .map_err(|_| anyhow!("Failed to acquire database lock"))?
-                    .remove_from_playlist(ps_id)?;
+                    .remove_from_playlist(&[ps_id])?;
 
                 playlist.tracklist.remove(song_idx);
             }
@@ -171,8 +181,67 @@ impl UiState {
             }
             _ => (),
         };
+        Ok(())
+    }
 
-        self.set_legal_songs();
+    pub fn remove_song_bulk(&mut self) -> Result<()> {
+        match *self.get_mode() {
+            Mode::Library(LibraryView::Playlists) => {
+                let playlist_id = self
+                    .get_selected_playlist()
+                    .ok_or_else(|| anyhow!("No song selected"))?
+                    .id;
+
+                let removal_ids = self
+                    .get_bulk_sel()
+                    .iter()
+                    .map(|s| s.id)
+                    .collect::<HashSet<_>>();
+
+                let ps_ids_to_remove = {
+                    let playlist = self
+                        .playlists
+                        .iter_mut()
+                        .find(|p| p.id == playlist_id)
+                        .ok_or_else(|| anyhow!("Playlist not found"))?;
+
+                    playlist
+                        .tracklist
+                        .iter()
+                        .filter(|ps| removal_ids.contains(&ps.song.id))
+                        .map(|ps| ps.id)
+                        .collect::<Vec<_>>()
+                };
+
+                let db = self.library.get_db();
+                let mut db_lock = db.lock().unwrap();
+                db_lock.remove_from_playlist(&ps_ids_to_remove)?;
+
+                let playlist = self
+                    .playlists
+                    .iter_mut()
+                    .find(|p| p.id == playlist_id)
+                    .ok_or_else(|| anyhow!("Playlist not found"))?;
+
+                playlist
+                    .tracklist
+                    .retain(|playlist_song| !removal_ids.contains(&playlist_song.song.id));
+            }
+            Mode::Queue => {
+                let removal_ids = self
+                    .get_bulk_sel()
+                    .iter()
+                    .map(|s| s.id)
+                    .collect::<HashSet<_>>();
+
+                self.playback
+                    .queue
+                    .retain(|qs| !removal_ids.contains(&qs.meta.id));
+            }
+            _ => (),
+        }
+
+        self.clear_bulk_sel();
         Ok(())
     }
 }
