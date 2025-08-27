@@ -4,6 +4,7 @@ use crate::{
     key_handler::Director,
 };
 use anyhow::{anyhow, Result};
+use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
 
@@ -17,9 +18,11 @@ pub struct DisplayState {
     pub sidebar_view: LibraryView,
     pub album_pos: ListState,
     pub playlist_pos: ListState,
-    pub table_pos: TableState,
 
+    pub table_pos: TableState,
     table_pos_cached: usize,
+
+    pub bulk_select: IndexSet<Arc<SimpleSong>>,
 }
 
 impl DisplayState {
@@ -32,13 +35,13 @@ impl DisplayState {
             album_sort: AlbumSort::Artist,
 
             sidebar_view: LibraryView::Albums,
-
-            table_pos: TableState::default().with_selected(0),
-
             album_pos: ListState::default().with_selected(Some(0)),
             playlist_pos: ListState::default().with_selected(Some(0)),
 
+            table_pos: TableState::default().with_selected(0),
             table_pos_cached: 0,
+
+            bulk_select: IndexSet::default(),
         }
     }
 }
@@ -149,6 +152,19 @@ impl UiState {
         }
     }
 
+    pub fn add_to_bulk_select(&mut self) -> Result<()> {
+        let song = self.get_selected_song()?;
+        let song_clone = Arc::clone(&song);
+
+        if !self.display_state.bulk_select.insert(song) {
+            self.display_state.bulk_select.swap_remove(&song_clone)
+        } else {
+            false
+        };
+
+        Ok(())
+    }
+
     pub fn get_selected_album(&self) -> Option<&Album> {
         self.display_state
             .album_pos
@@ -178,7 +194,6 @@ impl UiState {
         };
 
         self.set_mode(Mode::Library(self.display_state.sidebar_view));
-        //self.update_sidebar_items();
         self.set_legal_songs();
     }
 

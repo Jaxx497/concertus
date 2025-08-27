@@ -154,6 +154,11 @@ pub const DELETE_PLAYLIST: &str = "
         WHERE id = ?
 ";
 
+pub const GET_PLAYLIST_POSITION: &str = "
+    SELECT COALESCE(MAX(position), 0)  
+    FROM playlist_songs WHERE playlist_id = ?
+";
+
 pub const ADD_SONG_TO_PLAYLIST: &str = "
     INSERT INTO playlist_songs (
         song_id, 
@@ -165,6 +170,20 @@ pub const ADD_SONG_TO_PLAYLIST: &str = "
         COALESCE((SELECT MAX(position) + 1
         FROM playlist_songs WHERE playlist_id = ?2), 1)
     )
+";
+
+pub const ADD_SONG_TO_PLAYLIST_WITH_POSITION: &str = "
+    INSERT INTO playlist_songs (
+        song_id, 
+        playlist_id, 
+        position
+    )
+    VALUES (
+        ?1, 
+        ?2, 
+        ?3
+    )
+    
 ";
 
 pub const GET_PLAYLISTS: &str = "

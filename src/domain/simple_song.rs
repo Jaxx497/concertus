@@ -2,7 +2,7 @@ use super::{FileType, SongInfo};
 use crate::{get_readable_duration, Database};
 use std::{sync::Arc, time::Duration};
 
-#[derive(Default)]
+#[derive(Default, Hash, Eq, PartialEq)]
 pub struct SimpleSong {
     pub(crate) id: u64,
     pub(crate) title: String,
@@ -81,3 +81,8 @@ impl SongInfo for Arc<SimpleSong> {
         self.as_ref().get_duration_str()
     }
 }
+
+//     fn hash(&self) -> u64 {
+//         self.id
+//     }
+// }

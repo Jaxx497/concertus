@@ -86,14 +86,38 @@ impl UiState {
         Ok(())
     }
 
+    pub fn add_to_playlist_popup(&mut self) {
+        self.popup.selection.select_first();
+        self.show_popup(super::PopupType::Playlist(PlaylistAction::AddSong));
+    }
+
     pub fn add_to_playlist(&mut self) -> Result<()> {
         if let Some(playlist_idx) = self.popup.selection.selected() {
-            let song_id = self.get_selected_song()?.id;
             let playlist_id = self.playlists.get(playlist_idx).unwrap().id;
 
-            let db = self.library.get_db();
-            let mut db_lock = db.lock().unwrap();
-            db_lock.add_to_playlist(song_id, playlist_id)?;
+            match self.display_state.bulk_select.is_empty() {
+                true => {
+                    let song_id = self.get_selected_song()?.id;
+
+                    let db = self.library.get_db();
+                    let mut db_lock = db.lock().unwrap();
+                    db_lock.add_to_playlist(song_id, playlist_id)?;
+                }
+                false => {
+                    let song_ids = self
+                        .display_state
+                        .bulk_select
+                        .iter()
+                        .map(|s| s.id)
+                        .collect::<Vec<_>>();
+
+                    let db = self.library.get_db();
+                    let mut db_lock = db.lock().unwrap();
+
+                    db_lock.add_to_playlist_bulk(song_ids, playlist_id)?;
+                    self.display_state.bulk_select.clear();
+                }
+            }
 
             self.close_popup()
         } else {

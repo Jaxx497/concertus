@@ -14,7 +14,7 @@ pub use search_results::StandardTable;
 use crate::{
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
-    ui_state::{DisplayTheme, Mode, Pane, TableSort, UiState},
+    ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
     DurationStyle,
 };
 use ratatui::{
@@ -94,11 +94,10 @@ pub(super) fn get_header<'a>(state: &UiState, active: &TableSort) -> Row<'a> {
     Row::new(row).bottom_margin(1).bold()
 }
 
-pub fn get_keymaps(pane: &Pane) -> &'static str {
-    match pane {
-        &Pane::TrackList => " [q]ueue song ✧ [a]dd to playlist ✧ [x] remove ",
-        _ => "",
-    }
+pub fn get_keymaps(mode: &Mode) -> &'static str {
+    matches!(mode, Mode::Library(LibraryView::Playlists) | Mode::Queue)
+        .then_some(" [q]ueue ✧ [a]dd to playlist ✧ [x] remove ")
+        .unwrap_or(" [q]ueue ✧ [a]dd to playlist ")
 }
 
 pub fn create_standard_table<'a>(
@@ -106,13 +105,15 @@ pub fn create_standard_table<'a>(
     title: Line<'static>,
     state: &UiState,
 ) -> Table<'a> {
-    let pane = state.get_pane();
     let mode = state.get_mode();
     let theme = state.get_theme(&Pane::TrackList);
 
     let header = get_header(state, &TableSort::Title);
     let widths = get_widths(mode);
-    let keymaps = get_keymaps(pane);
+    let keymaps = match state.get_pane() {
+        Pane::TrackList => get_keymaps(mode),
+        _ => "",
+    };
 
     let block = Block::bordered()
         .title_top(Line::from(title).alignment(Alignment::Center))

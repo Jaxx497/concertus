@@ -45,7 +45,6 @@ library, which may solve this problem in time.
 
 ## Current Development Objectives
 - Implementing a playlist system
- - Add play entire playlist
  - Visual selection to add multiple songs at once
  - Create new playlist on add song to playlist popup
  - Change order of songs

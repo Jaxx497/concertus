@@ -1,6 +1,7 @@
 use super::{get_header, get_widths, COLUMN_SPACING, PADDING, SELECTOR};
 use crate::{
     domain::SongInfo,
+    tui::widgets::tracklist::create_standard_table,
     ui_state::{Pane, TableSort, UiState},
 };
 use ratatui::{
@@ -25,7 +26,7 @@ impl StatefulWidget for StandardTable {
         let song_len = songs.len();
         let search_len = state.get_search_len();
 
-        let results = match state.get_mode() {
+        let title = match state.get_mode() {
             _ => match search_len > 1 {
                 true => format!(" Search Results: {} Songs ", song_len),
                 false => format!(" Total: {} Songs ", song_len),
@@ -51,30 +52,7 @@ impl StatefulWidget for StandardTable {
             })
             .collect::<Vec<Row>>();
 
-        let header = get_header(&state, &state.get_table_sort());
-        let widths = get_widths(&state.get_mode());
-
-        let block = Block::bordered()
-            .title_top(Line::from(results).alignment(Alignment::Center))
-            .border_style(theme.border)
-            .border_type(BorderType::Thick)
-            .padding(PADDING)
-            .fg(theme.text_focused)
-            .bg(theme.bg);
-
-        let table = Table::new(rows, widths)
-            .column_spacing(COLUMN_SPACING)
-            .header(header.fg(theme.text_secondary))
-            .flex(Flex::Legacy)
-            .block(block)
-            .row_highlight_style(
-                Style::default()
-                    .bg(theme.text_highlighted)
-                    .fg(Color::Black)
-                    .italic(),
-            )
-            .highlight_spacing(HighlightSpacing::Always)
-            .highlight_symbol(SELECTOR);
+        let table = create_standard_table(rows, title.into(), state);
 
         StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }

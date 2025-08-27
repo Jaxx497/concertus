@@ -5,7 +5,7 @@ use rusqlite::{
 use std::fmt::Display;
 
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Default, PartialEq, Copy, Clone)]
+#[derive(Default, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum FileType {
     MP3 = 1,
     M4A = 2,

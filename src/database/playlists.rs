@@ -2,8 +2,9 @@ use indexmap::IndexMap;
 
 use crate::{
     database::queries::{
-        ADD_SONG_TO_PLAYLIST, CREATE_NEW_PLAYLIST, DELETE_PLAYLIST, GET_PLAYLISTS,
-        PLAYLIST_BUILDER, REMOVE_SONG_FROM_PLAYLIST, UPDATE_PLAYLIST,
+        ADD_SONG_TO_PLAYLIST, ADD_SONG_TO_PLAYLIST_WITH_POSITION, CREATE_NEW_PLAYLIST,
+        DELETE_PLAYLIST, GET_PLAYLISTS, GET_PLAYLIST_POSITION, PLAYLIST_BUILDER,
+        REMOVE_SONG_FROM_PLAYLIST, UPDATE_PLAYLIST,
     },
     domain::Playlist,
     Database,
@@ -46,13 +47,39 @@ impl Database {
 
     pub fn add_to_playlist(&mut self, song_id: u64, playlist_id: i64) -> Result<()> {
         let tx = self.conn.transaction()?;
-
         tx.execute(
             ADD_SONG_TO_PLAYLIST,
             params![song_id.to_le_bytes(), playlist_id],
         )?;
         tx.execute(UPDATE_PLAYLIST, params![playlist_id])?;
 
+        tx.commit()?;
+
+        Ok(())
+    }
+
+    pub fn add_to_playlist_bulk(&mut self, songs: Vec<u64>, playlist_id: i64) -> Result<()> {
+        let tx = self.conn.transaction()?;
+        {
+            let start_pos = tx
+                .query_row(GET_PLAYLIST_POSITION, params![playlist_id], |row| {
+                    row.get(0)
+                })
+                .unwrap_or(0)
+                + 1;
+
+            let mut stmt = tx.prepare(ADD_SONG_TO_PLAYLIST_WITH_POSITION)?;
+
+            for (i, song) in songs.iter().enumerate() {
+                stmt.execute(params![
+                    song.to_le_bytes(),
+                    playlist_id,
+                    start_pos + i as i64
+                ])?;
+            }
+
+            tx.execute(UPDATE_PLAYLIST, params![playlist_id])?;
+        }
         tx.commit()?;
 
         Ok(())

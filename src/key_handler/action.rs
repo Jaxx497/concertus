@@ -48,6 +48,7 @@ pub enum Action {
     ChangePane(Pane),
     GoToAlbum,
     Scroll(Director),
+    BulkSelect,
 
     // Playlists
     CreatePlaylist,
@@ -105,7 +106,6 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
         Pane::Search    => handle_search_pane(&key_event),
         Pane::SideBar   => handle_sidebar_pane(&key_event),
         _ => None
-
     }
 }
 
@@ -160,10 +160,12 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match (key.modifiers, key.code) {
         (X, Enter) => Some(Action::Play),
 
-        (X, Tab) | (X, Left) | (X, Char('h')) => Some(Action::ChangeMode(Mode::Library(
+        (X, Tab) | (X, Left) | (X, Char('h')) => 
+        Some(Action::ChangeMode(Mode::Library(
             state.display_state.sidebar_view,
         ))),
 
+        (_, Char('v')) => Some(Action::BulkSelect),
         (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
 
@@ -172,11 +174,6 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (X, Char('q')) => Some(Action::QueueSong),
         (X, Char('x')) => Some(Action::RemoveSong),
         
-        // Queue entire album/playlist
-        (X, Char('Q')) => {
-            (state.get_mode() == Mode::Library(LibraryView::Albums)).then(|| Action::QueueEntity)
-        }
-
         // SORTING SONGS
         (C, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
         (C, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
@@ -202,10 +199,13 @@ fn handle_sidebar_pane(key: &KeyEvent) -> Option<Action> {
 }
 
 fn handle_search_pane(key: &KeyEvent) -> Option<Action> {
-    match key.code {
-        Tab | Char('/') | Enter => Some(Action::SendSearch),
+    match (key.modifiers, key.code) {
+        (_, Tab) | (_, Char('/')) | (_, Enter) => Some(Action::SendSearch),
 
-        Char(x) if ILLEGAL_CHARS.contains(&x) => None,
+        (X, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
+        (X, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
+
+        (_, Char(x)) if ILLEGAL_CHARS.contains(&x) => None,
         _ => Some(Action::UpdateSearch(*key)),
     }
 }
@@ -341,11 +341,7 @@ impl Concertus {
                 self.ui.close_popup();
             }
 
-            Action::AddToPlaylist => {
-                self.ui.popup.selection.select_first();
-                self.ui.show_popup(PopupType::Playlist(PlaylistAction::AddSong));
-            }
-
+            Action::AddToPlaylist => self.ui.add_to_playlist_popup(),
             Action::AddToPlaylistConfirm => self.ui.add_to_playlist()?,
 
             Action::PopupInput(key) => {
@@ -355,9 +351,12 @@ impl Concertus {
             Action::ClosePopup => self.ui.close_popup(),
 
             // Queue
-            Action::QueueSong       => self.ui.queue_song(None)?,
+            Action::QueueSong       => self.ui.queue_check(None)?,
             Action::QueueEntity      => self.ui.queue_entity()?,
             Action::RemoveSong      => self.ui.remove_song()?,
+
+            Action::BulkSelect      => self.ui.add_to_bulk_select()?,
+            
 
             // Ops
             Action::SoftReset       => self.ui.soft_reset(),

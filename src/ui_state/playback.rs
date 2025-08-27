@@ -39,6 +39,13 @@ impl UiState {
         self.playback.queue.is_empty()
     }
 
+    pub fn queue_check(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
+        match self.display_state.bulk_select.is_empty() {
+            true => self.queue_song(song),
+            false => self.queue_entity(),
+        }
+    }
+
     pub(crate) fn queue_song(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
         let simple_song = match song {
             Some(s) => s,
@@ -51,27 +58,39 @@ impl UiState {
     }
 
     pub fn queue_entity(&mut self) -> Result<()> {
-        let songs = match self.get_mode() {
-            Mode::Library(LibraryView::Albums) => {
-                let album_idx = self
-                    .display_state
-                    .album_pos
-                    .selected()
-                    .ok_or_else(|| anyhow!("Illegal album selection!"))?;
+        let songs;
 
-                self.albums[album_idx].tracklist.clone()
-            }
-            Mode::Library(LibraryView::Playlists) => {
-                let playlist_idx = self
-                    .display_state
-                    .playlist_pos
-                    .selected()
-                    .ok_or_else(|| anyhow!("Illegal playlist selection!"))?;
+        if !self.display_state.bulk_select.is_empty() {
+            songs = self
+                .display_state
+                .bulk_select
+                .clone()
+                .into_iter()
+                .collect::<Vec<Arc<SimpleSong>>>();
+            self.display_state.bulk_select.clear();
+        } else {
+            songs = match self.get_mode() {
+                Mode::Library(LibraryView::Albums) => {
+                    let album_idx = self
+                        .display_state
+                        .album_pos
+                        .selected()
+                        .ok_or_else(|| anyhow!("Illegal album selection!"))?;
 
-                self.playlists[playlist_idx].get_tracks()
-            }
-            _ => return Ok(()),
-        };
+                    self.albums[album_idx].tracklist.clone()
+                }
+                Mode::Library(LibraryView::Playlists) => {
+                    let playlist_idx = self
+                        .display_state
+                        .playlist_pos
+                        .selected()
+                        .ok_or_else(|| anyhow!("Illegal playlist selection!"))?;
+
+                    self.playlists[playlist_idx].get_tracks()
+                }
+                _ => return Ok(()),
+            };
+        }
 
         for song in songs {
             self.queue_song(Some(song))?;
