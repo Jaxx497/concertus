@@ -20,10 +20,15 @@ impl StatefulWidget for SideBarPlaylist {
         let playlists = &state.playlists;
 
         let list_items = playlists.iter().map(|p| {
-            ListItem::new(Line::from_iter([
-                Span::from(format!("{:<5} ", format!("[{}]", p.tracklist.len()))).fg(GOLD_FADED),
-                Span::from(&p.name).fg(theme.text_secondary),
-            ]))
+            ListItem::new(
+                Line::from_iter([
+                    Span::from(p.name.as_str()).fg(theme.text_secondary),
+                    format!("{:>5} ", format!("[{}]", p.tracklist.len()))
+                        .fg(GOLD_FADED)
+                        .into(),
+                ])
+                .right_aligned(),
+            )
         });
 
         let keymaps = match state.get_pane() {

@@ -24,7 +24,7 @@ pub struct LongSong {
     pub(crate) duration: Duration,
     pub(crate) sample_rate: u32,
     pub(crate) year: Option<u32>,
-    pub(crate) format: FileType,
+    pub(crate) filetype: FileType,
     pub(crate) path: PathBuf,
 }
 
@@ -64,7 +64,7 @@ impl LongSong {
 
         let mut song_info = LongSong::new(PathBuf::from(path));
 
-        song_info.format = format;
+        song_info.filetype = format;
         song_info.id = calculate_signature(path)?;
 
         let track = probed.format.default_track().context("No default track")?;
@@ -108,7 +108,7 @@ impl LongSong {
                 .unwrap_or_default()
         }
 
-        if song_info.format == FileType::M4A {
+        if song_info.filetype == FileType::M4A {
             let tag = mp4ameta::Tag::read_from_path(path).unwrap();
             song_info.disc_no = tag.disc_number().map(u32::from);
         }

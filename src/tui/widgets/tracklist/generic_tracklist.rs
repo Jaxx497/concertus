@@ -1,17 +1,11 @@
-use super::{get_widths, COLUMN_SPACING, PADDING};
+use std::collections::HashSet;
+
 use crate::{
     domain::SongInfo,
-    get_readable_duration,
-    tui::widgets::tracklist::{create_standard_table, get_header, get_keymaps},
-    ui_state::{LibraryView, Mode, Pane, TableSort, UiState},
-    DurationStyle,
+    tui::widgets::tracklist::{create_standard_table, CellFactory},
+    ui_state::{LibraryView, Mode, Pane, UiState},
 };
-use ratatui::{
-    layout::{Alignment, Flex},
-    style::{Color, Style, Stylize},
-    text::Text,
-    widgets::{StatefulWidget, *},
-};
+use ratatui::widgets::{Row, StatefulWidget};
 
 pub struct GenericView;
 impl StatefulWidget for GenericView {
@@ -33,24 +27,28 @@ impl StatefulWidget for GenericView {
 
         let title = format!(" {} Size: {} Songs ", pretitle, songs.len());
 
+        let now_playing = state.get_now_playing().map(|s| s.id);
+
+        let queued_ids: HashSet<u64> = state.playback.queue.iter().map(|s| s.get_id()).collect();
+
         let rows = songs
             .iter()
             .enumerate()
             .map(|(idx, song)| {
-                let index = Cell::from(format!("{:>3}", idx + 1)).fg(theme.text_highlighted);
-                let title_col = Cell::from(song.get_title()).fg(theme.text_focused);
-                let artist_col = Cell::from(song.get_artist()).fg(theme.text_focused);
-                let format_col = Cell::from(song.format.to_string()).fg(theme.text_secondary);
-                let duration_str = get_readable_duration(song.duration, DurationStyle::Clean);
+                let playing = now_playing == Some(song.id);
+                let queued = queued_ids.contains(&song.id);
 
-                let dur_col =
-                    Cell::from(Text::from(duration_str).right_aligned()).fg(theme.text_focused);
+                let index = CellFactory::index_cell(&theme, idx);
+                let title = CellFactory::title_cell(&theme, song, playing, queued);
+                let artist = CellFactory::artist_cell(&theme, song);
+                let filetype = CellFactory::filetype_cell(&theme, song);
+                let duration = CellFactory::duration_cell(&theme, song);
 
-                Row::new([index, title_col, artist_col, format_col, dur_col])
+                Row::new([index, title, artist, filetype, duration])
             })
             .collect::<Vec<Row>>();
 
-        let table = create_standard_table(rows, title, state);
+        let table = create_standard_table(rows, title.into(), state);
         StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }
 }

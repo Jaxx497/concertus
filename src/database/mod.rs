@@ -99,7 +99,7 @@ impl Database {
                     &song.disc_no,
                     &song.duration.as_secs_f32(),
                     &song.sample_rate,
-                    &song.format
+                    &song.filetype
                 ])
                 .unwrap_or_else(|e| {
                     eprintln!("Error inserting song {}: {}", song.title, e);
@@ -153,7 +153,7 @@ impl Database {
                     track_no: row.get("track_no")?,
                     disc_no: row.get("disc_no")?,
                     duration: Duration::from_secs_f32(row.get("duration")?),
-                    format: row.get("format")?,
+                    filetype: row.get("format")?,
                 };
 
                 Ok((hash, Arc::new(song)))

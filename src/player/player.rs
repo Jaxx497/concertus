@@ -133,7 +133,7 @@ impl Player {
         };
 
         if playback_state != PlaybackState::Stopped
-            && (now_playing.as_deref().unwrap().format != FileType::OGG)
+            && (now_playing.as_deref().unwrap().filetype != FileType::OGG)
         {
             let elapsed = self.sink.get_pos();
             let duration = &now_playing.unwrap().duration;
@@ -170,7 +170,7 @@ impl Player {
         };
 
         if playback_state != PlaybackState::Stopped
-            && (now_playing.as_deref().unwrap().format != FileType::OGG)
+            && (now_playing.as_deref().unwrap().filetype != FileType::OGG)
         {
             let elapsed = self.sink.get_pos();
 

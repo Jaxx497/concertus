@@ -13,7 +13,7 @@ pub struct SimpleSong {
     pub(crate) track_no: Option<u32>,
     pub(crate) disc_no: Option<u32>,
     pub(crate) duration: Duration,
-    pub(crate) format: FileType,
+    pub(crate) filetype: FileType,
 }
 
 impl SimpleSong {
@@ -49,5 +49,35 @@ impl SongInfo for SimpleSong {
 
     fn get_duration_str(&self) -> String {
         get_readable_duration(self.duration, crate::DurationStyle::Compact)
+    }
+}
+
+impl SongInfo for Arc<SimpleSong> {
+    fn get_id(&self) -> u64 {
+        self.as_ref().get_id()
+    }
+
+    fn get_title(&self) -> &str {
+        self.as_ref().get_title()
+    }
+
+    fn get_artist(&self) -> &str {
+        self.as_ref().get_artist()
+    }
+
+    fn get_album(&self) -> &str {
+        self.as_ref().get_album()
+    }
+
+    fn get_duration(&self) -> Duration {
+        self.as_ref().get_duration()
+    }
+
+    fn get_duration_f32(&self) -> f32 {
+        self.as_ref().get_duration_f32()
+    }
+
+    fn get_duration_str(&self) -> String {
+        self.as_ref().get_duration_str()
     }
 }

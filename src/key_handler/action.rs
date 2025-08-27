@@ -8,9 +8,9 @@ use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use std::{collections::HashSet, sync::LazyLock, time::Duration};
 
 static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from(['\'', ';']));
-const C: KeyModifiers = KeyModifiers::CONTROL;
-const S: KeyModifiers = KeyModifiers::SHIFT;
 const X: KeyModifiers = KeyModifiers::NONE;
+const S: KeyModifiers = KeyModifiers::SHIFT;
+const C: KeyModifiers = KeyModifiers::CONTROL;
 
 const SEEK_SMALL: usize = 5;
 const SEEK_LARGE: usize = 30;
@@ -112,6 +112,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
 fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
     let in_search = state.get_pane() == Pane::Search;
     let popup_active = state.popup.is_open();
+    
     // Works on every pane, even search
     match (key.modifiers, key.code) {
         (X, Esc) => Some(Action::SoftReset),
@@ -157,25 +158,29 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
 fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match (key.modifiers, key.code) {
-        // QUEUEING SONGS
-        (X, Char('q')) => Some(Action::QueueSong),
-        (_, Char('Q')) => {
-            (state.get_mode() == Mode::Library(LibraryView::Albums)).then(|| Action::QueueEntity)
-        }
+        (X, Enter) => Some(Action::Play),
 
-        (X, Char('x')) => Some(Action::RemoveSong),
+        (X, Tab) | (X, Left) | (X, Char('h')) => Some(Action::ChangeMode(Mode::Library(
+            state.display_state.sidebar_view,
+        ))),
 
         (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
 
-        // SORTING SONGS
-        (X, Left) | (X, Char('h')) => Some(Action::SortColumnsPrev),
-        (X, Right) | (X, Char('l')) => Some(Action::SortColumnsNext),
 
-        (X, Enter) => Some(Action::Play),
-        (X, Tab) => Some(Action::ChangeMode(Mode::Library(
-            state.display_state.sidebar_view,
-        ))),
+        // Queue management
+        (X, Char('q')) => Some(Action::QueueSong),
+        (X, Char('x')) => Some(Action::RemoveSong),
+        
+        // Queue entire album/playlist
+        (X, Char('Q')) => {
+            (state.get_mode() == Mode::Library(LibraryView::Albums)).then(|| Action::QueueEntity)
+        }
+
+        // SORTING SONGS
+        (C, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
+        (C, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
+
         _ => None,
     }
 }
@@ -184,8 +189,8 @@ fn handle_sidebar_pane(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
         (X, Char('q')) | (C, Enter) => Some(Action::QueueEntity),
         (X, Char('c')) => Some(Action::CreatePlaylist),
-        (X, Enter) | (X, Tab) => Some(Action::ChangePane(Pane::TrackList)),
-        (X, Char('l')) | (X, Char('h')) => Some(Action::ToggleSideBar),
+        (X, Enter) | (X, Right) | (X, Char('l')) => Some(Action::ChangePane(Pane::TrackList)),
+        (X, Tab) => Some(Action::ToggleSideBar),
 
         // Change album sorting algorithm
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),

@@ -51,10 +51,7 @@ impl StatefulWidget for StandardTable {
             })
             .collect::<Vec<Row>>();
 
-        let header = Row::new(get_header(&state.get_mode(), &state.get_table_sort()))
-            .bold()
-            .fg(theme.text_secondary)
-            .bottom_margin(1);
+        let header = get_header(&state, &state.get_table_sort());
         let widths = get_widths(&state.get_mode());
 
         let block = Block::bordered()
@@ -67,7 +64,7 @@ impl StatefulWidget for StandardTable {
 
         let table = Table::new(rows, widths)
             .column_spacing(COLUMN_SPACING)
-            .header(header)
+            .header(header.fg(theme.text_secondary))
             .flex(Flex::Legacy)
             .block(block)
             .row_highlight_style(
