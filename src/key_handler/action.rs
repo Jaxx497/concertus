@@ -354,8 +354,8 @@ impl Concertus {
             Action::ClosePopup => self.ui.close_popup(),
 
             // Queue
-            Action::QueueSong       => self.ui.queue_check(None)?,
-            Action::QueueEntity     => self.ui.queue_entity()?,
+            Action::QueueSong       => self.ui.queue_song(None)?,
+            Action::QueueEntity     => self.ui.add_to_queue_bulk()?,
             Action::RemoveSong      => self.ui.remove_song()?,
 
             Action::BulkSelect      => self.ui.add_to_bulk_select()?,

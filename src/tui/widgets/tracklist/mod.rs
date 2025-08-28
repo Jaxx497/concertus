@@ -38,6 +38,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
     match mode {
         Mode::Power | Mode::Search => {
             vec![
+                Constraint::Length(1),
                 Constraint::Ratio(3, 9),
                 Constraint::Ratio(2, 9),
                 Constraint::Ratio(2, 9),
@@ -61,24 +62,27 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
 pub(super) fn get_header<'a>(state: &UiState, active: &TableSort) -> Row<'a> {
     let row = match state.get_mode() {
         Mode::Power | Mode::Search => [
-            TableSort::Title,
-            TableSort::Artist,
-            TableSort::Album,
-            TableSort::Duration,
+            String::new(),
+            TableSort::Title.to_string(),
+            TableSort::Artist.to_string(),
+            TableSort::Album.to_string(),
+            TableSort::Duration.to_string(),
         ]
         .iter()
-        .map(|s| match (s == active, s.eq(&TableSort::Duration)) {
-            (true, true) => Text::from(s.to_string())
-                .fg(Color::Red)
-                .underlined()
-                .italic()
-                .right_aligned(),
-            (false, true) => Text::from(s.to_string()).right_aligned(),
-            (true, false) => Text::from(Span::from(
-                s.to_string().fg(Color::Red).underlined().italic(),
-            )),
-            _ => s.to_string().into(),
-        })
+        .map(
+            |s| match (*s == active.to_string(), s.eq(&String::from("Duration"))) {
+                (true, true) => Text::from(s.to_string())
+                    .fg(Color::Red)
+                    .underlined()
+                    .italic()
+                    .right_aligned(),
+                (false, true) => Text::from(s.to_string()).right_aligned(),
+                (true, false) => Text::from(Span::from(
+                    s.to_string().fg(Color::Red).underlined().italic(),
+                )),
+                _ => s.to_string().into(),
+            },
+        )
         .collect(),
         Mode::Library(_) | Mode::Queue => {
             vec![
@@ -162,7 +166,7 @@ impl CellFactory {
         Cell::from(if is_playing {
             "♫".fg(theme.text_secondary)
         } else if is_bulk_selected {
-            "".fg(theme.text_highlighted)
+            "󱕣".fg(theme.text_highlighted)
         } else if is_queued {
             "".fg(theme.text_highlighted)
         } else {
@@ -170,23 +174,7 @@ impl CellFactory {
         })
     }
 
-    pub fn title_cell(
-        theme: &DisplayTheme,
-        song: &Arc<SimpleSong>,
-        // playing: bool,
-        // queued: bool,
-    ) -> Cell<'static> {
-        // let title = match (queued, playing) {
-        //     (true, false) => Line::from_iter([
-        //         song.get_title().to_string().fg(theme.text_focused),
-        //         " [queued]".fg(theme.text_faded).italic().into(),
-        //     ]),
-        //     (false, true) => Line::from_iter([
-        //         song.get_title().to_string().fg(theme.text_focused),
-        //         " ♫".fg(theme.text_secondary).into(),
-        //     ]),
-        //     _ => Line::from(song.get_title().to_string().fg(theme.text_focused)),
-        // };
+    pub fn title_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
         Cell::from(song.get_title().to_string().fg(theme.text_focused))
     }
 

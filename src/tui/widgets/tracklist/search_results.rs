@@ -1,6 +1,6 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::tracklist::create_standard_table,
+    tui::widgets::tracklist::{create_standard_table, CellFactory},
     ui_state::{Pane, TableSort, UiState},
 };
 use ratatui::{
@@ -34,6 +34,7 @@ impl StatefulWidget for StandardTable {
         let rows = songs
             .iter()
             .map(|song| {
+                let symbol = CellFactory::status_cell(song, state);
                 let mut title_col = Cell::from(song.get_title()).fg(theme.text_faded);
                 let mut artist_col = Cell::from(song.get_artist()).fg(theme.text_faded);
                 let mut album_col = Cell::from(song.get_album()).fg(theme.text_faded);
@@ -46,7 +47,7 @@ impl StatefulWidget for StandardTable {
                     TableSort::Artist => artist_col = artist_col.fg(theme.text_focused),
                     TableSort::Duration => dur_col = dur_col.fg(theme.text_focused),
                 }
-                Row::new([title_col, artist_col, album_col, dur_col])
+                Row::new([symbol, title_col, artist_col, album_col, dur_col])
             })
             .collect::<Vec<Row>>();
 

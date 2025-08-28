@@ -1,7 +1,7 @@
 use super::widgets::Settings;
 use super::{widgets::SongTable, AppLayout};
 use super::{ErrorMsg, Progress, SearchBar, SideBar};
-use crate::tui::widgets::PlaylistPopup;
+use crate::tui::widgets::{BufferLine, PlaylistPopup};
 use crate::ui_state::PopupType;
 use crate::UiState;
 use ratatui::{
@@ -17,6 +17,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     SideBar.render(layout.sidebar, f.buffer_mut(), state);
     SongTable.render(layout.song_window, f.buffer_mut(), state);
     Progress.render(layout.progress_bar, f.buffer_mut(), state);
+    BufferLine.render(layout.buffer_line, f.buffer_mut(), state);
 
     if state.popup.is_open() {
         let popup_rect = match &state.popup.current {

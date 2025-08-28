@@ -39,14 +39,14 @@ impl UiState {
         self.playback.queue.is_empty()
     }
 
-    pub fn queue_check(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
+    pub fn queue_song(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
         match self.bulk_select_empty() {
-            true => self.queue_song(song),
-            false => self.queue_entity(),
+            true => self.add_to_queue_single(song),
+            false => self.add_to_queue_bulk(),
         }
     }
 
-    pub(crate) fn queue_song(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
+    pub(crate) fn add_to_queue_single(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
         let simple_song = match song {
             Some(s) => s,
             None => self.get_selected_song()?,
@@ -57,7 +57,7 @@ impl UiState {
         Ok(())
     }
 
-    pub fn queue_entity(&mut self) -> Result<()> {
+    pub fn add_to_queue_bulk(&mut self) -> Result<()> {
         let songs;
 
         if !self.get_bulk_sel().is_empty() {
@@ -93,7 +93,7 @@ impl UiState {
         }
 
         for song in songs {
-            self.queue_song(Some(song))?;
+            self.add_to_queue_single(Some(song))?;
         }
         Ok(())
     }

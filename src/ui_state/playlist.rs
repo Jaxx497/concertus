@@ -78,8 +78,6 @@ impl UiState {
                 let mut db_lock = db.lock().unwrap();
                 db_lock.delete_playlist(playlist_id)?;
             }
-
-            // self.playlists = db_lock.get_playlists()?;
             self.get_playlists()?;
         }
 

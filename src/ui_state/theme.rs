@@ -1,5 +1,7 @@
 use ratatui::{style::Color, widgets::Borders};
 
+use crate::ui_state::{Pane, UiState};
+
 const DARK_WHITE: Color = Color::Rgb(210, 210, 210);
 const MID_GRAY: Color = Color::Rgb(100, 100, 100);
 const DARK_GRAY: Color = Color::Rgb(25, 25, 25);
@@ -47,6 +49,34 @@ impl Theme {
 
             border_focused: GOLD,
             border_unfocused: Color::Rgb(50, 50, 50),
+        }
+    }
+}
+
+impl UiState {
+    pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
+        match pane == self.get_pane() {
+            true => DisplayTheme {
+                // bg: Color::default(),
+                bg: self.theme.bg_focused,
+                border: self.theme.border_focused,
+                border_display: Borders::ALL,
+                text_focused: self.theme.text_focused,
+                text_secondary: self.theme.text_secondary,
+                text_faded: self.theme.text_unfocused,
+                text_highlighted: self.theme.text_highlighted,
+            },
+
+            false => DisplayTheme {
+                // bg: Color::default(),
+                bg: self.theme.bg_unfocused,
+                border: self.theme.border_unfocused,
+                border_display: Borders::ALL,
+                text_focused: self.theme.text_unfocused,
+                text_secondary: self.theme.text_secondary_u,
+                text_faded: self.theme.text_unfocused,
+                text_highlighted: self.theme.text_highlighted_u,
+            },
         }
     }
 }

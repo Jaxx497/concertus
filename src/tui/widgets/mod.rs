@@ -1,3 +1,4 @@
+mod buffer_line;
 mod error;
 mod playlist_popup;
 mod progress;
@@ -9,6 +10,7 @@ mod song_window;
 mod tracklist;
 mod waveform;
 
+pub use buffer_line::BufferLine;
 pub use error::ErrorMsg;
 pub use playlist_popup::PlaylistPopup;
 pub use progress::Progress;

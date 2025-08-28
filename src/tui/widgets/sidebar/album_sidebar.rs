@@ -104,6 +104,7 @@ impl StatefulWidget for SideBarAlbum {
         };
 
         let block = Block::bordered()
+            .borders(theme.border_display)
             .border_type(BorderType::Thick)
             .border_style(theme.border)
             .bg(theme.bg)
@@ -130,7 +131,7 @@ impl StatefulWidget for SideBarAlbum {
                     .italic(),
             )
             .scroll_padding(5)
-            .highlight_spacing(HighlightSpacing::Always); // We handle highlighting ourselves
+            .highlight_spacing(HighlightSpacing::Always);
 
         list.render(area, buf, &mut render_state);
 

@@ -1,5 +1,4 @@
 use crate::{
-    domain::SongInfo,
     truncate_at_last_space,
     tui::widgets::tracklist::{create_standard_table, CellFactory},
     ui_state::{Pane, UiState},
@@ -9,7 +8,6 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Row, StatefulWidget},
 };
-use std::collections::HashSet;
 
 pub struct AlbumView;
 impl StatefulWidget for AlbumView {
@@ -26,15 +24,9 @@ impl StatefulWidget for AlbumView {
 
         let theme = &state.get_theme(&Pane::TrackList);
 
-        let album = state
-            .get_selected_album()
-            .unwrap_or(&state.albums[0])
-            .clone();
+        let album = state.get_selected_album().unwrap_or(&state.albums[0]);
 
         let album_title = truncate_at_last_space(&album.title, (area.width / 3) as usize);
-
-        let queued_ids: HashSet<u64> = state.playback.queue.iter().map(|s| s.get_id()).collect();
-        let now_playing_id = state.get_now_playing().map(|s| s.id);
 
         let disc_count = album
             .tracklist
@@ -47,9 +39,6 @@ impl StatefulWidget for AlbumView {
             .tracklist
             .iter()
             .map(|song| {
-                let is_queued = queued_ids.contains(&song.id);
-                let is_playing = now_playing_id == Some(song.id);
-
                 let track_no = CellFactory::get_track_discs(theme, song, disc_count);
                 let icon = CellFactory::status_cell(song, state);
                 let title = CellFactory::title_cell(theme, song);
@@ -72,7 +61,7 @@ impl StatefulWidget for AlbumView {
                 .italic(),
             Span::from(year_str).fg(theme.text_faded),
             Span::from(" ✧ ").fg(theme.text_faded),
-            Span::from(album.artist.to_string()).fg(theme.text_focused),
+            Span::from(album.artist.to_string()).fg(theme.text_highlighted),
             Span::from(format!(" [{} Songs] ", album.tracklist.len())).fg(theme.text_faded),
         ]);
 

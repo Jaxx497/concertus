@@ -1,7 +1,4 @@
-use super::{
-    playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState,
-    DisplayTheme, Pane,
-};
+use super::{playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState};
 use crate::{
     domain::{Album, Playlist, SimpleSong},
     player::PlayerState,
@@ -13,7 +10,6 @@ use crate::{
 };
 use anyhow::{Error, Result};
 use indexmap::IndexSet;
-use ratatui::widgets::Borders;
 use std::sync::{Arc, Mutex};
 
 pub struct UiState {
@@ -22,7 +18,7 @@ pub struct UiState {
     pub(crate) playback: PlaybackCoordinator,
 
     // Visual Elements
-    theme: Theme,
+    pub(crate) theme: Theme,
     pub(crate) popup: PopupState,
     pub(super) search: SearchState,
     pub(crate) display_state: DisplayState,
@@ -87,32 +83,6 @@ impl UiState {
         self.search.input.select_all();
         self.search.input.cut();
         self.set_legal_songs();
-    }
-
-    pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
-        match pane == self.get_pane() {
-            true => DisplayTheme {
-                // bg: Color::default(),
-                bg: self.theme.bg_focused,
-                border: self.theme.border_focused,
-                border_display: Borders::ALL,
-                text_focused: self.theme.text_focused,
-                text_secondary: self.theme.text_secondary,
-                text_faded: self.theme.text_unfocused,
-                text_highlighted: self.theme.text_highlighted,
-            },
-
-            false => DisplayTheme {
-                // bg: Color::default(),
-                bg: self.theme.bg_unfocused,
-                border: self.theme.border_unfocused,
-                border_display: Borders::ALL,
-                text_focused: self.theme.text_unfocused,
-                text_secondary: self.theme.text_secondary_u,
-                text_faded: self.theme.text_unfocused,
-                text_highlighted: self.theme.text_highlighted_u,
-            },
-        }
     }
 
     pub fn get_error(&self) -> Option<&str> {

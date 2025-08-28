@@ -1,13 +1,10 @@
 use super::{DUR_WIDTH, WAVEFORM_WIDGET_HEIGHT};
-use crate::{
-    domain::SongInfo, get_readable_duration, tui::widgets::PAUSE_ICON, ui_state::UiState,
-    DurationStyle,
-};
+use crate::{domain::SongInfo, get_readable_duration, ui_state::UiState, DurationStyle};
 use canvas::Context;
 use ratatui::{
-    layout::{Alignment, Rect},
+    layout::Rect,
     style::{Color, Stylize},
-    text::{Line, Span, Text},
+    text::Text,
     widgets::{
         canvas::{Canvas, Rectangle},
         StatefulWidget, *,
@@ -27,18 +24,6 @@ impl StatefulWidget for Waveform {
         let np = state
             .get_now_playing()
             .expect("Expected a song to be playing. [Widget: Waveform]");
-        let theme = &state.get_theme(state.get_pane());
-
-        let separator = match state.is_paused() {
-            true => Span::from(format!(" {PAUSE_ICON} ")).fg(theme.text_focused),
-            false => Span::from(" ✧ ").fg(theme.text_faded),
-        };
-
-        let playing_title = Line::from_iter([
-            Span::from(np.get_title()).fg(theme.text_secondary),
-            separator,
-            Span::from(np.get_artist()).fg(theme.text_faded),
-        ]);
 
         let waveform = state.get_waveform();
         let wf_len = waveform.len();
@@ -47,7 +32,7 @@ impl StatefulWidget for Waveform {
         let y = buf.area().height
             - match area.height {
                 0 => 1,
-                _ => area.height / 2 + 1,
+                _ => area.height / 2 + 2,
             };
 
         let elapsed_str =
@@ -68,7 +53,6 @@ impl StatefulWidget for Waveform {
         Canvas::default()
             .x_bounds([0.0, wf_len as f64])
             .y_bounds([WAVEFORM_WIDGET_HEIGHT * -1.0, WAVEFORM_WIDGET_HEIGHT])
-            // .background_color(Color::DarkGray)
             .paint(|ctx| {
                 let duration_f32 = &np.get_duration_f32();
                 let elapsed = &state.get_playback_elapsed();
@@ -89,16 +73,12 @@ impl StatefulWidget for Waveform {
                     }
                 }
             })
-            .block(
-                Block::new()
-                    .title_bottom(playing_title.alignment(Alignment::Center))
-                    .padding(Padding {
-                        left: 10,
-                        right: 10,
-                        top: 0,
-                        bottom: 0,
-                    }),
-            )
+            .block(Block::new().padding(Padding {
+                left: 10,
+                right: 10,
+                top: 1,
+                bottom: 1,
+            }))
             .render(area, buf)
     }
 }
