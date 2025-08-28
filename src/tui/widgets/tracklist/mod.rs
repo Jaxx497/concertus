@@ -14,18 +14,18 @@ pub use search_results::StandardTable;
 use crate::{
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
+    tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED, SELECTED, SELECTOR},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
     DurationStyle,
 };
 use ratatui::{
-    layout::{Alignment, Constraint, Flex},
+    layout::{Alignment, Constraint, Flex, Rect},
     style::{Color, Style, Stylize},
     text::{Line, Span, Text},
     widgets::{Block, BorderType, Cell, HighlightSpacing, Padding, Row, Table},
 };
 
 const COLUMN_SPACING: u16 = 2;
-const SELECTOR: &str = "⮞  ";
 
 const PADDING: Padding = Padding {
     left: 2,
@@ -164,11 +164,11 @@ impl CellFactory {
         let is_bulk_selected = state.get_bulk_sel().contains(song);
 
         Cell::from(if is_playing {
-            "♫".fg(theme.text_secondary)
+            MUSIC_NOTE.fg(theme.text_secondary)
         } else if is_bulk_selected {
-            "󱕣".fg(theme.text_highlighted)
+            SELECTED.fg(theme.text_highlighted)
         } else if is_queued {
-            "".fg(theme.text_highlighted)
+            QUEUED.fg(theme.text_highlighted)
         } else {
             "".into()
         })
@@ -233,3 +233,32 @@ static SUPERSCRIPT: LazyLock<HashMap<u32, &str>> = LazyLock::new(|| {
         (9, "⁹"),
     ])
 });
+
+fn get_title(state: &UiState, area: Rect) -> Line<'static> {
+    let theme = state.get_theme(state.get_pane());
+    let (title, track_count) = match state.get_mode() {
+        &Mode::Queue => (
+            Span::from("Queue").fg(theme.text_highlighted),
+            state.playback.queue.len(),
+        ),
+        &Mode::Library(LibraryView::Playlists) => {
+            let playlist = state.get_selected_playlist().unwrap_or(&state.playlists[0]);
+            let formatted_title =
+                crate::truncate_at_last_space(&playlist.name, (area.width / 3) as usize);
+            (
+                Span::from(format!("{}", formatted_title))
+                    .fg(theme.text_secondary)
+                    .italic(),
+                playlist.tracklist.len(),
+            )
+        }
+        _ => (Span::default(), 0),
+    };
+
+    Line::from_iter([
+        Span::from(DECORATOR).fg(theme.text_focused),
+        title,
+        Span::from(DECORATOR).fg(theme.text_focused),
+        Span::from(format!("[{} Songs] ", track_count)).fg(theme.text_faded),
+    ])
+}

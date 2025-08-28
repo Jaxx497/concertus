@@ -1,6 +1,7 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::PAUSE_ICON,
+    truncate_at_last_space,
+    tui::widgets::{PAUSE_ICON, SELECTED},
     ui_state::{DisplayTheme, UiState, GOLD_FADED},
 };
 use ratatui::{
@@ -23,28 +24,6 @@ impl StatefulWidget for BufferLine {
     ) {
         let theme = state.get_theme(state.get_pane());
 
-        let separator = match state.is_paused() {
-            true => Span::from(format!(" {PAUSE_ICON} ")).fg(theme.text_focused),
-            false => Span::from(" ✧ ").fg(theme.text_faded),
-        };
-
-        let playing_title = match state.get_now_playing() {
-            Some(s) => Line::from_iter([
-                Span::from(s.get_title().to_string()).fg(theme.text_secondary),
-                separator,
-                Span::from(s.get_artist().to_string()).fg(theme.text_faded),
-            ])
-            .centered(),
-            None => "".into(),
-        };
-
-        let bulk_selection = match state.get_bulk_sel().len() {
-            0 => "".into(),
-            x => format!("  {x} songs selected")
-                .fg(theme.text_faded)
-                .into_left_aligned_line(),
-        };
-
         let [left, center, right] = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
@@ -54,25 +33,82 @@ impl StatefulWidget for BufferLine {
             ])
             .areas(area);
 
-        bulk_selection.render(left, buf);
-        playing_title.render(center, buf);
-        queue_display(state, &theme).render(right, buf);
+        get_bulk_selection(state.get_bulk_sel().len()).render(left, buf);
+        playing_title(state, &theme, center.width as usize).render(center, buf);
+        queue_display(state, &theme, right.width as usize).render(right, buf);
     }
 }
 
-fn queue_display(state: &UiState, theme: &DisplayTheme) -> Option<Line<'static>> {
-    if let Some(up_next) = state.peek_queue() {
-        let up_next_str = up_next.get_title().to_string();
-        let total = state.playback.queue.len();
+fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
+    let separator = match state.is_paused() {
+        true => Span::from(format!(" {PAUSE_ICON} ")).fg(theme.text_focused),
+        false => Span::from(" ✧ ").fg(theme.text_faded),
+    };
+
+    if let Some(s) = state.get_now_playing() {
+        let available_width = width.saturating_sub(3); // 3 is the length of " ✧ "
+
+        let title = s.get_title();
+        let artist = s.get_artist();
+
+        let (final_title, final_artist) =
+            if title.chars().count() + artist.chars().count() <= available_width {
+                (title.to_string(), artist.to_string())
+            } else if title.chars().count() <= available_width * 2 / 3 {
+                // Title fits in 2/3, truncate artist
+                let artist_space = available_width.saturating_sub(title.chars().count());
+                (
+                    title.to_string(),
+                    truncate_at_last_space(artist, artist_space),
+                )
+            } else {
+                let title_space = (available_width * 3) / 5;
+                let artist_space = available_width.saturating_sub(title_space);
+                (
+                    truncate_at_last_space(title, available_width),
+                    truncate_at_last_space(artist, artist_space),
+                )
+            };
 
         Some(
             Line::from_iter([
-                Span::from(up_next_str).fg(GOLD_FADED),
-                format!(" [{total}]").fg(theme.text_faded),
+                Span::from(final_title).fg(theme.text_secondary),
+                Span::from(separator).fg(theme.text_focused),
+                Span::from(final_artist).fg(theme.text_faded),
             ])
-            .right_aligned(),
+            .centered(),
         )
     } else {
         None
     }
+}
+
+fn get_bulk_selection(size: usize) -> Option<Line<'static>> {
+    let output = match size {
+        0 => return None,
+        x => format!(" {x:>3} {} ", SELECTED)
+            .fg(GOLD_FADED)
+            .into_left_aligned_line(),
+    };
+
+    Some(output)
+}
+
+fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
+    let output = match state.peek_queue() {
+        Some(up_next) => {
+            let up_next_str = up_next.get_title();
+            let truncated = truncate_at_last_space(up_next_str, width - 12);
+            let total = state.playback.queue.len();
+            Line::from_iter([
+                Span::from("Up next ✧ ").fg(theme.text_faded),
+                Span::from(truncated).fg(GOLD_FADED),
+                format!(" [{total}] ").fg(theme.text_faded),
+            ])
+            .right_aligned()
+        }
+        None => return None,
+    };
+
+    Some(output)
 }

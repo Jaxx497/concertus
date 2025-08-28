@@ -45,9 +45,9 @@ library, which may solve this problem in time.
 
 ## Current Development Objectives
 - Implementing a playlist system
- - Bulk Selection (Implemented, but needs cleanup)
+ - Bulk Selection (Implemented- need to add it for sidebar view)
+- Change order of songs in playlists and queue
  - Create new playlist on add song to playlist popup
- - Change order of songs
 
 
 ## TODO 

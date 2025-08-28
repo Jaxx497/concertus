@@ -49,6 +49,7 @@ pub enum Action {
     GoToAlbum,
     Scroll(Director),
     BulkSelect,
+    BulkSelectALL,
     ClearBulkSelect,
 
     // Playlists
@@ -167,6 +168,7 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
         ))),
 
         (X, Char('v')) => Some(Action::BulkSelect),
+        (S, Char('V')) => Some(Action::BulkSelectALL),
         (C, Char('v')) => Some(Action::ClearBulkSelect),
 
         (X, Char('a')) => Some(Action::AddToPlaylist),
@@ -359,6 +361,7 @@ impl Concertus {
             Action::RemoveSong      => self.ui.remove_song()?,
 
             Action::BulkSelect      => self.ui.add_to_bulk_select()?,
+            Action::BulkSelectALL   => self.ui.bulk_select_all()?,
             Action::ClearBulkSelect => self.ui.clear_bulk_sel(),
             
 

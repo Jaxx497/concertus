@@ -163,6 +163,29 @@ impl UiState {
         Ok(())
     }
 
+    pub fn bulk_select_all(&mut self) -> Result<()> {
+        if let Mode::Queue | Mode::Library(_) = self.get_mode() {
+            let songs = &self.legal_songs;
+
+            match songs
+                .iter()
+                .all(|s| self.display_state.bulk_select.contains(s))
+            {
+                true => {
+                    songs.iter().for_each(|s| {
+                        self.display_state.bulk_select.swap_remove(s);
+                    });
+                }
+                false => {
+                    songs.iter().for_each(|s| {
+                        self.display_state.bulk_select.insert(Arc::clone(&s));
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn get_selected_album(&self) -> Option<&Album> {
         self.display_state
             .album_pos
