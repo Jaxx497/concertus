@@ -1,12 +1,12 @@
 use crate::{
     truncate_at_last_space,
-    tui::widgets::tracklist::{create_standard_table, CellFactory},
+    tui::widgets::tracklist::{CellFactory, create_empty_block, create_standard_table},
     ui_state::{Pane, UiState},
 };
 use ratatui::{
     style::Stylize,
     text::{Line, Span},
-    widgets::{Row, StatefulWidget},
+    widgets::{Row, StatefulWidget, Widget},
 };
 
 pub struct AlbumView;
@@ -18,11 +18,12 @@ impl StatefulWidget for AlbumView {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
+        let theme = &state.get_theme(&Pane::TrackList);
+
         if state.albums.is_empty() {
+            create_empty_block(theme, "0 Songs").render(area, buf);
             return;
         }
-
-        let theme = &state.get_theme(&Pane::TrackList);
 
         let album = state.get_selected_album().unwrap_or(&state.albums[0]);
 

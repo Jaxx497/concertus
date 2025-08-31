@@ -1,13 +1,13 @@
 [package]
 name = "concertus"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-anyhow = "1.0.99"
-bincode = "2.0.1"
+anyhow = "*"
+bincode = "*"
 byteorder = "*"
-dirs = "6.0.0"
+dirs = "*"
 fuzzy-matcher = "*"
 indexmap = "*"
 mp4ameta = "*"

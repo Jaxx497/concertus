@@ -207,8 +207,8 @@ fn handle_search_pane(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
         (_, Tab) | (_, Char('/')) | (_, Enter) => Some(Action::SendSearch),
 
-        (X, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
-        (X, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
+        (_, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
+        (_, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
 
         (_, Char(x)) if ILLEGAL_CHARS.contains(&x) => None,
         _ => Some(Action::UpdateSearch(*key)),
@@ -218,7 +218,7 @@ fn handle_search_pane(key: &KeyEvent) -> Option<Action> {
 fn handle_popup(key: &KeyEvent, state: &UiState) -> Option<Action> {
     if let Some(_) = state.get_error() {
         match key.code {
-            Char('?') | Char('`') | Enter | Esc => Some(Action::SoftReset),
+            Char('?') | Enter | Esc => Some(Action::SoftReset),
             _ => None,
         };
     }
@@ -241,6 +241,7 @@ fn handle_settings(key: &KeyEvent, variant: &SettingsMode ) -> Option<Action> {
                 Char('d') => Some(Action::RootRemove),
                 Up | Char('k') => Some(Action::PopupScrollUp),
                 Down | Char('j') => Some(Action::PopupScrollDown),
+                Char('`') => Some(Action::ClosePopup),
                 _ => None,
             },
             AddRoot => match key.code {

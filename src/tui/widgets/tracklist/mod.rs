@@ -12,11 +12,11 @@ pub use generic_tracklist::GenericView;
 pub use search_results::StandardTable;
 
 use crate::{
+    DurationStyle,
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
     tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED, SELECTED, SELECTOR},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
-    DurationStyle,
 };
 use ratatui::{
     layout::{Alignment, Constraint, Flex, Rect},
@@ -50,8 +50,8 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
                 Constraint::Length(6),
                 Constraint::Length(1),
                 Constraint::Min(25),
-                Constraint::Max(30),
-                Constraint::Max(6),
+                Constraint::Max(20),
+                Constraint::Max(3),
                 Constraint::Length(7),
             ]
         }
@@ -88,10 +88,10 @@ pub(super) fn get_header<'a>(state: &UiState, active: &TableSort) -> Row<'a> {
             vec![
                 Text::default(),
                 Text::default(),
-                Text::from("Title").underlined(),
-                Text::from("Artist").underlined(),
-                Text::from("Format").underlined(),
-                Text::from("Length").right_aligned().underlined(),
+                Text::from("𝕋𝕚𝕥𝕝𝕖").underlined().bold().italic(),
+                Text::from("󰠃").centered(),
+                Text::from("").centered(),
+                Text::from("").centered(),
             ]
         }
         _ => Vec::new(),
@@ -146,6 +146,17 @@ pub fn create_standard_table<'a>(
         )
 }
 
+pub fn create_empty_block(theme: &DisplayTheme, title: &str) -> Block<'static> {
+    Block::bordered()
+        .title_top(format!(" {} ", title))
+        .title_alignment(Alignment::Center)
+        .borders(theme.border_display)
+        .border_type(BorderType::Thick)
+        .border_style(theme.border)
+        .padding(PADDING)
+        .bg(theme.bg)
+}
+
 pub struct CellFactory;
 
 impl CellFactory {
@@ -179,11 +190,11 @@ impl CellFactory {
     }
 
     pub fn artist_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
-        Cell::from(song.get_artist().to_string()).fg(theme.text_focused)
+        Cell::from(Line::from(song.get_artist().to_string())).fg(theme.text_focused)
     }
 
     pub fn filetype_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
-        Cell::from(format!("{}", song.filetype)).fg(theme.text_secondary)
+        Cell::from(Line::from(format!("{}", song.filetype)).centered()).fg(theme.text_secondary)
     }
 
     pub fn duration_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
@@ -235,7 +246,7 @@ static SUPERSCRIPT: LazyLock<HashMap<u32, &str>> = LazyLock::new(|| {
 });
 
 fn get_title(state: &UiState, area: Rect) -> Line<'static> {
-    let theme = state.get_theme(state.get_pane());
+    let theme = state.get_theme(&Pane::TrackList);
     let (title, track_count) = match state.get_mode() {
         &Mode::Queue => (
             Span::from("Queue").fg(theme.text_highlighted),

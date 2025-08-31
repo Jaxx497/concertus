@@ -1,4 +1,4 @@
-# Concertus - v0.0.4
+# Concertus - v0.0.5a
 
 Concertus is a lightweight, simple to use TUI music player written in Rust.
 
@@ -49,14 +49,14 @@ library, which may solve this problem in time.
 - Change order of songs in playlists and queue
  - Create new playlist on add song to playlist popup
 
-
 ## TODO 
-- Implement custom themeing
-- Search by album/artist (!) Should be simple, just need to do it
+- Tune search results
+- Re-work sort-by-column approach
+- Provide visual progress when scanning in songs
 - Add more settings
+    - Custom themeing
     - Update on start?
 - Implement a secondary player backend (gstreamer?)
-
 
 ## Other
 This project seeks to demonstrate my understanding of a series of

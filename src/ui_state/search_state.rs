@@ -1,11 +1,11 @@
-use super::{new_textarea, Pane, UiState};
+use super::{Pane, UiState, new_textarea};
 use crate::domain::{SimpleSong, SongInfo};
-use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use ratatui::crossterm::event::KeyEvent;
 use std::sync::Arc;
 use tui_textarea::TextArea;
 
-const MATCH_THRESHOLD: i64 = 50;
+const MATCH_THRESHOLD: i64 = 70;
 
 pub(super) struct SearchState {
     pub input: TextArea<'static>,
@@ -30,11 +30,51 @@ impl UiState {
             .get_all_songs()
             .iter()
             .filter_map(|song| {
-                self.search
-                    .matcher
-                    .fuzzy_match(&song.get_title().to_lowercase(), &query.as_str())
-                    .filter(|&score| score > MATCH_THRESHOLD)
-                    .map(|score| (song.clone(), score))
+                // Take the highest score from any field
+                let best_score = [
+                    self.search
+                        .matcher
+                        .fuzzy_match(&song.get_title().to_lowercase(), &query),
+                    self.search
+                        .matcher
+                        .fuzzy_match(&song.get_artist().to_lowercase(), &query),
+                    self.search
+                        .matcher
+                        .fuzzy_match(&song.get_album().to_lowercase(), &query),
+                ]
+                .iter()
+                .filter_map(|&score| score)
+                .max()
+                .unwrap_or(0);
+
+                // let title_score = self
+                //     .search
+                //     .matcher
+                //     .fuzzy_match(&song.get_title().to_lowercase(), &query)
+                //     .unwrap_or(0);
+                //
+                // let artist_score = self
+                //     .search
+                //     .matcher
+                //     .fuzzy_match(&song.get_artist().to_lowercase(), &query)
+                //     .unwrap_or(0);
+                //
+                // let album_score = self
+                //     .search
+                //     .matcher
+                //     .fuzzy_match(&song.get_album().to_lowercase(), &query)
+                //     .unwrap_or(0);
+                //
+                // let best_score = (title_score * 3) + (artist_score * 2) + (album_score * 2);
+
+                if best_score > MATCH_THRESHOLD {
+                    Some((Arc::clone(&song), best_score))
+                } else {
+                    None
+                }
+
+                // .filter(|&score| score > MATCH_THRESHOLD)
+                // .map(|score| (Arc::clone(&song), score))
             })
             .collect();
 

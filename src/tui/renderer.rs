@@ -1,13 +1,13 @@
 use super::widgets::Settings;
-use super::{widgets::SongTable, AppLayout};
+use super::{AppLayout, widgets::SongTable};
 use super::{ErrorMsg, Progress, SearchBar, SideBar};
+use crate::UiState;
 use crate::tui::widgets::{BufferLine, PlaylistPopup};
 use crate::ui_state::PopupType;
-use crate::UiState;
 use ratatui::{
+    Frame,
     layout::{Constraint, Layout, Rect},
     widgets::{Widget, *},
-    Frame,
 };
 
 pub fn render(f: &mut Frame, state: &mut UiState) {

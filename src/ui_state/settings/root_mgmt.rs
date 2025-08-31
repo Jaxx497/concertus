@@ -1,9 +1,9 @@
 use crate::{
+    Library,
     app_core::Concertus,
     ui_state::{PopupType, SettingsMode, UiState},
-    Library,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::sync::Arc;
 
 impl UiState {

@@ -2,7 +2,7 @@ use crate::{
     domain::SongInfo,
     truncate_at_last_space,
     tui::widgets::{PAUSE_ICON, SELECTED},
-    ui_state::{DisplayTheme, UiState, GOLD_FADED},
+    ui_state::{DisplayTheme, GOLD_FADED, UiState},
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout},
@@ -33,7 +33,9 @@ impl StatefulWidget for BufferLine {
             ])
             .areas(area);
 
-        get_bulk_selection(state.get_bulk_sel().len()).render(left, buf);
+        let selection_count = state.get_bulk_sel().len();
+
+        get_bulk_selection(selection_count).render(left, buf);
         playing_title(state, &theme, center.width as usize).render(center, buf);
         queue_display(state, &theme, right.width as usize).render(right, buf);
     }
@@ -86,7 +88,7 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
 fn get_bulk_selection(size: usize) -> Option<Line<'static>> {
     let output = match size {
         0 => return None,
-        x => format!(" {x:>3} {} ", SELECTED)
+        x => format!("{x:>3} {} ", SELECTED)
             .fg(GOLD_FADED)
             .into_left_aligned_line(),
     };

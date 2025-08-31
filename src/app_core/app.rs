@@ -1,16 +1,16 @@
 use crate::{
-    domain::{generate_waveform, QueueSong, SongInfo},
+    Database, Library,
+    domain::{QueueSong, SongInfo, generate_waveform},
     key_handler::{self},
     overwrite_line,
     player::PlayerController,
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
-    Database, Library,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use ratatui::crossterm::event::{Event, KeyEventKind};
 use std::{
-    sync::{mpsc, Arc, Mutex},
+    sync::{Arc, Mutex, mpsc},
     thread,
     time::{Duration, Instant},
 };
@@ -94,6 +94,7 @@ impl Concertus {
             }
 
             let _ = self.await_waveform_completion();
+
             terminal.draw(|f| tui::render(f, &mut self.ui))?;
 
             if self.ui.get_mode() == Mode::QUIT {
