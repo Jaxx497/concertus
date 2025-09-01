@@ -1,92 +1,14 @@
-use crate::{
-    app_core::Concertus,
-    ui_state::{LibraryView, Mode, Pane, PlaylistAction, PopupType, SettingsMode, UiState},
-    REFRESH_RATE,
-};
-use anyhow::{anyhow, Result};
-use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
-use std::{collections::HashSet, sync::LazyLock, time::Duration};
+use std::time::Duration;
 
-static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from(['\'', ';']));
+use crate::{
+    app_core::Concertus, key_handler::{Action, Director, MoveDirection, ILLEGAL_CHARS, SCROLL_MID, SCROLL_XTRA, SEEK_LARGE, SEEK_SMALL}, ui_state::{LibraryView, Mode, Pane, PlaylistAction, PopupType, SettingsMode, UiState}, REFRESH_RATE
+};
+use anyhow::Result;
+use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers };
+
 const X: KeyModifiers = KeyModifiers::NONE;
 const S: KeyModifiers = KeyModifiers::SHIFT;
 const C: KeyModifiers = KeyModifiers::CONTROL;
-
-const SEEK_SMALL: usize = 5;
-const SEEK_LARGE: usize = 30;
-const SCROLL_MID: usize = 5;
-const SCROLL_XTRA: usize = 20;
-
-#[derive(PartialEq, Eq)]
-pub enum Action {
-    // Player Controls
-    Play,
-    Stop,
-    TogglePause,
-    PlayNext,
-    PlayPrev,
-    SeekForward(usize),
-    SeekBack(usize),
-
-    // Queue & Playlist Actions 
-    QueueSong,
-    QueueEntity,
-    RemoveSong,
-
-    AddToPlaylist,
-    AddToPlaylistConfirm,
-
-    // Updating App State
-    UpdateLibrary,
-    SendSearch,
-    UpdateSearch(KeyEvent),
-    SortColumnsNext,
-    SortColumnsPrev,
-    ToggleAlbumSort(bool),
-    ToggleSideBar,
-    ChangeMode(Mode),
-    ChangePane(Pane),
-    GoToAlbum,
-    Scroll(Director),
-    BulkSelect,
-    BulkSelectALL,
-    ClearBulkSelect,
-
-    // Playlists
-    CreatePlaylist,
-    CreatePlaylistConfirm,
-
-    DeletePlaylist,
-    DeletePlaylistConfirm,
-
-
-    PopupInput(KeyEvent),
-
-    ClosePopup,
-    PopupScrollUp,
-    PopupScrollDown,
-
-    // Errors, Convenience & Other
-    ViewSettings,
-    RootAdd,
-    RootRemove,
-    RootConfirm,
-
-    // SettingsCancel,
-    SettingsInput(KeyEvent),
-
-    HandleErrors,
-    SoftReset,
-    QUIT,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum Director {
-    Up(usize),
-    Down(usize),
-    Top,
-    Bottom,
-}
 
 use KeyCode::*;
 
@@ -114,7 +36,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
 fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
     let in_search = state.get_pane() == Pane::Search;
     let popup_active = state.popup.is_open();
-    
+
     // Works on every pane, even search
     match (key.modifiers, key.code) {
         (X, Esc) => Some(Action::SoftReset),
@@ -141,8 +63,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
 
             // SCROLLING
-            (X, Char('j')) | (X, Down)  => Some(Action::Scroll(Director::Down(1))),
-            (X, Char('k')) | (X, Up)    => Some(Action::Scroll(Director::Up(1))),
+            (X, Char('j')) | (X, Down) => Some(Action::Scroll(Director::Down(1))),
+            (X, Char('k')) | (X, Up) => Some(Action::Scroll(Director::Up(1))),
             (X, Char('d')) => Some(Action::Scroll(Director::Down(SCROLL_MID))),
             (X, Char('u')) => Some(Action::Scroll(Director::Up(SCROLL_MID))),
             (S, Char('D')) => Some(Action::Scroll(Director::Down(SCROLL_XTRA))),
@@ -150,7 +72,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('g')) => Some(Action::Scroll(Director::Top)),
             (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
 
-            (C, Char('u')) | (X, F(5))  => Some(Action::UpdateLibrary),
+            (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
         },
@@ -162,8 +84,7 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match (key.modifiers, key.code) {
         (X, Enter) => Some(Action::Play),
 
-        (X, Tab) | (X, Left) | (X, Char('h')) => 
-        Some(Action::ChangeMode(Mode::Library(
+        (X, Tab) | (X, Left) | (X, Char('h')) => Some(Action::ChangeMode(Mode::Library(
             state.display_state.sidebar_view,
         ))),
 
@@ -174,11 +95,13 @@ fn handle_main_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
 
+        (S, Char('K')) => Some(Action::ShiftPosition(MoveDirection::Up)),
+        (S, Char('J')) => Some(Action::ShiftPosition(MoveDirection::Down)),
 
         // Queue management
         (X, Char('q')) => Some(Action::QueueSong),
         (X, Char('x')) => Some(Action::RemoveSong),
-        
+
         // SORTING SONGS
         (C, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
         (C, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
@@ -223,44 +146,41 @@ fn handle_popup(key: &KeyEvent, state: &UiState) -> Option<Action> {
         };
     }
 
-
     match &state.popup.current {
-        PopupType::Settings(s)  => handle_settings(key, s),
-        PopupType::Playlist(p)  => handle_playlist(key, p),
-        PopupType::Error(_)     => Some(Action::ClosePopup),
-        _ => None 
+        PopupType::Settings(s) => handle_settings(key, s),
+        PopupType::Playlist(p) => handle_playlist(key, p),
+        PopupType::Error(_) => Some(Action::ClosePopup),
+        _ => None,
     }
-
 }
 
-fn handle_settings(key: &KeyEvent, variant: &SettingsMode ) -> Option<Action> {
+fn handle_settings(key: &KeyEvent, variant: &SettingsMode) -> Option<Action> {
     use SettingsMode::*;
     match variant {
-            ViewRoots => match key.code {
-                Char('a') => Some(Action::RootAdd),
-                Char('d') => Some(Action::RootRemove),
-                Up | Char('k') => Some(Action::PopupScrollUp),
-                Down | Char('j') => Some(Action::PopupScrollDown),
-                Char('`') => Some(Action::ClosePopup),
-                _ => None,
-            },
-            AddRoot => match key.code {
-                Esc => Some(Action::ViewSettings),
-                Enter => Some(Action::RootConfirm),
-                _ => Some(Action::SettingsInput(*key)),
-            },
-            RemoveRoot => match key.code {
-                Esc => Some(Action::ViewSettings),
-                Enter => Some(Action::RootConfirm),
-                _ => None,
-            },
+        ViewRoots => match key.code {
+            Char('a') => Some(Action::RootAdd),
+            Char('d') => Some(Action::RootRemove),
+            Up | Char('k') => Some(Action::PopupScrollUp),
+            Down | Char('j') => Some(Action::PopupScrollDown),
+            Char('`') => Some(Action::ClosePopup),
+            _ => None,
+        },
+        AddRoot => match key.code {
+            Esc => Some(Action::ViewSettings),
+            Enter => Some(Action::RootConfirm),
+            _ => Some(Action::SettingsInput(*key)),
+        },
+        RemoveRoot => match key.code {
+            Esc => Some(Action::ViewSettings),
+            Enter => Some(Action::RootConfirm),
+            _ => None,
+        },
     }
 }
 
 fn handle_playlist(key: &KeyEvent, variant: &PlaylistAction) -> Option<Action> {
-    use PlaylistAction::*;    
-match variant {
-
+    use PlaylistAction::*;
+    match variant {
         Create => match key.code {
             Esc => Some(Action::ClosePopup),
             Enter => Some(Action::CreatePlaylistConfirm),
@@ -272,12 +192,12 @@ match variant {
             _ => Some(Action::PopupInput(*key)),
         },
         AddSong => match key.code {
-                Up | Char('k') => Some(Action::PopupScrollUp),
-                Down | Char('j') => Some(Action::PopupScrollDown),
-                Enter | Char('a') => Some(Action::AddToPlaylistConfirm),
-                _ => None
+            Up | Char('k') => Some(Action::PopupScrollUp),
+            Down | Char('j') => Some(Action::PopupScrollDown),
+            Enter | Char('a') => Some(Action::AddToPlaylistConfirm),
+            _ => None,
         },
-        Rename => todo!()
+        Rename => todo!(),
     }
 }
 
@@ -316,31 +236,12 @@ impl Concertus {
             Action::SendSearch      => self.ui.send_search(),
 
             //Playlist
-            Action::CreatePlaylist  =>  if self.ui.get_sidebar_view() == &LibraryView::Playlists {
-                self.ui.show_popup(PopupType::Playlist(PlaylistAction::Create));
-            }
+            Action::CreatePlaylist  => self.ui.create_playlist_popup(),
+            Action::CreatePlaylistConfirm => self.ui.create_playlist_popup_confirm()?,
 
-            Action::CreatePlaylistConfirm => {
-                let name = self.ui.popup.input.lines()[0].clone();
-                
-                // Prevent duplicates 
-                let playlist_names = self.ui.playlists.iter().map(|p| p.name.to_lowercase()).collect::<HashSet<_>>();
-
-                match playlist_names.contains(&name.to_lowercase()) {
-                    true => return Err(anyhow!("Playlist name already exists!")),
-                    false => {
-                        if let Err(e) = self.ui.create_playlist(&name) {
-                            self.ui.set_error(e);
-                        } else {
-                            self.ui.close_popup();
-                        }
-                    }
-                }
-            }
-
-            Action::DeletePlaylist => {
-                self.ui.show_popup(PopupType::Playlist(PlaylistAction::Delete));
-            }
+            Action::DeletePlaylist => 
+                self.ui.show_popup(PopupType::Playlist(PlaylistAction::Delete)),
+            
 
             Action::DeletePlaylistConfirm => {
                 self.ui.delete_playlist()?;
@@ -364,7 +265,8 @@ impl Concertus {
             Action::BulkSelect      => self.ui.add_to_bulk_select()?,
             Action::BulkSelectALL   => self.ui.bulk_select_all()?,
             Action::ClearBulkSelect => self.ui.clear_bulk_sel(),
-            
+
+            Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
 
             // Ops
             Action::SoftReset       => self.ui.soft_reset(),

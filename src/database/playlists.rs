@@ -1,14 +1,6 @@
 use indexmap::IndexMap;
 
-use crate::{
-    database::queries::{
-        ADD_SONG_TO_PLAYLIST, ADD_SONG_TO_PLAYLIST_WITH_POSITION, CREATE_NEW_PLAYLIST,
-        DELETE_PLAYLIST, GET_PLAYLISTS, GET_PLAYLIST_POSITION, PLAYLIST_BUILDER,
-        REMOVE_SONG_FROM_PLAYLIST, UPDATE_PLAYLIST,
-    },
-    domain::Playlist,
-    Database,
-};
+use crate::{Database, database::queries::*, domain::Playlist};
 use anyhow::Result;
 use rusqlite::params;
 
@@ -62,7 +54,7 @@ impl Database {
         let tx = self.conn.transaction()?;
         {
             let start_pos = tx
-                .query_row(GET_PLAYLIST_POSITION, params![playlist_id], |row| {
+                .query_row(GET_PLAYLIST_POSITION_NEXT, params![playlist_id], |row| {
                     row.get(0)
                 })
                 .unwrap_or(0)
@@ -95,6 +87,26 @@ impl Database {
         }
 
         tx.commit()?;
+        Ok(())
+    }
+
+    pub fn swap_position(&mut self, ps_id1: i64, ps_id2: i64, playlist_id: i64) -> Result<()> {
+        let tx = self.conn.transaction()?;
+        {
+            let pos1: i64 = tx.query_row(GET_PLAYLIST_POS, params![ps_id1], |row| row.get(0))?;
+
+            let pos2: i64 = tx.query_row(GET_PLAYLIST_POS, params![ps_id2], |row| row.get(0))?;
+
+            // Three-step swap to avoid unique constraint violation
+            tx.execute(UPDATE_PLAYLIST_POS, params![-1, ps_id1])?;
+            tx.execute(UPDATE_PLAYLIST_POS, params![pos1, ps_id2])?;
+            tx.execute(UPDATE_PLAYLIST_POS, params![pos2, ps_id1])?;
+
+            tx.execute(UPDATE_PLAYLIST, params![playlist_id])?;
+        }
+
+        tx.commit()?;
+
         Ok(())
     }
 

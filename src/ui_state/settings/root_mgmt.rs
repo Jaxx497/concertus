@@ -122,12 +122,12 @@ impl Concertus {
                 let path = self.ui.popup.input.lines();
                 let path = path[0].clone();
                 if !path.is_empty() {
-                    if let Err(e) = self.ui.add_root(&path) {
-                        self.ui.set_error(e);
-                    } else {
-                        self.ui
-                            .show_popup(PopupType::Settings(SettingsMode::ViewRoots));
-                        self.update_library()?;
+                    match self.ui.add_root(&path) {
+                        Err(e) => self.ui.set_error(e),
+                        Ok(_) => {
+                            self.ui.close_popup();
+                            self.update_library()?;
+                        }
                     }
                 }
             }

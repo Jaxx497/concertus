@@ -1,9 +1,9 @@
 use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
     domain::{Album, Playlist, SimpleSong, SongInfo},
-    key_handler::Director,
+    key_handler::{Director, MoveDirection},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
@@ -285,6 +285,76 @@ impl UiState {
                     .expect("Error sorting by duration.")
             }),
         };
+    }
+
+    pub(crate) fn shift_position(&mut self, direction: MoveDirection) -> Result<()> {
+        match self.get_mode() {
+            Mode::Queue => {
+                let Some(display_idx) = self.display_state.table_pos.selected() else {
+                    return Ok(());
+                };
+
+                match direction {
+                    MoveDirection::Up => {
+                        if display_idx > 0 {
+                            self.playback.queue.swap(display_idx, display_idx - 1);
+                            self.scroll(Director::Up(1));
+                        }
+                    }
+                    MoveDirection::Down => {
+                        if display_idx < self.playback.queue.len() - 1 {
+                            self.playback.queue.swap(display_idx, display_idx + 1);
+                            self.scroll(Director::Down(1));
+                        }
+                    }
+                }
+            }
+
+            Mode::Library(LibraryView::Playlists) => {
+                let Some(playlist_idx) = self.display_state.playlist_pos.selected() else {
+                    return Ok(());
+                };
+
+                let Some(song_idx) = self.display_state.table_pos.selected() else {
+                    return Ok(());
+                };
+
+                let playlist = &mut self.playlists[playlist_idx];
+
+                match direction {
+                    MoveDirection::Up => {
+                        if song_idx > 0 && playlist.tracklist.len() > 1 {
+                            let ps_id1 = playlist.tracklist[song_idx].id;
+                            let ps_id2 = playlist.tracklist[song_idx - 1].id;
+
+                            let db = self.library.get_db();
+                            let mut db_lock = db.lock().unwrap();
+                            db_lock.swap_position(ps_id1, ps_id2, playlist.id)?;
+
+                            playlist.tracklist.swap(song_idx, song_idx - 1);
+                            self.scroll(Director::Up(1));
+                        }
+                    }
+                    MoveDirection::Down => {
+                        if song_idx < playlist.tracklist.len() - 1 {
+                            let ps_id1 = playlist.tracklist[song_idx].id;
+                            let ps_id2 = playlist.tracklist[song_idx + 1].id;
+
+                            let db = self.library.get_db();
+                            let mut db_lock = db.lock().unwrap();
+                            db_lock.swap_position(ps_id1, ps_id2, playlist.id)?;
+
+                            playlist.tracklist.swap(song_idx, song_idx + 1);
+                            self.scroll(Director::Down(1));
+                        }
+                    }
+                }
+            }
+            _ => (),
+        }
+        self.set_legal_songs();
+
+        Ok(())
     }
 
     pub(crate) fn go_to_album(&mut self) -> Result<()> {

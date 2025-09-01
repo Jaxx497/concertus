@@ -253,15 +253,19 @@ fn get_title(state: &UiState, area: Rect) -> Line<'static> {
             state.playback.queue.len(),
         ),
         &Mode::Library(LibraryView::Playlists) => {
-            let playlist = state.get_selected_playlist().unwrap_or(&state.playlists[0]);
-            let formatted_title =
-                crate::truncate_at_last_space(&playlist.name, (area.width / 3) as usize);
-            (
-                Span::from(format!("{}", formatted_title))
-                    .fg(theme.text_secondary)
-                    .italic(),
-                playlist.tracklist.len(),
-            )
+            if state.playlists.is_empty() {
+                return "".into();
+            } else {
+                let playlist = state.get_selected_playlist().unwrap_or(&state.playlists[0]);
+                let formatted_title =
+                    crate::truncate_at_last_space(&playlist.name, (area.width / 3) as usize);
+                (
+                    Span::from(format!("{}", formatted_title))
+                        .fg(theme.text_secondary)
+                        .italic(),
+                    playlist.tracklist.len(),
+                )
+            }
         }
         _ => (Span::default(), 0),
     };

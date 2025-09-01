@@ -1,7 +1,7 @@
 use anyhow::Result;
 use indexmap::IndexMap;
 use queries::*;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,

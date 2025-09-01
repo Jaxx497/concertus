@@ -22,6 +22,11 @@ impl SearchState {
 }
 
 impl UiState {
+    // Algorithm looks at the title, artist, and album fields
+    // and scores each attribute while applying a heavier
+    // weight to the title field and returns the highest score.
+    // Assuming the score is higher than the threshold, the
+    // result is valid. Results are ordered by score.
     pub(crate) fn filter_songs_by_search(&mut self) {
         let query = self.read_search().to_lowercase();
 
@@ -30,56 +35,37 @@ impl UiState {
             .get_all_songs()
             .iter()
             .filter_map(|song| {
-                // Take the highest score from any field
-                let best_score = [
-                    self.search
-                        .matcher
-                        .fuzzy_match(&song.get_title().to_lowercase(), &query),
-                    self.search
-                        .matcher
-                        .fuzzy_match(&song.get_artist().to_lowercase(), &query),
-                    self.search
-                        .matcher
-                        .fuzzy_match(&song.get_album().to_lowercase(), &query),
-                ]
-                .iter()
-                .filter_map(|&score| score)
-                .max()
-                .unwrap_or(0);
+                let title_score = self
+                    .search
+                    .matcher
+                    .fuzzy_match(&song.get_title().to_lowercase(), &query)
+                    .unwrap_or(0);
 
-                // let title_score = self
-                //     .search
-                //     .matcher
-                //     .fuzzy_match(&song.get_title().to_lowercase(), &query)
-                //     .unwrap_or(0);
-                //
-                // let artist_score = self
-                //     .search
-                //     .matcher
-                //     .fuzzy_match(&song.get_artist().to_lowercase(), &query)
-                //     .unwrap_or(0);
-                //
-                // let album_score = self
-                //     .search
-                //     .matcher
-                //     .fuzzy_match(&song.get_album().to_lowercase(), &query)
-                //     .unwrap_or(0);
-                //
-                // let best_score = (title_score * 3) + (artist_score * 2) + (album_score * 2);
+                let artist_score = self
+                    .search
+                    .matcher
+                    .fuzzy_match(&song.get_artist().to_lowercase(), &query)
+                    .unwrap_or(0);
+
+                let album_score = self
+                    .search
+                    .matcher
+                    .fuzzy_match(&song.get_album().to_lowercase(), &query)
+                    .unwrap_or(0);
+
+                // Apply height weight to title.
+                let weighted_score = [(title_score * 2) + artist_score + album_score];
+                let best_score = weighted_score.iter().max().copied().unwrap_or(0);
 
                 if best_score > MATCH_THRESHOLD {
                     Some((Arc::clone(&song), best_score))
                 } else {
                     None
                 }
-
-                // .filter(|&score| score > MATCH_THRESHOLD)
-                // .map(|score| (Arc::clone(&song), score))
             })
             .collect();
 
         scored_songs.sort_by(|a, b| b.1.cmp(&a.1));
-
         self.legal_songs = scored_songs.into_iter().map(|i| i.0).collect();
     }
 
@@ -101,10 +87,9 @@ impl UiState {
     pub fn process_search(&mut self, k: KeyEvent) {
         self.search.input.input(k);
         self.set_legal_songs();
-        if self.legal_songs.is_empty() {
-            self.display_state.table_pos.select(None);
-        } else {
-            self.display_state.table_pos.select(Some(0));
+        match self.legal_songs.is_empty() {
+            true => self.display_state.table_pos.select(None),
+            false => self.display_state.table_pos.select(Some(0)),
         }
     }
 

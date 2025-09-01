@@ -154,7 +154,7 @@ pub const DELETE_PLAYLIST: &str = "
         WHERE id = ?
 ";
 
-pub const GET_PLAYLIST_POSITION: &str = "
+pub const GET_PLAYLIST_POSITION_NEXT: &str = "
     SELECT COALESCE(MAX(position), 0)  
     FROM playlist_songs WHERE playlist_id = ?
 ";
@@ -207,4 +207,12 @@ pub const PLAYLIST_BUILDER: &str = "
 pub const REMOVE_SONG_FROM_PLAYLIST: &str = "
     DELETE FROM playlist_songs
     WHERE id = ?;
+";
+
+pub const GET_PLAYLIST_POS: &str = " 
+    SELECT position FROM playlist_songs WHERE id = ?
+";
+
+pub const UPDATE_PLAYLIST_POS: &str = "
+    UPDATE playlist_songs SET position = ? WHERE id = ?
 ";

@@ -5,7 +5,7 @@ use crate::{
     domain::{Album, LongSong, SimpleSong, SongInfo},
     expand_tilde,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use std::{

@@ -56,12 +56,10 @@ impl Concertus {
         self.preload_lib();
         self.initialize_ui();
 
-        match self.requires_setup {
-            true => {
-                self.ui
-                    .show_popup(PopupType::Settings(SettingsMode::AddRoot));
-            }
-            false => (),
+        if self.requires_setup {
+            self.ui
+                .show_popup(PopupType::Settings(SettingsMode::AddRoot));
+            self.ui.display_state.album_pos.select_first();
         }
 
         // MAIN ROUTINE

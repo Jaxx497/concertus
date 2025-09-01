@@ -1,12 +1,12 @@
-use super::{playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState};
+use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState, theme::Theme};
 use crate::{
+    Library,
     domain::{Album, Playlist, SimpleSong},
     player::PlayerState,
     ui_state::{
-        popup::{PopupState, PopupType},
         LibraryView, Mode,
+        popup::{PopupState, PopupType},
     },
-    Library,
 };
 use anyhow::{Error, Result};
 use indexmap::IndexSet;
@@ -54,8 +54,12 @@ impl UiState {
             true => self.display_state.album_pos.select(None),
             false => {
                 let album_len = self.albums.len();
-                if self.display_state.album_pos.selected().unwrap_or(0) > album_len {
+                let current_selection = self.display_state.album_pos.selected().unwrap_or(0);
+
+                if current_selection > album_len {
                     self.display_state.album_pos.select(Some(album_len - 1));
+                } else if self.display_state.album_pos.selected().is_none() {
+                    self.display_state.album_pos.select(Some(0));
                 };
             }
         }

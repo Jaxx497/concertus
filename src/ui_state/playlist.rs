@@ -1,8 +1,10 @@
+use std::collections::HashSet;
+
 use crate::{
     domain::{Playlist, PlaylistSong},
-    ui_state::UiState,
+    ui_state::{LibraryView, PopupType, UiState},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 #[derive(PartialEq)]
 pub enum PlaylistAction {
@@ -65,6 +67,35 @@ impl UiState {
             self.display_state.playlist_pos.select_first();
         }
 
+        Ok(())
+    }
+
+    pub fn create_playlist_popup(&mut self) {
+        if self.get_sidebar_view() == &LibraryView::Playlists {
+            self.show_popup(PopupType::Playlist(PlaylistAction::Create));
+        }
+    }
+
+    pub fn create_playlist_popup_confirm(&mut self) -> Result<()> {
+        let name = self.popup.input.lines()[0].clone();
+
+        // Prevent duplicates
+        let playlist_names = self
+            .playlists
+            .iter()
+            .map(|p| p.name.to_lowercase())
+            .collect::<HashSet<_>>();
+
+        match playlist_names.contains(&name.to_lowercase()) {
+            true => return Err(anyhow!("Playlist name already exists!")),
+            false => {
+                if let Err(e) = self.create_playlist(&name) {
+                    self.set_error(e);
+                } else {
+                    self.close_popup();
+                }
+            }
+        }
         Ok(())
     }
 
