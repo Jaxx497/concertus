@@ -6,11 +6,17 @@ use std::sync::LazyLock;
 pub use action::handle_key_event;
 pub use action::next_event;
 use ratatui::crossterm::event::KeyEvent;
+use ratatui::crossterm::event::KeyModifiers;
 
 use crate::ui_state::Mode;
 use crate::ui_state::Pane;
+use crate::ui_state::PopupType;
 
-static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from(['\'', ';']));
+static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from([';']));
+
+const X: KeyModifiers = KeyModifiers::NONE;
+const S: KeyModifiers = KeyModifiers::SHIFT;
+const C: KeyModifiers = KeyModifiers::CONTROL;
 
 const SEEK_SMALL: usize = 5;
 const SEEK_LARGE: usize = 30;
@@ -62,11 +68,10 @@ pub enum Action {
 
     ShiftPosition(MoveDirection),
 
-    PopupInput(KeyEvent),
-
     ClosePopup,
     PopupScrollUp,
     PopupScrollDown,
+    PopupInput(KeyEvent),
 
     // Errors, Convenience & Other
     ViewSettings,
@@ -74,12 +79,18 @@ pub enum Action {
     RootRemove,
     RootConfirm,
 
-    // SettingsCancel,
-    SettingsInput(KeyEvent),
-
     HandleErrors,
     SoftReset,
     QUIT,
+}
+
+pub enum InputContext {
+    AlbumView,
+    PlaylistView,
+    TrackList(Mode),
+    Search,
+    Queue,
+    Popup(PopupType),
 }
 
 #[derive(PartialEq, Eq)]

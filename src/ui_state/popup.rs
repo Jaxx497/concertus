@@ -1,9 +1,9 @@
-use ratatui::widgets::ListState;
+use ratatui::{crossterm::event::KeyEvent, widgets::ListState};
 use tui_textarea::TextArea;
 
 use crate::ui_state::{Pane, SettingsMode, UiState, new_textarea, playlist::PlaylistAction};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum PopupType {
     None,
     Error(String),
@@ -82,5 +82,9 @@ impl UiState {
         let pane = self.popup.close();
         self.popup.cached = Pane::Popup;
         self.set_pane(pane);
+    }
+
+    pub fn process_popup_input(&mut self, key: &KeyEvent) {
+        self.popup.input.input(*key);
     }
 }

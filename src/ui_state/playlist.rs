@@ -6,7 +6,7 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum PlaylistAction {
     Create,
     AddSong,
@@ -110,6 +110,7 @@ impl UiState {
                 db_lock.delete_playlist(playlist_id)?;
             }
             self.get_playlists()?;
+            self.set_legal_songs();
         }
 
         Ok(())

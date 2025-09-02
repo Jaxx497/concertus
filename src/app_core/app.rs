@@ -10,7 +10,10 @@ use crate::{
 use anyhow::{Result, anyhow};
 use ratatui::crossterm::event::{Event, KeyEventKind};
 use std::{
-    sync::{Arc, Mutex, mpsc},
+    sync::{
+        Arc, Mutex,
+        mpsc::{self, Receiver},
+    },
     thread,
     time::{Duration, Instant},
 };
@@ -21,7 +24,7 @@ pub struct Concertus {
     library: Arc<Library>,
     pub(crate) ui: UiState,
     pub(crate) player: PlayerController,
-    waveform_rec: Option<mpsc::Receiver<Vec<f32>>>,
+    waveform_rec: Option<Receiver<Vec<f32>>>,
     requires_setup: bool,
 }
 
@@ -36,7 +39,7 @@ impl Concertus {
         let shared_state = Arc::new(Mutex::new(crate::player::PlayerState::default()));
         let shared_state_clone = Arc::clone(&shared_state);
 
-        let appstate = Concertus {
+        Concertus {
             _initializer: Instant::now(),
             db,
             library: lib,
@@ -44,9 +47,7 @@ impl Concertus {
             ui: UiState::new(lib_clone, shared_state_clone),
             waveform_rec: None,
             requires_setup: true,
-        };
-
-        appstate
+        }
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {

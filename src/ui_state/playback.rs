@@ -5,7 +5,7 @@ use crate::{
     strip_win_prefix,
     ui_state::LibraryView,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::{
     collections::{HashSet, VecDeque},
     sync::{Arc, Mutex},
@@ -43,7 +43,10 @@ impl UiState {
         match self.bulk_select_empty() {
             true => self.add_to_queue_single(song),
             false => self.add_to_queue_bulk(),
-        }
+        }?;
+
+        self.set_legal_songs();
+        Ok(())
     }
 
     pub(crate) fn add_to_queue_single(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {

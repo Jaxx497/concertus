@@ -5,7 +5,7 @@ pub enum LibraryView {
     Playlists,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum Mode {
     Power,
     Library(LibraryView),

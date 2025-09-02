@@ -125,8 +125,8 @@ impl Concertus {
                     match self.ui.add_root(&path) {
                         Err(e) => self.ui.set_error(e),
                         Ok(_) => {
-                            self.ui.close_popup();
                             self.update_library()?;
+                            self.ui.close_popup();
                         }
                     }
                 }

@@ -43,14 +43,9 @@ feature, alongside other small QOL additions, new backend options will
 be explored. However, lots of progress is being made in the rodio
 library, which may solve this problem in time. 
 
-## Current Development Objectives
-- Implementing a playlist system
- - Bulk Selection (Implemented- need to add it for sidebar view)
-- Change order of songs in playlists and queue
- - Create new playlist on add song to playlist popup
-
 ## TODO 
 - Tune search results
+- Create new playlist on add song to playlist popup
 - Re-work sort-by-column approach
 - Provide visual progress when scanning in songs
 - Add more settings

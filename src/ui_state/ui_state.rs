@@ -2,9 +2,10 @@ use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchSta
 use crate::{
     Library,
     domain::{Album, Playlist, SimpleSong},
+    key_handler::InputContext,
     player::PlayerState,
     ui_state::{
-        LibraryView, Mode,
+        LibraryView, Mode, Pane,
         popup::{PopupState, PopupType},
     },
 };
@@ -106,5 +107,20 @@ impl UiState {
 
     pub fn clear_bulk_sel(&mut self) {
         self.display_state.bulk_select.clear();
+    }
+
+    pub fn get_input_context(&self) -> InputContext {
+        if self.popup.is_open() {
+            return InputContext::Popup(self.popup.current.clone());
+        }
+
+        match (self.get_mode(), self.get_pane()) {
+            (Mode::Library(LibraryView::Albums), Pane::SideBar) => InputContext::AlbumView,
+            (Mode::Library(LibraryView::Playlists), Pane::SideBar) => InputContext::PlaylistView,
+            (Mode::Search, Pane::Search) => InputContext::Search,
+            (mode, Pane::TrackList) => InputContext::TrackList(mode.clone()),
+            (Mode::QUIT, _) => unreachable!(),
+            _ => InputContext::TrackList(self.get_mode().clone()),
+        }
     }
 }
