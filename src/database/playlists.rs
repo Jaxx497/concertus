@@ -38,8 +38,12 @@ impl Database {
     }
 
     pub fn rename_playlist(&mut self, new_name: &str, playlist_id: i64) -> Result<()> {
-        self.conn
-            .execute(RENAME_PLAYLIST, params![new_name, playlist_id])?;
+        let tx = self.conn.transaction()?;
+        {
+            tx.execute(RENAME_PLAYLIST, params![new_name, playlist_id])?;
+            tx.execute(UPDATE_PLAYLIST, params![playlist_id])?;
+        }
+        tx.commit()?;
 
         Ok(())
     }

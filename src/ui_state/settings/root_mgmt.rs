@@ -119,8 +119,7 @@ impl Concertus {
     pub(crate) fn settings_root_confirm(&mut self) -> anyhow::Result<()> {
         match self.ui.popup.current {
             PopupType::Settings(SettingsMode::AddRoot) => {
-                let path = self.ui.popup.input.lines();
-                let path = path[0].clone();
+                let path = self.ui.get_popup_string();
                 if !path.is_empty() {
                     match self.ui.add_root(&path) {
                         Err(e) => self.ui.set_error(e),

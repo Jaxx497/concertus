@@ -84,6 +84,10 @@ impl UiState {
         }
     }
 
+    pub fn get_popup_string(&self) -> String {
+        self.popup.input.lines()[0].trim().to_string()
+    }
+
     pub fn close_popup(&mut self) {
         let pane = self.popup.close();
         self.popup.cached = Pane::Popup;

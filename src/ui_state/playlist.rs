@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::{
     domain::{Playlist, PlaylistSong},
     ui_state::{LibraryView, PopupType, UiState},
@@ -58,35 +56,32 @@ impl UiState {
     }
 
     pub fn create_playlist(&mut self) -> Result<()> {
-        let name = self.popup.input.lines()[0].clone();
+        let name = self.get_popup_string();
 
-        // Prevent duplicates
-        let playlist_names = self
+        if name.is_empty() {
+            return Err(anyhow!("Playlist name cannot be empty!"));
+        }
+
+        if self
             .playlists
             .iter()
-            .map(|p| p.name.to_lowercase())
-            .collect::<HashSet<_>>();
-
-        match playlist_names.contains(&name.to_lowercase()) {
-            true => return Err(anyhow!("Playlist name already exists!")),
-            false => {
-                if name.trim().is_empty() {
-                    return Err(anyhow!("Playlist name cannot be empty!"));
-                }
-
-                {
-                    let db = self.library.get_db();
-                    let mut db_lock = db.lock().unwrap();
-                    db_lock.create_playlist(&name)?;
-                }
-
-                self.get_playlists()?;
-
-                if self.display_state.playlist_pos.selected() == None {
-                    self.display_state.playlist_pos.select_first();
-                }
-            }
+            .any(|p| p.name.to_lowercase() == name.to_lowercase())
+        {
+            return Err(anyhow!("Playlist name already exists!"));
         }
+
+        {
+            let db = self.library.get_db();
+            let mut db_lock = db.lock().unwrap();
+            db_lock.create_playlist(&name)?;
+        }
+
+        self.get_playlists()?;
+
+        if self.display_state.playlist_pos.selected() == None {
+            self.display_state.playlist_pos.select_first();
+        }
+
         self.close_popup();
         Ok(())
     }
@@ -98,30 +93,35 @@ impl UiState {
     }
 
     pub fn rename_playlist(&mut self) -> Result<()> {
-        match self.get_selected_playlist() {
-            Some(p) => {
-                let name = self.popup.input.lines()[0].clone();
+        let playlist = self
+            .get_selected_playlist()
+            .ok_or_else(|| anyhow!("No playlist selected!"))?;
 
-                if name.trim().is_empty() {
-                    return Err(anyhow!("Playlist name cannot be empty!"));
-                }
+        let name = self.get_popup_string();
 
-                {
-                    let db = self.library.get_db();
-                    let mut db_lock = db.lock().unwrap();
-                    db_lock.rename_playlist(&name, p.id)?;
-                }
-
-                self.get_playlists()?;
-
-                if self.display_state.playlist_pos.selected() == None {
-                    self.display_state.playlist_pos.select_first();
-                }
-                self.close_popup();
-                Ok(())
-            }
-            None => Err(anyhow!("Invalid playlist selected!")),
+        if name.is_empty() {
+            return Err(anyhow!("Playlist name cannot be empty!"));
         }
+
+        if self
+            .playlists
+            .iter()
+            .filter(|p| p.id != playlist.id)
+            .any(|p| p.name.to_lowercase() == name.to_lowercase())
+        {
+            return Err(anyhow!("Playlist name already exists!"));
+        }
+
+        {
+            let db = self.library.get_db();
+            let mut db_lock = db.lock().unwrap();
+            db_lock.rename_playlist(&name, playlist.id)?;
+        }
+
+        self.get_playlists()?;
+        self.display_state.playlist_pos.select_first();
+        self.close_popup();
+        Ok(())
     }
 
     pub fn delete_playlist_popup(&mut self) {
