@@ -61,6 +61,7 @@ impl UiState {
             let mut db_lock = db.lock().unwrap();
             db_lock.create_playlist(name)?;
         }
+
         self.get_playlists()?;
 
         if self.display_state.playlist_pos.selected() == None {

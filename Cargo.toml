@@ -12,6 +12,7 @@ fuzzy-matcher = "*"
 indexmap = "*"
 mp4ameta = "*"
 ratatui = "*"
+rand = "*"
 rayon = "*"
 rodio = { version = "0.20.1", features = ["symphonia-all"]}
 rusqlite = { version = "0.37.0", features = ["bundled"] }

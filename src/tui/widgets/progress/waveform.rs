@@ -1,13 +1,19 @@
-use super::{DUR_WIDTH, WAVEFORM_WIDGET_HEIGHT};
-use crate::{domain::SongInfo, get_readable_duration, ui_state::UiState, DurationStyle};
+use crate::{
+    DurationStyle,
+    domain::SongInfo,
+    get_readable_duration,
+    tui::widgets::{DUR_WIDTH, WAVEFORM_WIDGET_HEIGHT},
+    ui_state::UiState,
+};
 use canvas::Context;
 use ratatui::{
     layout::Rect,
     style::{Color, Stylize},
     text::Text,
     widgets::{
+        StatefulWidget,
         canvas::{Canvas, Rectangle},
-        StatefulWidget, *,
+        *,
     },
 };
 

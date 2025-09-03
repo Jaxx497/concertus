@@ -57,9 +57,15 @@ impl UiSnapshot {
 
 impl UiState {
     pub fn create_snapshot(&self) -> UiSnapshot {
+        let pane = match self.get_pane() {
+            Pane::Popup => &self.popup.cached,
+            _ => self.get_pane(),
+        }
+        .to_string();
+
         UiSnapshot {
             mode: self.get_mode().to_string(),
-            pane: self.get_pane().to_string(),
+            pane,
             album_sort: self.display_state.album_sort.to_string(),
             album_selection: self.display_state.album_pos.selected(),
             playlist_selection: self.display_state.playlist_pos.selected(),

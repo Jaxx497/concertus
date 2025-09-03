@@ -1,5 +1,7 @@
-use crate::{tui::widgets::Waveform, ui_state::UiState};
+mod waveform;
 use ratatui::widgets::StatefulWidget;
+
+use crate::{tui::widgets::progress::waveform::Waveform, ui_state::UiState};
 
 pub struct Progress;
 impl StatefulWidget for Progress {

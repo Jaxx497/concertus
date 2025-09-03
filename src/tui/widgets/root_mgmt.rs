@@ -1,7 +1,7 @@
 use crate::{
     strip_win_prefix,
     tui::widgets::POPUP_PADDING,
-    ui_state::{SettingsMode, UiState, GOOD_RED},
+    ui_state::{GOOD_RED, SettingsMode, UiState},
 };
 use ratatui::{
     layout::{Constraint, Layout},
@@ -102,13 +102,15 @@ fn render_add_root(
     state: &mut UiState,
 ) {
     let chunks = Layout::vertical([
+        Constraint::Max(3),
         Constraint::Length(3),
-        Constraint::Length(3),
-        Constraint::Min(1),
+        Constraint::Fill(1),
     ])
     .split(area);
 
-    Paragraph::new("Enter the path to a directory containing music files:").render(chunks[0], buf);
+    Paragraph::new("Enter the path to a directory containing music files:")
+        .wrap(Wrap { trim: false })
+        .render(chunks[0], buf);
 
     let theme = state.get_theme(state.get_pane());
 

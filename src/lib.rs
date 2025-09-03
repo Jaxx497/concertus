@@ -1,9 +1,9 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use ratatui::crossterm::{
+    ExecutableCommand,
     cursor::MoveToColumn,
     style::Print,
     terminal::{Clear, ClearType},
-    ExecutableCommand,
 };
 use std::{
     fs,
@@ -136,7 +136,9 @@ pub fn expand_tilde<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
     }
 
     if path_str == "~" {
-        return Err(anyhow!("Setting the home directory would read every file in your system. Please provide a more specific path!"));
+        return Err(anyhow!(
+            "Setting the home directory would read every file in your system. Please provide a more specific path!"
+        ));
     }
 
     if path_str.starts_with("~") || path_str.starts_with("~\\") {
@@ -147,3 +149,61 @@ pub fn expand_tilde<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
 
     Err(anyhow!("Error reading directory with tilde (~)"))
 }
+
+pub fn get_random_playlist_idea() -> &'static str {
+    use rand::seq::IndexedRandom;
+
+    match PLAYLIST_IDEAS.choose(&mut rand::rng()) {
+        Some(s) => s,
+        None => "",
+    }
+}
+
+const PLAYLIST_IDEAS: [&str; 46] = [
+    "A Lantern in the Dark",
+    "A Map Without Places",
+    "After the Rain Ends",
+    "Background Music for Poor Decisions",
+    "Beats Me, Literally",
+    "Certified Hood Classics (But It’s Just Me Singing)",
+    "Chordially Yours",
+    "Clouds Made of Static",
+    "Coffee Shop Apocalypse",
+    "Ctrl Alt Repeat",
+    "Dancing on the Edge of Stillness",
+    "Drifting Into Tomorrow",
+    "Echoes Between Stars",
+    "Existential Karaoke",
+    "Fragments of a Dream",
+    "Frequencies Between Worlds",
+    "Ghosts of Tomorrow’s Sunlight",
+    "Horizons That Never End",
+    "I Liked It Before It Was Cool",
+    "In Treble Since Birth",
+    "Key Changes and Life Changes",
+    "Liminal Grooves",
+    "Low Effort High Vibes",
+    "Major Minor Issues",
+    "Melancholy But Make It Funky",
+    "Microwave Symphony",
+    "Midnight Conversations",
+    "Music to Stare Dramatically Out the Window To",
+    "Neon Memories in Sepia",
+    "Note to Self",
+    "Notes From Another Dimension",
+    "Off-Brand Emotions™",
+    "Rhythm & Clues",
+    "Sharp Notes Only",
+    "Silence Speaks Louder",
+    "Songs Stuck Between Pages",
+    "Songs That Owe Me Rent",
+    "Soundtrack for Imaginary Films",
+    "Tempo Tantrums",
+    "Temporary Eternity",
+    "The Shape of Sound to Come",
+    "The Weight of Quiet",
+    "Untranslatable Feelings",
+    "Vinyl Countdown",
+    "Waiting for the Beat to Drop (Forever)",
+    "When the World Pauses",
+];

@@ -66,6 +66,8 @@ pub enum Action {
     DeletePlaylist,
     DeletePlaylistConfirm,
 
+    RenamePlaylist,
+
     ShiftPosition(MoveDirection),
 
     ClosePopup,

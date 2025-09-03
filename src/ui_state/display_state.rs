@@ -118,6 +118,8 @@ impl UiState {
                     self.display_state.mode = Mode::Queue;
                     self.display_state.pane = Pane::TrackList;
                     self.set_legal_songs()
+                } else {
+                    self.set_error(anyhow!("Queue is empty!"));
                 }
             }
             Mode::Search => {

@@ -21,9 +21,9 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
 
     if state.popup.is_open() {
         let popup_rect = match &state.popup.current {
-            PopupType::Playlist(_) => centered_rect(30, 40, f.area()),
-            PopupType::Settings(_) => centered_rect(30, 40, f.area()),
-            PopupType::Error(_) => centered_rect(40, 35, f.area()),
+            PopupType::Playlist(_) => centered_rect(35, 40, f.area()),
+            PopupType::Settings(_) => centered_rect(30, 30, f.area()),
+            PopupType::Error(_) => centered_rect(40, 30, f.area()),
             _ => centered_rect(30, 30, f.area()),
         };
 

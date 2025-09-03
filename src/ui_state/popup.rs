@@ -1,7 +1,10 @@
 use ratatui::{crossterm::event::KeyEvent, widgets::ListState};
 use tui_textarea::TextArea;
 
-use crate::ui_state::{Pane, SettingsMode, UiState, new_textarea, playlist::PlaylistAction};
+use crate::{
+    get_random_playlist_idea,
+    ui_state::{Pane, SettingsMode, UiState, new_textarea, playlist::PlaylistAction},
+};
 
 #[derive(PartialEq, Clone)]
 pub enum PopupType {
@@ -30,8 +33,11 @@ impl PopupState {
 
     fn open(&mut self, popup: PopupType) {
         match &popup {
-            PopupType::Playlist(PlaylistAction::Create) => {
-                self.input.set_placeholder_text(" Enter playlist name: ");
+            PopupType::Playlist(PlaylistAction::Rename)
+            | PopupType::Playlist(PlaylistAction::Create) => {
+                let placeholder = get_random_playlist_idea();
+
+                self.input.set_placeholder_text(format!(" {placeholder} "));
                 self.input.select_all();
                 self.input.cut();
             }
