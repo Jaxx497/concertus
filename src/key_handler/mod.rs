@@ -67,6 +67,7 @@ pub enum Action {
     DeletePlaylistConfirm,
 
     RenamePlaylist,
+    RenamePlaylistConfirm,
 
     ShiftPosition(MoveDirection),
 

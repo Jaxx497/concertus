@@ -51,33 +51,13 @@ impl UiState {
         Ok(())
     }
 
-    pub fn create_playlist(&mut self, name: &str) -> Result<()> {
-        if name.trim().is_empty() {
-            return Err(anyhow!("Playlist name cannot be empty!"));
-        }
-
-        {
-            let db = self.library.get_db();
-            let mut db_lock = db.lock().unwrap();
-            db_lock.create_playlist(name)?;
-        }
-
-        self.get_playlists()?;
-
-        if self.display_state.playlist_pos.selected() == None {
-            self.display_state.playlist_pos.select_first();
-        }
-
-        Ok(())
-    }
-
     pub fn create_playlist_popup(&mut self) {
         if self.get_sidebar_view() == &LibraryView::Playlists {
             self.show_popup(PopupType::Playlist(PlaylistAction::Create));
         }
     }
 
-    pub fn create_playlist_popup_confirm(&mut self) -> Result<()> {
+    pub fn create_playlist(&mut self) -> Result<()> {
         let name = self.popup.input.lines()[0].clone();
 
         // Prevent duplicates
@@ -90,14 +70,64 @@ impl UiState {
         match playlist_names.contains(&name.to_lowercase()) {
             true => return Err(anyhow!("Playlist name already exists!")),
             false => {
-                if let Err(e) = self.create_playlist(&name) {
-                    self.set_error(e);
-                } else {
-                    self.close_popup();
+                if name.trim().is_empty() {
+                    return Err(anyhow!("Playlist name cannot be empty!"));
+                }
+
+                {
+                    let db = self.library.get_db();
+                    let mut db_lock = db.lock().unwrap();
+                    db_lock.create_playlist(&name)?;
+                }
+
+                self.get_playlists()?;
+
+                if self.display_state.playlist_pos.selected() == None {
+                    self.display_state.playlist_pos.select_first();
                 }
             }
         }
+        self.close_popup();
         Ok(())
+    }
+
+    pub fn rename_playlist_popup(&mut self) {
+        if self.get_selected_playlist().is_some() {
+            self.show_popup(PopupType::Playlist(PlaylistAction::Rename));
+        }
+    }
+
+    pub fn rename_playlist(&mut self) -> Result<()> {
+        match self.get_selected_playlist() {
+            Some(p) => {
+                let name = self.popup.input.lines()[0].clone();
+
+                if name.trim().is_empty() {
+                    return Err(anyhow!("Playlist name cannot be empty!"));
+                }
+
+                {
+                    let db = self.library.get_db();
+                    let mut db_lock = db.lock().unwrap();
+                    db_lock.rename_playlist(&name, p.id)?;
+                }
+
+                self.get_playlists()?;
+
+                if self.display_state.playlist_pos.selected() == None {
+                    self.display_state.playlist_pos.select_first();
+                }
+                self.close_popup();
+                Ok(())
+            }
+            None => Err(anyhow!("Invalid playlist selected!")),
+        }
+    }
+
+    pub fn delete_playlist_popup(&mut self) {
+        if self.get_selected_playlist().is_some() {
+            self.show_popup(PopupType::Playlist(PlaylistAction::Delete))
+        }
     }
 
     pub fn delete_playlist(&mut self) -> Result<()> {
@@ -113,6 +143,8 @@ impl UiState {
             self.get_playlists()?;
             self.set_legal_songs();
         }
+
+        self.close_popup();
 
         Ok(())
     }

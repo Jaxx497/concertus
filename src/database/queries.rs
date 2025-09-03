@@ -216,3 +216,7 @@ pub const GET_PLAYLIST_POS: &str = "
 pub const UPDATE_PLAYLIST_POS: &str = "
     UPDATE playlist_songs SET position = ? WHERE id = ?
 ";
+
+pub const RENAME_PLAYLIST: &str = "
+    UPDATE playlists SET name = ? WHERE id = ?
+";

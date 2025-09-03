@@ -229,7 +229,7 @@ fn handle_playlist(key: &KeyEvent, variant: &PlaylistAction) -> Option<Action> {
         },
         Rename => match key.code {
             Esc => Some(Action::ClosePopup),
-            // Enter => Some(Action::CreatePlaylistConfirm),
+            Enter => Some(Action::RenamePlaylistConfirm),
             _ => Some(Action::PopupInput(*key)),
         },
     }
@@ -271,27 +271,13 @@ impl Concertus {
 
             //Playlist
             Action::CreatePlaylist  => self.ui.create_playlist_popup(),
-            Action::CreatePlaylistConfirm => self.ui.create_playlist_popup_confirm()?,
+            Action::CreatePlaylistConfirm => self.ui.create_playlist()?,
 
-            Action::RenamePlaylist  => {
+            Action::RenamePlaylist  => self.ui.rename_playlist_popup(),
+            Action::RenamePlaylistConfirm => self.ui.rename_playlist()?,
 
-                if self.ui.get_selected_playlist().is_some() {
-                    self.ui.show_popup(PopupType::Playlist(PlaylistAction::Rename));
-                }
-            }
-
-            Action::DeletePlaylist  => {
-
-                if self.ui.get_selected_playlist().is_some() {
-                    self.ui.show_popup(PopupType::Playlist(PlaylistAction::Delete))
-                }
-            }
-
-            Action::DeletePlaylistConfirm => {
-                self.ui.delete_playlist()?;
-                self.ui.close_popup();
-            }
-
+            Action::DeletePlaylist  => self.ui.delete_playlist_popup(),
+            Action::DeletePlaylistConfirm => self.ui.delete_playlist()?,
 
             // Queue
             Action::QueueSong       => self.ui.queue_song(None)?,

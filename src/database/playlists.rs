@@ -5,12 +5,6 @@ use anyhow::Result;
 use rusqlite::params;
 
 impl Database {
-    pub fn create_playlist(&mut self, name: &str) -> Result<()> {
-        self.conn.execute(CREATE_NEW_PLAYLIST, params![name])?;
-
-        Ok(())
-    }
-
     pub fn get_playlists(&mut self) -> Result<Vec<Playlist>> {
         let mut stmt = self.conn.prepare(GET_PLAYLISTS)?;
 
@@ -31,8 +25,21 @@ impl Database {
         Ok(playlists)
     }
 
+    pub fn create_playlist(&mut self, name: &str) -> Result<()> {
+        self.conn.execute(CREATE_NEW_PLAYLIST, params![name])?;
+
+        Ok(())
+    }
+
     pub fn delete_playlist(&mut self, id: i64) -> Result<()> {
         self.conn.execute(DELETE_PLAYLIST, params![id])?;
+
+        Ok(())
+    }
+
+    pub fn rename_playlist(&mut self, new_name: &str, playlist_id: i64) -> Result<()> {
+        self.conn
+            .execute(RENAME_PLAYLIST, params![new_name, playlist_id])?;
 
         Ok(())
     }
