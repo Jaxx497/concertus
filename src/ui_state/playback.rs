@@ -17,7 +17,7 @@ pub struct PlaybackCoordinator {
     pub queue: VecDeque<Arc<QueueSong>>,
     pub history: VecDeque<Arc<SimpleSong>>,
     pub waveform: Vec<f32>,
-    pub(self) player_state: Arc<Mutex<PlayerState>>,
+    pub player_state: Arc<Mutex<PlayerState>>,
 }
 
 impl PlaybackCoordinator {

@@ -1,5 +1,8 @@
 use super::{PlaybackState, PlayerState};
-use crate::domain::{FileType, QueueSong};
+use crate::{
+    domain::{FileType, QueueSong},
+    get_readable_duration,
+};
 use anyhow::Result;
 use rodio::{Decoder, OutputStream, Sink};
 use std::{
@@ -43,6 +46,9 @@ impl Player {
         player_state.state = PlaybackState::Playing;
         player_state.now_playing = Some(Arc::clone(&song.meta));
         player_state.elapsed = Duration::default();
+        player_state.duration_display =
+            get_readable_duration(song.meta.duration, crate::DurationStyle::Compact);
+        player_state.elapsed_display = "0:00".to_string();
 
         Ok(())
     }
@@ -192,7 +198,15 @@ impl Player {
     pub(crate) fn update_elapsed(&self) {
         if let Ok(mut state) = self.shared_state.lock() {
             if state.state == PlaybackState::Playing {
-                state.elapsed = self.sink.get_pos()
+                let new_elapsed = self.sink.get_pos();
+                state.elapsed = new_elapsed;
+
+                let secs = new_elapsed.as_secs();
+                if secs != state.last_elapsed_secs {
+                    state.last_elapsed_secs = secs;
+                    state.elapsed_display =
+                        get_readable_duration(new_elapsed, crate::DurationStyle::Compact);
+                }
             }
         }
     }

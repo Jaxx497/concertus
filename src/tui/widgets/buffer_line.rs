@@ -115,12 +115,17 @@ fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
     let truncated = truncate_at_last_space(up_next_str, width - 12);
     let total = state.playback.queue.len();
 
-    let output = Line::from_iter([
-        Span::from("Up next ✧ ").fg(theme.text_faded),
-        Span::from(truncated).fg(GOLD_FADED),
-        format!(" [{total}] ").fg(theme.text_faded),
-    ])
-    .right_aligned();
+    let up_next_line = match alert {
+        true => Span::from(truncated).fg(GOLD_FADED).rapid_blink(),
+        false => Span::from(truncated).fg(GOLD_FADED),
+    };
 
-    Some(if alert { output.rapid_blink() } else { output })
+    Some(
+        Line::from_iter([
+            Span::from("Up next ✧ ").fg(theme.text_faded),
+            up_next_line,
+            format!(" [{total}] ").fg(theme.text_faded),
+        ])
+        .right_aligned(),
+    )
 }

@@ -1,7 +1,5 @@
 use crate::{
-    DurationStyle,
     domain::SongInfo,
-    get_readable_duration,
     tui::widgets::{DUR_WIDTH, WAVEFORM_WIDGET_HEIGHT},
     ui_state::UiState,
 };
@@ -41,10 +39,9 @@ impl StatefulWidget for Waveform {
                 _ => area.height / 2 + 2,
             };
 
-        let elapsed_str =
-            get_readable_duration(state.get_playback_elapsed(), DurationStyle::Compact);
-
-        let duration_str = get_readable_duration(np.get_duration(), DurationStyle::Compact);
+        let player_state = state.playback.player_state.lock().unwrap();
+        let elapsed_str = player_state.elapsed_display.as_str();
+        let duration_str = player_state.duration_display.as_str();
 
         Text::from(elapsed_str)
             .fg(Color::DarkGray)
@@ -55,6 +52,9 @@ impl StatefulWidget for Waveform {
             .fg(Color::DarkGray)
             .right_aligned()
             .render(Rect::new(x_duration, y, DUR_WIDTH, 1), buf);
+
+        // PREVENT DEADLOCKS
+        drop(player_state);
 
         Canvas::default()
             .x_bounds([0.0, wf_len as f64])

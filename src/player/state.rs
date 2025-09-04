@@ -7,6 +7,10 @@ pub struct PlayerState {
     pub state: PlaybackState,
     pub elapsed: Duration,
     pub player_error: Option<Error>,
+
+    pub elapsed_display: String,
+    pub duration_display: String,
+    pub last_elapsed_secs: u64,
 }
 
 impl Default for PlayerState {
@@ -16,6 +20,11 @@ impl Default for PlayerState {
             elapsed: Duration::default(),
             state: PlaybackState::Stopped,
             player_error: None,
+
+            duration_display: String::new(),
+            elapsed_display: String::new(),
+
+            last_elapsed_secs: 0,
         }
     }
 }
