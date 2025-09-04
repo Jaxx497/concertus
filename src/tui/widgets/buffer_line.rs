@@ -43,7 +43,9 @@ impl StatefulWidget for BufferLine {
 
 fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
     let separator = match state.is_paused() {
-        true => Span::from(format!(" {PAUSE_ICON} ")).fg(theme.text_focused),
+        true => Span::from(format!(" {PAUSE_ICON} "))
+            .fg(theme.text_focused)
+            .rapid_blink(),
         false => Span::from(" ✧ ").fg(theme.text_faded),
     };
 
@@ -97,20 +99,28 @@ fn get_bulk_selection(size: usize) -> Option<Line<'static>> {
 }
 
 fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
-    let output = match state.peek_queue() {
-        Some(up_next) => {
-            let up_next_str = up_next.get_title();
-            let truncated = truncate_at_last_space(up_next_str, width - 12);
-            let total = state.playback.queue.len();
-            Line::from_iter([
-                Span::from("Up next ✧ ").fg(theme.text_faded),
-                Span::from(truncated).fg(GOLD_FADED),
-                format!(" [{total}] ").fg(theme.text_faded),
-            ])
-            .right_aligned()
-        }
-        None => return None,
-    };
+    let up_next = state.peek_queue()?;
 
-    Some(output)
+    let alert = state
+        .get_now_playing()
+        .map(|np| {
+            let duration = np.duration.as_secs_f32();
+            let elapsed = state.get_playback_elapsed().as_secs_f32();
+
+            (duration - elapsed) < 3.0
+        })
+        .unwrap_or(false);
+
+    let up_next_str = up_next.get_title();
+    let truncated = truncate_at_last_space(up_next_str, width - 12);
+    let total = state.playback.queue.len();
+
+    let output = Line::from_iter([
+        Span::from("Up next ✧ ").fg(theme.text_faded),
+        Span::from(truncated).fg(GOLD_FADED),
+        format!(" [{total}] ").fg(theme.text_faded),
+    ])
+    .right_aligned();
+
+    Some(if alert { output.rapid_blink() } else { output })
 }

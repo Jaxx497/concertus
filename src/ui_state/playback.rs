@@ -279,10 +279,7 @@ impl UiState {
     }
 
     pub fn make_playable_song(&mut self, song: &Arc<SimpleSong>) -> Result<Arc<QueueSong>> {
-        let path = self
-            .library
-            .get_path(song.id)
-            .context("Could not retrieve path from database!")?;
+        let path = song.get_path()?;
 
         std::fs::metadata(&path).context(anyhow!(
             "Invalid file path!\n\nUnable to find: \"{}\"",
@@ -300,7 +297,7 @@ impl UiState {
 //   WAVEFORM
 // ==========
 impl UiState {
-    pub fn get_waveform(&self) -> &[f32] {
+    pub fn get_waveform_visual(&self) -> &[f32] {
         self.playback.waveform.as_slice()
     }
 

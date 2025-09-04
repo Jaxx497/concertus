@@ -1,8 +1,6 @@
 pub const GET_WAVEFORM: &str = "
-    SELECT w.waveform 
-    FROM waveforms w
-    JOIN songs s on w.song_id = s.id
-    WHERE s.path = ?
+    SELECT waveform FROM waveforms
+    WHERE song_id = ?
 ";
 
 pub const INSERT_WAVEFORM: &str = "

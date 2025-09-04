@@ -51,7 +51,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
                 Constraint::Length(1),
                 Constraint::Min(25),
                 Constraint::Max(20),
-                Constraint::Max(3),
+                Constraint::Max(4),
                 Constraint::Length(7),
             ]
         }
@@ -88,8 +88,8 @@ pub(super) fn get_header<'a>(state: &UiState, active: &TableSort) -> Row<'a> {
             vec![
                 Text::default(),
                 Text::default(),
-                Text::from("𝕋𝕚𝕥𝕝𝕖").underlined().bold().italic(),
-                Text::from("󰠃").centered(),
+                Text::from("𝕋𝕚𝕥𝕝𝕖").bold(),
+                Text::from("𝔸𝕣𝕥𝕚𝕤𝕥"),
                 Text::from("").centered(),
                 Text::from("").centered(),
             ]
@@ -206,23 +206,16 @@ impl CellFactory {
         Cell::from(format!("{:>2}", index + 1)).fg(theme.text_highlighted)
     }
 
-    pub fn get_track_discs(
-        theme: &DisplayTheme,
-        song: &Arc<SimpleSong>,
-        disc_count: usize,
-    ) -> Cell<'static> {
+    pub fn get_track_discs(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
         let track_no = Span::from(match song.track_no {
             Some(t) => format!("{t:>2}"),
             None => format!("{x:>2}", x = "󰇘"),
         })
         .fg(theme.text_highlighted);
 
-        let disc_no = Span::from(match disc_count {
-            0..2 => "".to_string(),
-            _ => match song.disc_no {
-                Some(t) => String::from("ᴰ") + SUPERSCRIPT.get(&t).unwrap_or(&"?"),
-                None => "".into(),
-            },
+        let disc_no = Span::from(match song.disc_no {
+            Some(t) => String::from("ᴰ") + SUPERSCRIPT.get(&t).unwrap_or(&"?"),
+            None => "".into(),
         })
         .fg(theme.text_faded);
 
@@ -255,17 +248,21 @@ fn get_title(state: &UiState, area: Rect) -> Line<'static> {
         &Mode::Library(LibraryView::Playlists) => {
             if state.playlists.is_empty() {
                 return "".into();
-            } else {
-                let playlist = state.get_selected_playlist().unwrap_or(&state.playlists[0]);
-                let formatted_title =
-                    crate::truncate_at_last_space(&playlist.name, (area.width / 3) as usize);
-                (
-                    Span::from(format!("{}", formatted_title))
-                        .fg(theme.text_secondary)
-                        .italic(),
-                    playlist.tracklist.len(),
-                )
             }
+
+            let playlist = match state.get_selected_playlist() {
+                Some(p) => p,
+                None => return "".into(),
+            };
+
+            let formatted_title =
+                crate::truncate_at_last_space(&playlist.name, (area.width / 3) as usize);
+            (
+                Span::from(format!("{}", formatted_title))
+                    .fg(theme.text_secondary)
+                    .italic(),
+                playlist.tracklist.len(),
+            )
         }
         _ => (Span::default(), 0),
     };

@@ -32,7 +32,7 @@ impl Player {
         let file = std::fs::File::open(&song.path)?;
         let source = Decoder::new(std::io::BufReader::new(file))?;
 
-        self.sink.stop();
+        self.sink.clear();
         self.sink.append(source);
         self.sink.play();
 

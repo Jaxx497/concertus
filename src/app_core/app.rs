@@ -153,7 +153,7 @@ impl Concertus {
 
         self.ui.clear_waveform();
         self.waveform_handler(&song)?;
-        self.library.update_play_count(&song.meta);
+        song.meta.update_play_count()?;
         self.player.play_song(song)?;
 
         Ok(())
@@ -207,8 +207,7 @@ impl Concertus {
     fn waveform_handler(&mut self, song: &QueueSong) -> Result<()> {
         let path_clone = song.path.clone();
 
-        let mut db = self.db.lock().unwrap();
-        match db.get_waveform(&song.path) {
+        match song.meta.get_waveform() {
             Ok(wf) => self.ui.set_waveform(wf),
             _ => {
                 let (tx, rx) = mpsc::channel();
@@ -224,13 +223,12 @@ impl Concertus {
     }
 
     fn await_waveform_completion(&mut self) -> Result<()> {
-        if self.ui.get_waveform().is_empty() && self.ui.get_now_playing().is_some() {
+        if self.ui.get_waveform_visual().is_empty() && self.ui.get_now_playing().is_some() {
             if let Some(rx) = &self.waveform_rec {
                 if let Ok(waveform) = rx.try_recv() {
-                    let id = self.player.get_now_playing().unwrap().id;
-                    let mut db = self.db.lock().unwrap();
+                    let song = self.player.get_now_playing().unwrap();
 
-                    db.set_waveform(id, &waveform)?;
+                    song.set_waveform(&waveform)?;
                     self.ui.set_waveform(waveform);
                     self.waveform_rec = None;
                     return Ok(());

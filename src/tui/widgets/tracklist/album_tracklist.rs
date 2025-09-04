@@ -26,21 +26,13 @@ impl StatefulWidget for AlbumView {
         }
 
         let album = state.get_selected_album().unwrap_or(&state.albums[0]);
-
         let album_title = truncate_at_last_space(&album.title, (area.width / 3) as usize);
-
-        let disc_count = album
-            .tracklist
-            .iter()
-            .filter_map(|s| s.disc_no)
-            .max()
-            .unwrap_or(1) as usize;
 
         let rows = album
             .tracklist
             .iter()
             .map(|song| {
-                let track_no = CellFactory::get_track_discs(theme, song, disc_count);
+                let track_no = CellFactory::get_track_discs(theme, song);
                 let icon = CellFactory::status_cell(song, state);
                 let title = CellFactory::title_cell(theme, song);
                 let artist = CellFactory::artist_cell(theme, song);

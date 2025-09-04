@@ -5,7 +5,7 @@ use crate::{
     domain::{Album, LongSong, SimpleSong, SongInfo},
     expand_tilde,
 };
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use std::{
@@ -281,40 +281,11 @@ impl Library {
     }
 }
 
-// Waveform related
-impl Library {
-    pub fn set_waveform(&mut self, id: u64, wf: &Vec<f32>) -> Result<()> {
-        let mut db = self.db.lock().unwrap();
-        Ok(db.set_waveform(id, wf)?)
-    }
-
-    pub fn get_waveform(&mut self, path: &str) -> Result<Vec<f32>> {
-        let mut db = self.db.lock().unwrap();
-        let waveform = db
-            .get_waveform(path)
-            .context("Failed to retrieve valid waveform data")?;
-        Ok(waveform)
-    }
-
-    pub fn get_path(&self, id: u64) -> Result<String> {
-        let mut this_db = Database::open()?;
-        let str = Database::get_song_path(&mut this_db, id)?;
-
-        Ok(str)
-    }
-}
-
 impl Library {
     pub fn set_history_db(&self, history: &[Arc<SimpleSong>]) -> Result<()> {
         let mut db = self.db.lock().unwrap();
 
         db.save_history_to_db(history)
-    }
-
-    pub fn update_play_count(&self, song: &Arc<SimpleSong>) {
-        let mut db = self.db.lock().unwrap();
-        db.update_play_count(&song)
-            .unwrap_or_else(|e| eprintln!("Error: {e}"));
     }
 
     pub fn load_history(

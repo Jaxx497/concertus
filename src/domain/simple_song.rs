@@ -1,5 +1,6 @@
 use super::{FileType, SongInfo};
-use crate::{get_readable_duration, Database};
+use crate::{Database, get_readable_duration};
+use anyhow::Result;
 use std::{sync::Arc, time::Duration};
 
 #[derive(Default, Hash, Eq, PartialEq)]
@@ -17,8 +18,24 @@ pub struct SimpleSong {
 }
 
 impl SimpleSong {
-    pub fn get_path(&self, db: &mut Database) -> anyhow::Result<String> {
-        db.get_path(self.id)
+    pub fn get_path(&self) -> Result<String> {
+        let mut db = Database::open()?;
+        db.get_song_path(self.id)
+    }
+
+    pub fn update_play_count(&self) -> Result<()> {
+        let mut db = Database::open()?;
+        db.update_play_count(self.id)
+    }
+
+    pub fn get_waveform(&self) -> Result<Vec<f32>> {
+        let mut db = Database::open()?;
+        db.get_waveform(self.id)
+    }
+
+    pub fn set_waveform(&self, wf: &[f32]) -> Result<()> {
+        let mut db = Database::open()?;
+        db.set_waveform(self.id, wf)
     }
 }
 

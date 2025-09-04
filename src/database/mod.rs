@@ -1,3 +1,4 @@
+use crate::domain::{LongSong, SimpleSong, SongInfo};
 use anyhow::Result;
 use indexmap::IndexMap;
 use queries::*;
@@ -9,13 +10,10 @@ use std::{
     sync::Arc,
     time::{Duration, UNIX_EPOCH},
 };
-
 mod playlists;
 mod queries;
 mod snapshot;
 mod tables;
-
-use crate::domain::{LongSong, SimpleSong, SongInfo};
 
 const CONFIG_DIRECTORY: &'static str = "Concertus";
 const DATABASE_FILENAME: &'static str = "concertus.db";
@@ -176,8 +174,8 @@ impl Database {
         Ok(())
     }
 
-    pub(crate) fn update_play_count(&mut self, song: &Arc<SimpleSong>) -> Result<()> {
-        let id = song.id.to_le_bytes();
+    pub(crate) fn update_play_count(&mut self, id: u64) -> Result<()> {
+        let id = id.to_le_bytes();
         self.conn.execute(UPDATE_PLAY_COUNT, params![id, 1])?;
 
         Ok(())
@@ -313,15 +311,14 @@ impl Database {
     //   WAVEFORMS
     // =============
 
-    pub fn get_waveform(&mut self, path: &str) -> Result<Vec<f32>> {
-        let blob: Vec<u8> = self
-            .conn
-            .query_row(GET_WAVEFORM, params![path], |row| row.get(0))?;
+    pub fn get_waveform(&mut self, id: u64) -> Result<Vec<f32>> {
+        let blob: Vec<u8> =
+            self.conn
+                .query_row(GET_WAVEFORM, params![id.to_le_bytes()], |row| row.get(0))?;
         Ok(bincode::decode_from_slice(&blob, bincode::config::standard())?.0)
     }
 
     pub fn set_waveform(&mut self, id: u64, wf: &[f32]) -> Result<()> {
-        // let serialized = bincode::serialize(wf)?;
         let serialized = bincode::encode_to_vec(wf, bincode::config::standard())?;
 
         self.conn
@@ -406,12 +403,5 @@ impl Database {
     pub(crate) fn delete_root(&mut self, path: &PathBuf) -> Result<()> {
         self.conn.execute(DELETE_ROOT, params![path.to_str()])?;
         Ok(())
-    }
-
-    pub(crate) fn get_path(&mut self, id: u64) -> Result<String> {
-        let output = self
-            .conn
-            .query_row(GET_PATH, [id.to_le_bytes()], |r| r.get(0))?;
-        Ok(output)
     }
 }

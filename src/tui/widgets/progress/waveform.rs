@@ -31,7 +31,7 @@ impl StatefulWidget for Waveform {
             .get_now_playing()
             .expect("Expected a song to be playing. [Widget: Waveform]");
 
-        let waveform = state.get_waveform();
+        let waveform = state.get_waveform_visual();
         let wf_len = waveform.len();
 
         let x_duration = area.width - 8;
