@@ -1,6 +1,6 @@
 use crate::{
     Database, Library,
-    domain::{QueueSong, SongInfo, generate_waveform},
+    domain::{QueueSong, SongDatabase as _, SongInfo, generate_waveform},
     key_handler::{self},
     overwrite_line,
     player::PlayerController,
@@ -153,7 +153,7 @@ impl Concertus {
 
         self.ui.clear_waveform();
         self.waveform_handler(&song)?;
-        song.meta.update_play_count()?;
+        song.update_play_count()?;
         self.player.play_song(song)?;
 
         Ok(())
@@ -207,7 +207,7 @@ impl Concertus {
     fn waveform_handler(&mut self, song: &QueueSong) -> Result<()> {
         let path_clone = song.path.clone();
 
-        match song.meta.get_waveform() {
+        match song.get_waveform() {
             Ok(wf) => self.ui.set_waveform(wf),
             _ => {
                 let (tx, rx) = mpsc::channel();

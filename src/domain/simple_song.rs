@@ -1,5 +1,5 @@
 use super::{FileType, SongInfo};
-use crate::{Database, get_readable_duration};
+use crate::{Database, domain::SongDatabase, get_readable_duration};
 use anyhow::Result;
 use std::{sync::Arc, time::Duration};
 
@@ -17,28 +17,36 @@ pub struct SimpleSong {
     pub(crate) filetype: FileType,
 }
 
-impl SimpleSong {
-    pub fn get_path(&self) -> Result<String> {
+/// DATABASE RELATED METHODS
+
+impl SongDatabase for SimpleSong {
+    /// Returns the path of a song as a String
+    fn get_path(&self) -> Result<String> {
         let mut db = Database::open()?;
         db.get_song_path(self.id)
     }
 
-    pub fn update_play_count(&self) -> Result<()> {
+    /// Update the play_count of the song
+    fn update_play_count(&self) -> Result<()> {
         let mut db = Database::open()?;
         db.update_play_count(self.id)
     }
 
-    pub fn get_waveform(&self) -> Result<Vec<f32>> {
+    /// Retrieve the waveform of a song
+    /// returns Result<Vec<f32>>
+    fn get_waveform(&self) -> Result<Vec<f32>> {
         let mut db = Database::open()?;
         db.get_waveform(self.id)
     }
 
-    pub fn set_waveform(&self, wf: &[f32]) -> Result<()> {
+    /// Store the waveform of a song in the databse
+    fn set_waveform(&self, wf: &[f32]) -> Result<()> {
         let mut db = Database::open()?;
         db.set_waveform(self.id, wf)
     }
 }
 
+/// Generic getter methods
 impl SongInfo for SimpleSong {
     fn get_id(&self) -> u64 {
         self.id
@@ -98,8 +106,3 @@ impl SongInfo for Arc<SimpleSong> {
         self.as_ref().get_duration_str()
     }
 }
-
-//     fn hash(&self) -> u64 {
-//         self.id
-//     }
-// }

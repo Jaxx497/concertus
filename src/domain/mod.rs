@@ -13,6 +13,7 @@ pub use playlist::Playlist;
 pub use playlist::PlaylistSong;
 pub use queue_song::QueueSong;
 pub use simple_song::SimpleSong;
+
 pub use waveform::generate_waveform;
 
 pub trait SongInfo {
@@ -23,4 +24,11 @@ pub trait SongInfo {
     fn get_duration(&self) -> std::time::Duration;
     fn get_duration_f32(&self) -> f32;
     fn get_duration_str(&self) -> String;
+}
+
+pub trait SongDatabase {
+    fn get_path(&self) -> anyhow::Result<String>;
+    fn update_play_count(&self) -> anyhow::Result<()>;
+    fn get_waveform(&self) -> anyhow::Result<Vec<f32>>;
+    fn set_waveform(&self, wf: &[f32]) -> anyhow::Result<()>;
 }

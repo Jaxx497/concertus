@@ -1,6 +1,6 @@
 use super::{Mode, UiState};
 use crate::{
-    domain::{QueueSong, SimpleSong},
+    domain::{QueueSong, SimpleSong, SongDatabase},
     player::{PlaybackState, PlayerState},
     strip_win_prefix,
     ui_state::LibraryView,
