@@ -1,13 +1,14 @@
-use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState, theme::Theme};
+use super::{playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState};
 use crate::{
-    Library,
+    database::DbWorker,
     domain::{Album, Playlist, SimpleSong},
     key_handler::InputContext,
     player::PlayerState,
     ui_state::{
-        LibraryView, Mode, Pane,
         popup::{PopupState, PopupType},
+        LibraryView, Mode, Pane,
     },
+    Library,
 };
 use anyhow::{Error, Result};
 use indexmap::IndexSet;
@@ -16,6 +17,7 @@ use std::sync::{Arc, Mutex};
 pub struct UiState {
     // Backend Modules
     pub(super) library: Arc<Library>,
+    pub(crate) db_worker: DbWorker,
     pub(crate) playback: PlaybackCoordinator,
 
     // Visual Elements
@@ -34,6 +36,8 @@ impl UiState {
     pub fn new(library: Arc<Library>, player_state: Arc<Mutex<PlayerState>>) -> Self {
         UiState {
             library,
+            db_worker: DbWorker::new()
+                .expect("Could not establish connection to database for UiState!"),
             search: SearchState::new(),
             display_state: DisplayState::new(),
             playback: PlaybackCoordinator::new(player_state),

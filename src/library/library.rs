@@ -11,19 +11,20 @@ use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     path::{Path, PathBuf},
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 use walkdir::WalkDir;
 
 pub struct Library {
-    db: Arc<Mutex<Database>>,
+    db: Database,
     pub roots: HashSet<PathBuf>,
     pub songs: IndexMap<u64, Arc<SimpleSong>>,
     pub albums: Vec<Album>,
 }
 
 impl Library {
-    fn new(db: Arc<Mutex<Database>>) -> Self {
+    fn new() -> Self {
+        let db = Database::open().expect("Failed to connect to database!");
         Library {
             db,
             roots: HashSet::new(),
@@ -32,13 +33,11 @@ impl Library {
         }
     }
 
-    pub fn init(db: Arc<Mutex<Database>>) -> Self {
-        let mut lib = Self::new(db);
+    pub fn init() -> Self {
+        let mut lib = Self::new();
 
         {
-            let mut db = lib.db.lock().unwrap();
-
-            if let Ok(db_roots) = db.get_roots() {
+            if let Ok(db_roots) = lib.db.get_roots() {
                 for root in db_roots {
                     if let Ok(canon) = PathBuf::from(root).canonicalize() {
                         lib.roots.insert(canon);
@@ -50,10 +49,6 @@ impl Library {
         lib
     }
 
-    pub fn get_db(&self) -> Arc<Mutex<Database>> {
-        Arc::clone(&self.db)
-    }
-
     pub fn add_root(&mut self, root: impl AsRef<Path>) -> Result<()> {
         let expanded_path = expand_tilde(root.as_ref())?;
         let canon = PathBuf::from(expanded_path)
@@ -61,8 +56,7 @@ impl Library {
             .map_err(|_| anyhow!("Path does not exist! {}", root.as_ref().display()))?;
 
         if self.roots.insert(canon.clone()) {
-            let mut db = self.db.lock().unwrap();
-            db.set_root(&canon)?;
+            self.db.set_root(&canon)?;
         }
 
         Ok(())
@@ -71,11 +65,7 @@ impl Library {
     pub fn delete_root(&mut self, root: &str) -> Result<()> {
         let bad_root = PathBuf::from(root);
         match self.roots.remove(&bad_root) {
-            true => {
-                let mut db = self.db.lock().unwrap();
-                db.delete_root(&bad_root)?;
-                Ok(())
-            }
+            true => self.db.delete_root(&bad_root),
             false => Err(anyhow!("Error deleting root")),
         }
     }
@@ -93,8 +83,7 @@ impl Library {
 
     /// Walk through directories and update database based on changes made.
     pub fn update_db_by_root(&mut self) -> Result<(usize, usize)> {
-        let mut db = self.db.lock().unwrap();
-        let mut existing_hashes = db.get_hashes()?;
+        let mut existing_hashes = self.db.get_hashes()?;
         let mut new_files = Vec::new();
 
         for root in &self.roots {
@@ -109,11 +98,11 @@ impl Library {
         // WARNING: Flip these two if statements in the event that INSERT OR REPLACE fails us
 
         if !new_files.is_empty() {
-            Self::insert_new_songs(&mut db, new_files)?;
+            Self::insert_new_songs(&mut self.db, new_files)?;
         }
 
         if !removed_ids.is_empty() {
-            db.delete_songs(&removed_ids)?;
+            self.db.delete_songs(&removed_ids)?;
         }
 
         Ok((new_file_count, removed_ids.len()))
@@ -199,8 +188,7 @@ impl Library {
     }
 
     fn collect_songs(&mut self) -> Result<()> {
-        let mut db = self.db.lock().unwrap();
-        self.songs = db.get_all_songs()?;
+        self.songs = self.db.get_all_songs()?;
 
         Ok(())
     }
@@ -214,9 +202,7 @@ impl Library {
     }
 
     fn build_albums(&mut self) -> Result<()> {
-        let mut db = self.db.lock().unwrap();
-        let aa_cache = db.get_album_map()?;
-
+        let aa_cache = self.db.get_album_map()?;
         self.albums = Vec::with_capacity(aa_cache.len());
 
         let mut album_lookup = HashMap::with_capacity(aa_cache.len());
@@ -282,19 +268,15 @@ impl Library {
 }
 
 impl Library {
-    pub fn set_history_db(&self, history: &[Arc<SimpleSong>]) -> Result<()> {
-        let mut db = self.db.lock().unwrap();
-
-        db.save_history_to_db(history)
+    pub fn set_history_db(&mut self, history: &[u64]) -> Result<()> {
+        self.db.save_history_to_db(history)
     }
 
     pub fn load_history(
-        &self,
+        &mut self,
         songs: &IndexMap<u64, Arc<SimpleSong>>,
     ) -> Result<VecDeque<Arc<SimpleSong>>> {
-        let mut db = self.db.lock().unwrap();
-
-        db.import_history(songs)
+        self.db.import_history(songs)
     }
 }
 

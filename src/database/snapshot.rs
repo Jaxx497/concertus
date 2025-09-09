@@ -2,17 +2,12 @@ use anyhow::Result;
 use rusqlite::params;
 
 use crate::{
+    Database,
     database::queries::{GET_SESSION_STATE, GET_UI_SNAPSHOT, SET_SESSION_STATE},
     ui_state::UiSnapshot,
-    Database,
 };
 
 impl Database {
-    pub fn save_session_state(&mut self, key: &str, value: &str) -> Result<()> {
-        self.conn.execute(SET_SESSION_STATE, params![key, value])?;
-        Ok(())
-    }
-
     pub fn get_session_state(&mut self, key: &str) -> Result<Option<String>> {
         match self.conn.query_row(GET_SESSION_STATE, params![key], |row| {
             row.get::<_, String>(0)
@@ -23,7 +18,7 @@ impl Database {
         }
     }
 
-    pub fn save_ui_snapshot(&mut self, snapshot: &UiSnapshot) -> Result<()> {
+    pub fn save_ui_snapshot(&mut self, snapshot: UiSnapshot) -> Result<()> {
         let tx = self.conn.transaction()?;
         {
             let mut stmt = tx.prepare(SET_SESSION_STATE)?;

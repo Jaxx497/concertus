@@ -1,5 +1,6 @@
 use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
+    Database,
     domain::{Album, Playlist, SimpleSong, SongInfo},
     key_handler::{Director, MoveDirection},
 };
@@ -130,10 +131,19 @@ impl UiState {
                 self.display_state.pane = Pane::Search;
             }
             Mode::QUIT => {
+                let song_ids = self
+                    .playback
+                    .history
+                    .make_contiguous()
+                    .iter()
+                    .map(|s| s.id)
+                    .collect::<Vec<_>>();
+
                 self.save_state().unwrap_or_else(|e| eprintln!("{e}"));
-                let _ = self
-                    .library
-                    .set_history_db(&self.playback.history.make_contiguous());
+
+                let mut db = Database::open().expect("Cannot conect to database!");
+                let _ = db.save_history_to_db(&song_ids);
+
                 self.display_state.mode = Mode::QUIT;
             }
         }
@@ -147,7 +157,11 @@ impl UiState {
 
         match self.display_state.mode {
             Mode::Power | Mode::Library(_) | Mode::Search | Mode::Queue => {
-                let idx = self.display_state.table_pos.selected().unwrap();
+                let idx = self
+                    .display_state
+                    .table_pos
+                    .selected()
+                    .ok_or_else(|| anyhow!("No song selected!"))?;
                 Ok(Arc::clone(&self.legal_songs[idx]))
             }
             Mode::QUIT => unreachable!(),
@@ -329,10 +343,7 @@ impl UiState {
                             let ps_id1 = playlist.tracklist[song_idx].id;
                             let ps_id2 = playlist.tracklist[song_idx - 1].id;
 
-                            let db = self.library.get_db();
-                            let mut db_lock = db.lock().unwrap();
-                            db_lock.swap_position(ps_id1, ps_id2, playlist.id)?;
-
+                            self.db_worker.swap_position(ps_id1, ps_id2, playlist.id)?;
                             playlist.tracklist.swap(song_idx, song_idx - 1);
                             self.scroll(Director::Up(1));
                         }
@@ -342,10 +353,7 @@ impl UiState {
                             let ps_id1 = playlist.tracklist[song_idx].id;
                             let ps_id2 = playlist.tracklist[song_idx + 1].id;
 
-                            let db = self.library.get_db();
-                            let mut db_lock = db.lock().unwrap();
-                            db_lock.swap_position(ps_id1, ps_id2, playlist.id)?;
-
+                            self.db_worker.swap_position(ps_id1, ps_id2, playlist.id)?;
                             playlist.tracklist.swap(song_idx, song_idx + 1);
                             self.scroll(Director::Down(1));
                         }
@@ -384,7 +392,10 @@ impl UiState {
             }
         }
 
-        self.legal_songs = this_album.unwrap().tracklist.clone();
+        self.legal_songs = this_album
+            .ok_or_else(|| anyhow!("Failed to parse album!"))?
+            .tracklist
+            .clone();
 
         // Select song and try to visually center it
         self.display_state.table_pos.select(Some(track_idx));

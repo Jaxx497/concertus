@@ -26,8 +26,7 @@ impl UiState {
     }
 
     pub fn add_root(&mut self, path: &str) -> Result<()> {
-        let db = self.library.get_db();
-        let mut lib = Library::init(db);
+        let mut lib = Library::init();
         lib.add_root(path)?;
         lib.build_library()?;
 
@@ -43,8 +42,7 @@ impl UiState {
                 return Err(anyhow!("Invalid root index!"));
             }
 
-            let db = self.library.get_db();
-            let mut lib = Library::init(db);
+            let mut lib = Library::init();
 
             let bad_root = &roots[selected];
             lib.delete_root(&bad_root)?;

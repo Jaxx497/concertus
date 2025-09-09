@@ -1,4 +1,3 @@
-use crate::Database;
 use anyhow::Result;
 
 use super::{AlbumSort, Mode, Pane, UiState};
@@ -74,16 +73,13 @@ impl UiState {
     }
 
     pub fn save_state(&self) -> Result<()> {
-        let mut db = Database::open()?;
         let snapshot = self.create_snapshot();
-        db.save_ui_snapshot(&snapshot)?;
+        self.db_worker.save_ui_snapshot(snapshot)?;
         Ok(())
     }
 
     pub fn restore_state(&mut self) -> Result<()> {
-        let mut db = Database::open()?;
-
-        if let Some(snapshot) = db.load_ui_snapshot()? {
+        if let Some(snapshot) = self.db_worker.load_ui_snapshot()? {
             self.set_mode(Mode::from_str(&snapshot.mode));
             self.set_pane(Pane::from_str(&snapshot.pane));
 

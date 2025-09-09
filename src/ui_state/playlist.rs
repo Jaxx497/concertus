@@ -1,4 +1,5 @@
 use crate::{
+    Database,
     domain::{Playlist, PlaylistSong},
     ui_state::{LibraryView, PopupType, UiState},
 };
@@ -15,9 +16,8 @@ pub enum PlaylistAction {
 impl UiState {
     pub fn get_playlists(&mut self) -> Result<()> {
         let playlist_db = {
-            let db = self.library.get_db();
-            let mut db_lock = db.lock().unwrap();
-            db_lock.build_playlists()?
+            let mut db = Database::open()?;
+            db.build_playlists()?
         };
 
         let songs_map = self.library.get_songs_map();
@@ -29,7 +29,7 @@ impl UiState {
                     .iter()
                     .filter_map(|&s_id| {
                         let ps_id = s_id.0;
-                        let simple_song = songs_map.get(&s_id.1).unwrap().clone();
+                        let simple_song = songs_map.get(&s_id.1)?.clone();
 
                         Some(PlaylistSong {
                             id: ps_id,
@@ -70,11 +70,7 @@ impl UiState {
             return Err(anyhow!("Playlist name already exists!"));
         }
 
-        {
-            let db = self.library.get_db();
-            let mut db_lock = db.lock().unwrap();
-            db_lock.create_playlist(&name)?;
-        }
+        self.db_worker.create_playlist(name)?;
 
         self.get_playlists()?;
 
@@ -97,9 +93,9 @@ impl UiState {
             .get_selected_playlist()
             .ok_or_else(|| anyhow!("No playlist selected!"))?;
 
-        let name = self.get_popup_string();
+        let new_name = self.get_popup_string();
 
-        if name.is_empty() {
+        if new_name.is_empty() {
             return Err(anyhow!("Playlist name cannot be empty!"));
         }
 
@@ -107,16 +103,12 @@ impl UiState {
             .playlists
             .iter()
             .filter(|p| p.id != playlist.id)
-            .any(|p| p.name.to_lowercase() == name.to_lowercase())
+            .any(|p| p.name.to_lowercase() == new_name.to_lowercase())
         {
             return Err(anyhow!("Playlist name already exists!"));
         }
 
-        {
-            let db = self.library.get_db();
-            let mut db_lock = db.lock().unwrap();
-            db_lock.rename_playlist(&name, playlist.id)?;
-        }
+        self.db_worker.rename_playlist(playlist.id, new_name)?;
 
         self.get_playlists()?;
         self.display_state.playlist_pos.select_first();
@@ -135,11 +127,9 @@ impl UiState {
 
         if let Some(idx) = current_playlist {
             let playlist_id = self.playlists[idx].id;
-            {
-                let db = self.library.get_db();
-                let mut db_lock = db.lock().unwrap();
-                db_lock.delete_playlist(playlist_id)?;
-            }
+
+            self.db_worker.delete_playlist(playlist_id)?;
+
             self.get_playlists()?;
             self.set_legal_songs();
         }
@@ -162,17 +152,12 @@ impl UiState {
                 true => {
                     let song_id = self.get_selected_song()?.id;
 
-                    let db = self.library.get_db();
-                    let mut db_lock = db.lock().unwrap();
-                    db_lock.add_to_playlist(song_id, playlist_id)?;
+                    self.db_worker.add_to_playlist(song_id, playlist_id)?;
                 }
                 false => {
                     let song_ids = self.get_bulk_sel().iter().map(|s| s.id).collect::<Vec<_>>();
 
-                    let db = self.library.get_db();
-                    let mut db_lock = db.lock().unwrap();
-
-                    db_lock.add_to_playlist_bulk(song_ids, playlist_id)?;
+                    self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
                     self.clear_bulk_sel();
                 }
             }

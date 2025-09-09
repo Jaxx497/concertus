@@ -1,5 +1,5 @@
 use crate::{
-    Database, Library,
+    Library,
     domain::{QueueSong, SongDatabase as _, SongInfo, generate_waveform},
     key_handler::{self},
     overwrite_line,
@@ -20,7 +20,6 @@ use std::{
 
 pub struct Concertus {
     _initializer: Instant,
-    db: Arc<Mutex<Database>>,
     library: Arc<Library>,
     pub(crate) ui: UiState,
     pub(crate) player: PlayerController,
@@ -30,9 +29,7 @@ pub struct Concertus {
 
 impl Concertus {
     pub fn new() -> Self {
-        let db = Database::open().expect("Could not create database!");
-        let db = Arc::new(Mutex::new(db));
-        let lib = Library::init(Arc::clone(&db));
+        let lib = Library::init();
         let lib = Arc::new(lib);
         let lib_clone = Arc::clone(&lib);
 
@@ -41,7 +38,6 @@ impl Concertus {
 
         Concertus {
             _initializer: Instant::now(),
-            db,
             library: lib,
             player: PlayerController::new(),
             ui: UiState::new(lib_clone, shared_state_clone),
@@ -114,8 +110,9 @@ impl Concertus {
     }
 
     pub fn preload_lib(&mut self) {
-        let lib_db = Arc::clone(&self.db);
-        let mut updated_lib = Library::init(lib_db);
+        // let lib_db = Arc::clone(&self.db);
+        // let mut updated_lib = Library::init(lib_db);
+        let mut updated_lib = Library::init();
 
         if !updated_lib.roots.is_empty() {
             self.requires_setup = false
@@ -240,14 +237,14 @@ impl Concertus {
     }
 
     pub(crate) fn update_library(&mut self) -> Result<()> {
-        let lib_db = Arc::clone(&self.db);
-        let mut updated_lib = Library::init(lib_db);
+        // let lib_db = Arc::clone(&self.db);
+        // let mut updated_lib = Library::init(lib_db);
+        let mut updated_lib = Library::init();
 
         let cached = self.ui.display_state.album_pos.selected();
         self.ui.display_state.album_pos.select(None);
 
         // TODO: Alert user of changes on update
-        updated_lib.update_db_by_root()?;
         updated_lib.build_library()?;
 
         let updated_len = updated_lib.albums.len();

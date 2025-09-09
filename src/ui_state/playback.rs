@@ -1,5 +1,6 @@
 use super::{Mode, UiState};
 use crate::{
+    Database,
     domain::{QueueSong, SimpleSong, SongDatabase},
     player::{PlaybackState, PlayerState},
     strip_win_prefix,
@@ -115,10 +116,9 @@ impl UiState {
     }
 
     pub(crate) fn load_history(&mut self) {
-        self.playback.history = self
-            .library
-            .load_history(&self.library.get_songs_map())
-            .unwrap_or_default();
+        let mut db = Database::open().expect("Database failed to open");
+        let song_map = self.library.get_songs_map();
+        self.playback.history = db.import_history(song_map).unwrap_or_default();
     }
 
     pub fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {
@@ -168,11 +168,7 @@ impl UiState {
                     .ok_or_else(|| anyhow!("Invalid song selection"))?
                     .id;
 
-                self.library
-                    .get_db()
-                    .lock()
-                    .map_err(|_| anyhow!("Failed to acquire database lock"))?
-                    .remove_from_playlist(&[ps_id])?;
+                self.db_worker.remove_from_playlist(vec![ps_id])?;
 
                 playlist.tracklist.remove(song_idx);
             }
@@ -216,9 +212,7 @@ impl UiState {
                         .collect::<Vec<_>>()
                 };
 
-                let db = self.library.get_db();
-                let mut db_lock = db.lock().unwrap();
-                db_lock.remove_from_playlist(&ps_ids_to_remove)?;
+                self.db_worker.remove_from_playlist(ps_ids_to_remove)?;
 
                 let playlist = self
                     .playlists

@@ -2,7 +2,7 @@ use crate::domain::{LongSong, SimpleSong, SongInfo};
 use anyhow::Result;
 use indexmap::IndexMap;
 use queries::*;
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
@@ -10,10 +10,14 @@ use std::{
     sync::Arc,
     time::{Duration, UNIX_EPOCH},
 };
+
 mod playlists;
 mod queries;
 mod snapshot;
 mod tables;
+mod worker;
+
+pub use worker::DbWorker;
 
 const CONFIG_DIRECTORY: &'static str = "Concertus";
 const DATABASE_FILENAME: &'static str = "concertus.db";
@@ -331,7 +335,7 @@ impl Database {
     //   HISTORY
     // ============
 
-    pub fn save_history_to_db(&mut self, history: &[Arc<SimpleSong>]) -> Result<()> {
+    pub fn save_history_to_db(&mut self, history: &[u64]) -> Result<()> {
         let tx = self.conn.transaction()?;
         {
             // Create timestamp
@@ -345,8 +349,8 @@ impl Database {
             // Since all timestamps are generated as we go into this
             // function, subtract index value from timestamp value to
             // maintain prior ordering
-            for (idx, song) in history.iter().enumerate() {
-                stmt.execute(params![song.id.to_le_bytes(), timestamp - idx as i64])?;
+            for (idx, song_id) in history.iter().enumerate() {
+                stmt.execute(params![song_id.to_le_bytes(), timestamp - idx as i64])?;
             }
             tx.execute(DELETE_FROM_HISTORY, [])?;
         }
