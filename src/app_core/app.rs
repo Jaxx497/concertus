@@ -110,8 +110,6 @@ impl Concertus {
     }
 
     pub fn preload_lib(&mut self) {
-        // let lib_db = Arc::clone(&self.db);
-        // let mut updated_lib = Library::init(lib_db);
         let mut updated_lib = Library::init();
 
         if !updated_lib.roots.is_empty() {
@@ -237,8 +235,6 @@ impl Concertus {
     }
 
     pub(crate) fn update_library(&mut self) -> Result<()> {
-        // let lib_db = Arc::clone(&self.db);
-        // let mut updated_lib = Library::init(lib_db);
         let mut updated_lib = Library::init();
 
         let cached = self.ui.display_state.album_pos.selected();

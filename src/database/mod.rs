@@ -2,7 +2,7 @@ use crate::domain::{LongSong, SimpleSong, SongInfo};
 use anyhow::Result;
 use indexmap::IndexMap;
 use queries::*;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
@@ -40,6 +40,7 @@ impl Database {
 
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "foreign_keys", "ON")?;
+        conn.pragma_update(None, "cache_size", "1000")?;
 
         let mut db = Database {
             conn,

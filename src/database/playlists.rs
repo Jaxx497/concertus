@@ -6,7 +6,7 @@ use rusqlite::params;
 
 impl Database {
     pub fn get_playlists(&mut self) -> Result<Vec<Playlist>> {
-        let mut stmt = self.conn.prepare(GET_PLAYLISTS)?;
+        let mut stmt = self.conn.prepare_cached(GET_PLAYLISTS)?;
 
         let rows = stmt.query_map([], |r| {
             let id: i64 = r.get("id")?;
@@ -71,7 +71,7 @@ impl Database {
                 .unwrap_or(0)
                 + 1;
 
-            let mut stmt = tx.prepare(ADD_SONG_TO_PLAYLIST_WITH_POSITION)?;
+            let mut stmt = tx.prepare_cached(ADD_SONG_TO_PLAYLIST_WITH_POSITION)?;
 
             for (i, song) in songs.iter().enumerate() {
                 stmt.execute(params![
@@ -91,7 +91,7 @@ impl Database {
     pub fn remove_from_playlist(&mut self, ps_id: &[i64]) -> Result<()> {
         let tx = self.conn.transaction()?;
         {
-            let mut stmt = tx.prepare(REMOVE_SONG_FROM_PLAYLIST)?;
+            let mut stmt = tx.prepare_cached(REMOVE_SONG_FROM_PLAYLIST)?;
             for id in ps_id {
                 stmt.execute(params![id])?;
             }
@@ -122,7 +122,7 @@ impl Database {
     }
 
     pub fn build_playlists(&mut self) -> Result<IndexMap<(i64, String), Vec<(i64, u64)>>> {
-        let mut stmt = self.conn.prepare(PLAYLIST_BUILDER)?;
+        let mut stmt = self.conn.prepare_cached(PLAYLIST_BUILDER)?;
 
         let rows = stmt.query_map([], |r| {
             let ps_id: Option<i64> = r.get("id")?;

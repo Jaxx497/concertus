@@ -47,7 +47,7 @@ impl Theme {
             text_highlighted: GOLD,
             text_highlighted_u: GOLD_FADED,
 
-            border_focused: GOLD,
+            border_focused: GOLD_FADED,
             border_unfocused: Color::Rgb(50, 50, 50),
         }
     }
