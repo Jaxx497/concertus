@@ -1,6 +1,5 @@
 use super::{Mode, UiState};
 use crate::{
-    Database,
     domain::{QueueSong, SimpleSong, SongDatabase},
     player::{PlaybackState, PlayerState},
     strip_win_prefix,
@@ -116,9 +115,8 @@ impl UiState {
     }
 
     pub(crate) fn load_history(&mut self) {
-        let mut db = Database::open().expect("Database failed to open");
-        let song_map = self.library.get_songs_map();
-        self.playback.history = db.import_history(song_map).unwrap_or_default();
+        let song_map = self.library.get_songs_map().to_owned();
+        self.playback.history = self.db_worker.import_history(song_map).unwrap_or_default();
     }
 
     pub fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {

@@ -1,6 +1,5 @@
 use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
-    Database,
     domain::{Album, Playlist, SimpleSong, SongInfo},
     key_handler::{Director, MoveDirection},
 };
@@ -139,10 +138,8 @@ impl UiState {
                     .map(|s| s.id)
                     .collect::<Vec<_>>();
 
-                self.save_state().unwrap_or_else(|e| eprintln!("{e}"));
-
-                let mut db = Database::open().expect("Cannot conect to database!");
-                let _ = db.save_history_to_db(&song_ids);
+                let _ = self.save_state();
+                let _ = self.db_worker.save_history_to_db(song_ids);
 
                 self.display_state.mode = Mode::QUIT;
             }

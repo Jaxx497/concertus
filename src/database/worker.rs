@@ -1,8 +1,11 @@
-use crate::{database::Database, ui_state::UiSnapshot};
+use crate::{database::Database, domain::SimpleSong, ui_state::UiSnapshot};
 use anyhow::{Result, anyhow};
-use std::{collections::HashSet, sync::mpsc, thread};
-
-// type DbOperation = Box<dyn FnOnce(&mut Database) -> Result<()> + Send>;
+use indexmap::IndexMap;
+use std::{
+    collections::{HashSet, VecDeque},
+    sync::{Arc, mpsc},
+    thread,
+};
 
 pub enum DbMessage {
     Operation(Box<dyn FnOnce(&mut Database) + Send>),
@@ -120,6 +123,10 @@ impl DbWorker {
         self.execute_sync(move |db| db.get_hashes())
     }
 
+    pub fn build_playlists(&mut self) -> Result<IndexMap<(i64, String), Vec<(i64, u64)>>> {
+        self.execute_sync(move |db| db.build_playlists())
+    }
+
     pub fn save_history(&self, history: Vec<u64>) -> Result<()> {
         self.execute_sync(move |db| db.save_history_to_db(&history))
     }
@@ -130,6 +137,25 @@ impl DbWorker {
 
     pub fn load_ui_snapshot(&self) -> Result<Option<UiSnapshot>> {
         self.execute_sync(move |db| db.load_ui_snapshot())
+    }
+
+    pub fn get_all_songs(&self) -> Result<IndexMap<u64, Arc<SimpleSong>>> {
+        self.execute_sync(move |db| db.get_all_songs())
+    }
+
+    pub fn import_history(
+        &self,
+        song_map: IndexMap<u64, Arc<SimpleSong>>,
+    ) -> Result<VecDeque<Arc<SimpleSong>>> {
+        self.execute_sync(move |db| db.import_history(&song_map))
+    }
+
+    pub fn save_history_to_db(&self, history: Vec<u64>) -> Result<()> {
+        self.execute_sync(move |db| db.save_history_to_db(&history))
+    }
+
+    pub fn get_song_path(&self, id: u64) -> Result<String> {
+        self.execute_sync(move |db| db.get_song_path(id))
     }
 
     // Fire-and-forget operations

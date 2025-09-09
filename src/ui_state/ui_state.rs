@@ -1,14 +1,14 @@
-use super::{playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState};
+use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState, theme::Theme};
 use crate::{
+    Library,
     database::DbWorker,
     domain::{Album, Playlist, SimpleSong},
     key_handler::InputContext,
     player::PlayerState,
     ui_state::{
-        popup::{PopupState, PopupType},
         LibraryView, Mode, Pane,
+        popup::{PopupState, PopupType},
     },
-    Library,
 };
 use anyhow::{Error, Result};
 use indexmap::IndexSet;

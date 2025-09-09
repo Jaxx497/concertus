@@ -1,5 +1,4 @@
 use crate::{
-    Database,
     domain::{Playlist, PlaylistSong},
     ui_state::{LibraryView, PopupType, UiState},
 };
@@ -15,11 +14,7 @@ pub enum PlaylistAction {
 
 impl UiState {
     pub fn get_playlists(&mut self) -> Result<()> {
-        let playlist_db = {
-            let mut db = Database::open()?;
-            db.build_playlists()?
-        };
-
+        let playlist_db = self.db_worker.build_playlists()?;
         let songs_map = self.library.get_songs_map();
 
         self.playlists = playlist_db
@@ -145,26 +140,25 @@ impl UiState {
     }
 
     pub fn add_to_playlist(&mut self) -> Result<()> {
-        if let Some(playlist_idx) = self.popup.selection.selected() {
-            let playlist_id = self.playlists.get(playlist_idx).unwrap().id;
+        match self.popup.selection.selected() {
+            Some(playlist_idx) => {
+                let playlist_id = self.playlists.get(playlist_idx).unwrap().id;
+                match self.get_bulk_sel().is_empty() {
+                    true => {
+                        let song_id = self.get_selected_song()?.id;
 
-            match self.get_bulk_sel().is_empty() {
-                true => {
-                    let song_id = self.get_selected_song()?.id;
+                        self.db_worker.add_to_playlist(song_id, playlist_id)?;
+                    }
+                    false => {
+                        let song_ids = self.get_bulk_sel().iter().map(|s| s.id).collect::<Vec<_>>();
 
-                    self.db_worker.add_to_playlist(song_id, playlist_id)?;
+                        self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
+                        self.clear_bulk_sel();
+                    }
                 }
-                false => {
-                    let song_ids = self.get_bulk_sel().iter().map(|s| s.id).collect::<Vec<_>>();
-
-                    self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
-                    self.clear_bulk_sel();
-                }
+                self.close_popup()
             }
-
-            self.close_popup()
-        } else {
-            return Err(anyhow!("Could not add to playlist"));
+            None => return Err(anyhow!("Could not add to playlist")),
         };
 
         self.get_playlists()?;

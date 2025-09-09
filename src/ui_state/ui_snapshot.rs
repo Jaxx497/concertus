@@ -79,10 +79,8 @@ impl UiState {
     }
 
     pub fn restore_state(&mut self) -> Result<()> {
+        // The order of these function calls is particularly important
         if let Some(snapshot) = self.db_worker.load_ui_snapshot()? {
-            self.set_mode(Mode::from_str(&snapshot.mode));
-            self.set_pane(Pane::from_str(&snapshot.pane));
-
             self.display_state.album_sort = AlbumSort::from_str(&snapshot.album_sort);
 
             self.sort_albums();
@@ -94,10 +92,13 @@ impl UiState {
             }
 
             if let Some(pos) = snapshot.playlist_selection {
-                if pos < self.albums.len() {
+                if pos < self.playlists.len() {
                     self.display_state.playlist_pos.select(Some(pos));
                 }
             }
+
+            self.set_mode(Mode::from_str(&snapshot.mode));
+            self.set_pane(Pane::from_str(&snapshot.pane));
 
             if let Some(pos) = snapshot.song_selection {
                 if pos < self.legal_songs.len() {

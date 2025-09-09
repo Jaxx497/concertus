@@ -189,7 +189,6 @@ impl Library {
 
     fn collect_songs(&mut self) -> Result<()> {
         self.songs = self.db.get_all_songs()?;
-
         Ok(())
     }
 
