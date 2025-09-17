@@ -1,9 +1,15 @@
 use super::{PlaybackState, PlayerState};
-use crate::{domain::QueueSong, get_readable_duration};
+use crate::{
+    domain::{QueueSong, SongInfo},
+    get_readable_duration,
+};
 use anyhow::Result;
-use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink};
+use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, decoder::builder::SeekMode};
 use std::{
+    fs::File,
+    io::BufReader,
     ops::Sub,
+    path::PathBuf,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -18,6 +24,7 @@ impl Player {
     pub(crate) fn new(shared_state: Arc<Mutex<PlayerState>>) -> Self {
         let _stream = OutputStreamBuilder::open_default_stream().expect("Cannot open stream");
         let sink = Sink::connect_new(_stream.mixer());
+
         Player {
             sink,
             shared_state,
@@ -28,9 +35,7 @@ impl Player {
     /// Play a song
     /// Returns an error if
     pub(crate) fn play_song(&mut self, song: &Arc<QueueSong>) -> Result<()> {
-        let file = std::fs::File::open(&song.path)?;
-        // let source = Decoder::new(std::io::BufReader::new(file))?;
-        let source = Decoder::try_from(file)?;
+        let source = decode(song)?;
 
         self.sink.clear();
         self.sink.append(source);
@@ -106,7 +111,7 @@ impl Player {
 
     // /// Stop playback
     pub(crate) fn stop(&mut self) {
-        self.sink.stop();
+        self.sink.clear();
 
         let mut state = self
             .shared_state
@@ -143,17 +148,18 @@ impl Player {
                 .shared_state
                 .lock()
                 .expect("Failed to unwrap mutex in music player");
+
             // This prevents skiping into the next song's playback
             if duration.sub(elapsed) > Duration::from_secs_f32(secs as f32 + 0.5) {
                 let new_time = elapsed + Duration::from_secs(secs as u64);
                 if let Err(_) = self.sink.try_seek(new_time) {
-                    self.sink.stop();
+                    self.sink.clear();
                     state.state = PlaybackState::Stopped;
                 } else {
                     state.elapsed = self.sink.get_pos()
                 }
             } else {
-                self.sink.stop();
+                self.sink.clear();
                 state.state = PlaybackState::Stopped;
             }
         }
@@ -210,4 +216,32 @@ impl Player {
     pub(crate) fn sink_is_empty(&self) -> bool {
         self.sink.empty()
     }
+}
+
+fn decode(song: &Arc<QueueSong>) -> Result<Decoder<BufReader<File>>> {
+    let path = PathBuf::from(&song.path);
+    let file = std::fs::File::open(&song.path)?;
+    let duration = song.get_duration();
+
+    let mut builder = Decoder::builder()
+        .with_data(BufReader::new(file))
+        .with_total_duration(duration)
+        .with_seek_mode(SeekMode::Fastest)
+        .with_seekable(true);
+
+    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        let hint = match ext {
+            "adif" | "adts" => "aac",
+            "caf" => "audio/x-caf",
+            "m4a" | "m4b" | "m4p" | "m4r" | "mp4" => "audio/mp4",
+            "bit" | "mpga" => "mp3",
+            "mka" | "mkv" => "audio/matroska",
+            "oga" | "ogm" | "ogv" | "ogx" | "spx" => "audio/ogg",
+            "wave" => "wav",
+            _ => ext,
+        };
+        builder = builder.with_hint(hint);
+    }
+
+    Ok(builder.build()?)
 }

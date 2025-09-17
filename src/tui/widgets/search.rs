@@ -22,8 +22,9 @@ impl StatefulWidget for SearchBar {
         search.set_block(
             Block::bordered()
                 .border_type(BorderType::Thick)
+                .border_style(theme.border)
                 .padding(SEARCH_PADDING)
-                .fg(theme.border),
+                .fg(theme.text_highlighted),
         );
 
         search.render(area, buf);

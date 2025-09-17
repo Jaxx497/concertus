@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::{io::Cursor, path::Path, process::Command, time::Duration};
 
@@ -15,7 +15,6 @@ pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Vec<f32> {
     match extract_waveform_data(path) {
         Ok(waveform) => waveform,
         Err(_) => {
-            // eprintln!("Error generating waveform: {}", e);
             vec![0.3; WF_LEN] // Return a flat line if all fails
         }
     }
@@ -62,8 +61,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
     // Get audio duration to calculate optimal sampling
     let duration = match get_audio_duration(&audio_path) {
         Ok(d) => d,
-        Err(e) => {
-            eprintln!("Warning: Couldn't determine audio duration: {}", e);
+        Err(_) => {
             return Err(anyhow!("Could not determine audio length"));
         }
     };

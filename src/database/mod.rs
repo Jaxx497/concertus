@@ -103,11 +103,7 @@ impl Database {
                     &song.duration.as_secs_f32(),
                     &song.sample_rate,
                     &song.filetype
-                ])
-                .unwrap_or_else(|e| {
-                    eprintln!("Error inserting song {}: {}", song.title, e);
-                    0
-                });
+                ])?;
             }
         }
         tx.commit()?;

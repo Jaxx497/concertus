@@ -1,4 +1,4 @@
-# Concertus - v0.0.5a
+# Concertus - v0.0.7a
 
 Concertus is a lightweight, simple to use TUI music player written in Rust.
 
@@ -6,54 +6,56 @@ Concertus is a lightweight, simple to use TUI music player written in Rust.
 
 ## Usage
 
-Begin by assigning one or more 'root' (or 'parent') directories when
-promted. The root management window can be managed by pressing the ```
-` ``` key. Concertus will walk through the supplied folder(s), and
-create a library based on the valid files it finds.
+Begin by assigning one or more 'root' (or 'parent') directories when promted.
+The root management window can be managed by pressing the ``` ` ``` key.
+Concertus will walk through the supplied folder(s), and create a library based
+on the valid files it finds.
 
-It's recommended that users have ffmpeg and a nerd font installed for
-visual flare. Neither is mandatory, however.
+It's recommended that users have ffmpeg and a nerd font installed for visual
+flare. Neither is mandatory, however.
 
-Concertus does not leverage any online capabilities, and strictly
-relies on the accurate and proper tagging. It's strongly recommended
-to utilize a tool like [MP3Tag](https://www.mp3tag.de/en/) to ensure
-the entries of one's library are accurate. Libraries can be live
-refreshed simply by pressing ```F5``` or ```Ctrl-u```
+>For a full list of keymaps, please [view the keymaps
+documentation](./docs/keymaps.md).
 
-Currently, supported filetypes include the following: ```mp3, m4a, flac, wav, ogg```
+Currently, supported filetypes include the following: ```mp3, m4a, flac, wav,
+ogg```
 
 ## Disclaimers
 
-Concertus never writes to user files, only a SQLite database stored in
-the users local config or appdata directory. 
+Concertus never writes to user files and does not have any online capabilities,
+but relies on accurate tagging. It's strongly recommended that users ensure
+their libraries are properly tagged with a tool like
+[MP3Tag](https://www.mp3tag.de/en/). Update a library during runtime with
+`Ctrl+u`
 
 ## Known bugs
 
 1. Symphonia/Rodio Related*
     1. There are no reliable Rodio compatible OPUS decoders.
-    1. Seeking may run into problems
+    1. Seeking can be potentially unstable on the occasional file.
+    1. Gapless playback is not viable as of now.
 
 2. Waveforms may generate on songs that cannot be played.
 
-*This project is heavily reliant on the Symphonia and Rodio crates.
-Most of the playback related issues are due to upstream issues in the
-aforementioned libraries. Following the rollout of the playlist
-feature, alongside other small QOL additions, new backend options will
-be explored. However, lots of progress is being made in the rodio
-library, which may solve this problem in time. 
+> **Note:** This project is heavily reliant on the Symphonia and Rodio crates.
+Many of the playback related issues are due to upstream issues in the
+aforementioned libraries. Following several QOL additons, I intend to explore
+new backend options. However, lots of progress is being made within the rodio
+crate, which may solve several of these problems in time. 
 
 ## TODO 
+
+- Provide visual progress when scanning in songs
+- Improved testing for various formats
 - Create new playlist on add song to playlist popup
 - Re-work sort-by-column approach
-- Provide visual progress when scanning in songs
-- Add more settings
-    - Custom themeing
-    - Update on start?
+- Custom themeing
 - Implement a secondary player backend (gstreamer?)
 
 ## Other
-This project seeks to demonstrate my understanding of a series of
-programming fundamentals, including but not limited to multi-threaded
-management, atomics, string internment, database integration,
-de/serialization, integrity hashing, session persistence, modular
-design, view models, and state management. 
+
+This project seeks to demonstrate my understanding of a series of programming
+fundamentals, including but not limited to multi-threaded management, atomics,
+string internment, database integration, de/serialization, memory management,
+integrity hashing, session persistence, OS operations, modular design, view
+models, and state management. 
