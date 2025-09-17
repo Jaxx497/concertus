@@ -14,7 +14,8 @@ mp4ameta = "*"
 ratatui = "*"
 rand = "*"
 rayon = "*"
-rodio = { version = "0.20.1", features = ["symphonia-all"]}
+rodio = { git = "https://github.com/RustAudio/rodio", branch = "feat/comprehensive-seeking-and-bit-depth", features = ["symphonia-all"]}
+# rodio = { version = "0.20.1", features = ["symphonia-all"]}
 rusqlite = { version = "0.37.0", features = ["bundled"] }
 symphonia = { version = "0.5.4", features = ["all"] }
 tui-textarea = "0.7.0"

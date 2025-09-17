@@ -30,9 +30,8 @@ the users local config or appdata directory.
 ## Known bugs
 
 1. Symphonia/Rodio Related*
-    1. FLAC may cause crashes when seeking in a song. 
-    1. OGG files cannot utilize seek functionality. 
     1. There are no reliable Rodio compatible OPUS decoders.
+    1. Seeking may run into problems
 
 2. Waveforms may generate on songs that cannot be played.
 
@@ -44,7 +43,6 @@ be explored. However, lots of progress is being made in the rodio
 library, which may solve this problem in time. 
 
 ## TODO 
-- Tune search results
 - Create new playlist on add song to playlist popup
 - Re-work sort-by-column approach
 - Provide visual progress when scanning in songs

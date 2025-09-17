@@ -1,10 +1,7 @@
 use super::{PlaybackState, PlayerState};
-use crate::{
-    domain::{FileType, QueueSong},
-    get_readable_duration,
-};
+use crate::{domain::QueueSong, get_readable_duration};
 use anyhow::Result;
-use rodio::{Decoder, OutputStream, Sink};
+use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink};
 use std::{
     ops::Sub,
     sync::{Arc, Mutex},
@@ -19,13 +16,12 @@ pub struct Player {
 
 impl Player {
     pub(crate) fn new(shared_state: Arc<Mutex<PlayerState>>) -> Self {
-        let (_stream, stream_handle) =
-            OutputStream::try_default().expect("Rodio: Could not create OutputStream.");
-        let sink = Sink::try_new(&stream_handle).expect("Rodio: Could not create Sink.");
+        let _stream = OutputStreamBuilder::open_default_stream().expect("Cannot open stream");
+        let sink = Sink::connect_new(_stream.mixer());
         Player {
             sink,
-            _stream,
             shared_state,
+            _stream,
         }
     }
 
@@ -33,7 +29,8 @@ impl Player {
     /// Returns an error if
     pub(crate) fn play_song(&mut self, song: &Arc<QueueSong>) -> Result<()> {
         let file = std::fs::File::open(&song.path)?;
-        let source = Decoder::new(std::io::BufReader::new(file))?;
+        // let source = Decoder::new(std::io::BufReader::new(file))?;
+        let source = Decoder::try_from(file)?;
 
         self.sink.clear();
         self.sink.append(source);
@@ -138,9 +135,7 @@ impl Player {
             (state.now_playing.clone(), state.state)
         };
 
-        if playback_state != PlaybackState::Stopped
-            && (now_playing.as_deref().unwrap().filetype != FileType::OGG)
-        {
+        if playback_state != PlaybackState::Stopped {
             let elapsed = self.sink.get_pos();
             let duration = &now_playing.unwrap().duration;
 
@@ -167,24 +162,25 @@ impl Player {
 
     /// Rewinds playback 5 seconds
     pub(crate) fn seek_back(&mut self, secs: usize) {
-        let (now_playing, playback_state) = {
+        let playback_state = {
             let state = self
                 .shared_state
                 .lock()
                 .expect("Failed to unwrap mutex in music player");
-            (state.now_playing.clone(), state.state)
+            state.state
         };
 
-        if playback_state != PlaybackState::Stopped
-            && (now_playing.as_deref().unwrap().filetype != FileType::OGG)
-        {
+        if playback_state != PlaybackState::Stopped {
             let elapsed = self.sink.get_pos();
 
-            if elapsed < Duration::from_secs(secs as u64) {
-                let _ = self.sink.try_seek(Duration::from_secs(0));
-            } else {
-                let new_time = elapsed.sub(Duration::from_secs(secs as u64));
-                let _ = self.sink.try_seek(new_time);
+            match elapsed < Duration::from_secs(secs as u64) {
+                true => {
+                    let _ = self.sink.try_seek(Duration::from_secs(0));
+                }
+                false => {
+                    let new_time = elapsed.sub(Duration::from_secs(secs as u64));
+                    let _ = self.sink.try_seek(new_time);
+                }
             }
 
             let mut state = self
