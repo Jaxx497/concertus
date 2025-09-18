@@ -10,6 +10,7 @@ pub enum PlaylistAction {
     AddSong,
     Delete,
     Rename,
+    CreateWithSongs,
 }
 
 impl UiState {
@@ -163,6 +164,50 @@ impl UiState {
 
         self.get_playlists()?;
 
+        Ok(())
+    }
+
+    pub fn create_playlist_with_songs_popup(&mut self) {
+        self.show_popup(PopupType::Playlist(PlaylistAction::CreateWithSongs));
+    }
+
+    pub fn create_playlist_with_songs(&mut self) -> Result<()> {
+        let name = self.get_popup_string();
+
+        if name.is_empty() {
+            return Err(anyhow!("Playlist name cannot be empty!"));
+        }
+
+        if self
+            .playlists
+            .iter()
+            .any(|p| p.name.to_lowercase() == name.to_lowercase())
+        {
+            return Err(anyhow!("Playlist name already exists!"));
+        }
+
+        self.db_worker.create_playlist(name)?;
+        self.get_playlists()?;
+
+        if let Some(new_playlist) = self.playlists.first() {
+            let playlist_id = new_playlist.id;
+
+            if !self.bulk_select_empty() {
+                let song_ids = self.get_bulk_sel().iter().map(|s| s.id).collect::<Vec<_>>();
+                self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
+                self.clear_bulk_sel();
+            } else if let Ok(song) = self.get_selected_song() {
+                self.db_worker.add_to_playlist(song.id, playlist_id)?;
+            }
+
+            self.get_playlists()?;
+        }
+
+        if self.display_state.playlist_pos.selected().is_none() {
+            self.display_state.playlist_pos.select_first();
+        }
+
+        self.close_popup();
         Ok(())
     }
 }

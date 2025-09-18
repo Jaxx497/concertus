@@ -131,9 +131,13 @@ impl UiState {
     }
 
     pub fn remove_song(&mut self) -> Result<()> {
-        match self.bulk_select_empty() {
-            true => self.remove_song_single()?,
-            false => self.remove_song_bulk()?,
+        let selected_song = self.get_selected_song()?;
+
+        let current_is_selected = self.get_bulk_sel().contains(&selected_song);
+
+        match (self.bulk_select_empty(), current_is_selected) {
+            (false, true) => self.remove_song_bulk()?,
+            _ => self.remove_song_single()?,
         }
 
         self.set_legal_songs();

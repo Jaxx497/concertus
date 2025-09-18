@@ -107,6 +107,17 @@ fn truncate_at_last_space(s: &str, limit: usize) -> String {
     }
 }
 
+pub fn normalize_metadata_str(s: &str) -> String {
+    s.trim()
+        .replace('\0', "")
+        .replace('\u{FEFF}', "")
+        .chars()
+        .filter(|c| !c.is_control() || *c == '\n' || *c == '\t')
+        .collect::<String>()
+        .trim()
+        .to_string()
+}
+
 pub fn strip_win_prefix(path: &str) -> String {
     let path_str = path.to_string();
     path_str

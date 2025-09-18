@@ -1,6 +1,8 @@
 use super::{FileType, SongInfo};
-use crate::{calculate_signature, database::Database, get_readable_duration};
-use anyhow::{anyhow, Context, Result};
+use crate::{
+    calculate_signature, database::Database, get_readable_duration, normalize_metadata_str,
+};
+use anyhow::{Context, Result, anyhow};
 use std::{
     path::{Path, PathBuf},
     sync::Arc,
@@ -118,10 +120,16 @@ impl LongSong {
 
     fn match_tags(&mut self, key: StandardTagKey, value: &Value) {
         match key {
-            StandardTagKey::TrackTitle => self.title = value.to_string(),
-            StandardTagKey::Album => self.album = Arc::new(value.to_string()),
-            StandardTagKey::Artist => self.artist = Arc::new(value.to_string()),
-            StandardTagKey::AlbumArtist => self.album_artist = Arc::new(value.to_string()),
+            StandardTagKey::TrackTitle => self.title = normalize_metadata_str(&value.to_string()),
+            StandardTagKey::Album => {
+                self.album = Arc::new(normalize_metadata_str(&value.to_string()))
+            }
+            StandardTagKey::Artist => {
+                self.artist = Arc::new(normalize_metadata_str(&value.to_string()))
+            }
+            StandardTagKey::AlbumArtist => {
+                self.album_artist = Arc::new(normalize_metadata_str(&value.to_string()))
+            }
             StandardTagKey::Date => {
                 self.year = value
                     .to_string()
