@@ -40,7 +40,6 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (C, Char('n')) => Some(Action::PlayNext),
         (C, Char('p')) => Some(Action::PlayPrev),
 
-        (C, Char('m')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
         (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
         (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
         (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
@@ -94,10 +93,9 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (X, Char('v')) => Some(Action::BulkSelect),
         (C, Char('v')) => Some(Action::ClearBulkSelect),
 
-        (X, Left) | (X, Char('h')) => Some(Action::ChangeMode(Mode::Library(
+        (X, Left) | (X, Char('h') | Tab) => Some(Action::ChangeMode(Mode::Library(
             state.display_state.sidebar_view,
         ))),
-        (X, Tab) => Some(Action::ToggleSideBar),
         _ => None,
     };
 
@@ -134,9 +132,10 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
 fn handle_album_browser(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
-        (X, Tab) => Some(Action::ToggleSideBar),
         (X, Char('q')) => Some(Action::QueueEntity),
-        (X, Enter) | (X, Right) | (X, Char('l')) => Some(Action::ChangePane(Pane::TrackList)),
+        (X, Enter) | (X, Tab) | (X, Right) | (X, Char('l')) | (C, Char('a')) => {
+            Some(Action::ChangePane(Pane::TrackList))
+        }
 
         // Change album sorting algorithm
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
@@ -150,10 +149,11 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
         (C, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
         (X, Char('r')) => Some(Action::RenamePlaylist),
-        (X, Tab) => Some(Action::ToggleSideBar),
         (X, Char('q')) => Some(Action::QueueEntity),
 
-        (X, Enter) | (X, Right) | (X, Char('l')) => Some(Action::ChangePane(Pane::TrackList)),
+        (X, Enter) | (X, Tab) | (X, Right) | (X, Char('l')) => {
+            Some(Action::ChangePane(Pane::TrackList))
+        }
 
         (X, Char('c')) => Some(Action::CreatePlaylist),
         (C, Char('d')) => Some(Action::DeletePlaylist),
@@ -164,7 +164,6 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
 fn handle_search_pane(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
         (X, Tab) | (X, Enter) => Some(Action::SendSearch),
-
         (C, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
 
         (_, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
@@ -212,12 +211,10 @@ fn handle_playlist(key: &KeyEvent, variant: &PlaylistAction) -> Option<Action> {
     use PlaylistAction::*;
     match variant {
         Create => match key.code {
-            Esc => Some(Action::ClosePopup),
             Enter => Some(Action::CreatePlaylistConfirm),
             _ => Some(Action::PopupInput(*key)),
         },
         Delete => match key.code {
-            Esc => Some(Action::ClosePopup),
             Enter => Some(Action::DeletePlaylistConfirm),
             _ => Some(Action::PopupInput(*key)),
         },
@@ -225,10 +222,14 @@ fn handle_playlist(key: &KeyEvent, variant: &PlaylistAction) -> Option<Action> {
             Up | Char('k') => Some(Action::PopupScrollUp),
             Down | Char('j') => Some(Action::PopupScrollDown),
             Enter | Char('a') => Some(Action::AddToPlaylistConfirm),
+            Char('c') => Some(Action::CreatePlaylistWithSongs),
             _ => None,
         },
+        CreateWithSongs => match key.code {
+            Enter => Some(Action::CreatePlaylistWithSongsConfirm),
+            _ => Some(Action::PopupInput(*key)),
+        },
         Rename => match key.code {
-            Esc => Some(Action::ClosePopup),
             Enter => Some(Action::RenamePlaylistConfirm),
             _ => Some(Action::PopupInput(*key)),
         },
@@ -263,7 +264,6 @@ impl Concertus {
             Action::SortColumnsNext => self.ui.next_song_column(),
             Action::SortColumnsPrev => self.ui.prev_song_column(),
             Action::ToggleAlbumSort(next)   => self.ui.toggle_album_sort(next),
-            Action::ToggleSideBar   => self.ui.toggle_sidebar_view(),
 
             // Search Related
             Action::UpdateSearch(k) => self.ui.process_search(k),
@@ -272,6 +272,9 @@ impl Concertus {
             //Playlist
             Action::CreatePlaylist  => self.ui.create_playlist_popup(),
             Action::CreatePlaylistConfirm => self.ui.create_playlist()?,
+
+            Action::CreatePlaylistWithSongs => self.ui.create_playlist_with_songs_popup(),
+            Action::CreatePlaylistWithSongsConfirm => self.ui.create_playlist_with_songs()?,
 
             Action::RenamePlaylist  => self.ui.rename_playlist_popup(),
             Action::RenamePlaylistConfirm => self.ui.rename_playlist()?,

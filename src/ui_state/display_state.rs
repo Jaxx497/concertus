@@ -221,16 +221,6 @@ impl UiState {
         &self.display_state.table_sort
     }
 
-    pub fn toggle_sidebar_view(&mut self) {
-        self.display_state.sidebar_view = match self.display_state.sidebar_view {
-            LibraryView::Albums => LibraryView::Playlists,
-            LibraryView::Playlists => LibraryView::Albums,
-        };
-
-        self.set_mode(Mode::Library(self.display_state.sidebar_view));
-        self.set_legal_songs();
-    }
-
     pub fn toggle_album_sort(&mut self, next: bool) {
         self.display_state.album_sort = match next {
             true => self.display_state.album_sort.next(),

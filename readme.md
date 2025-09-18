@@ -47,7 +47,6 @@ crate, which may solve several of these problems in time.
 
 - Provide visual progress when scanning in songs
 - Improved testing for various formats
-- Create new playlist on add song to playlist popup
 - Re-work sort-by-column approach
 - Custom themeing
 - Implement a secondary player backend (gstreamer?)

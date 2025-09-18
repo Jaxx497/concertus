@@ -34,7 +34,8 @@ impl PopupState {
     fn open(&mut self, popup: PopupType) {
         match &popup {
             PopupType::Playlist(PlaylistAction::Rename)
-            | PopupType::Playlist(PlaylistAction::Create) => {
+            | PopupType::Playlist(PlaylistAction::Create)
+            | PopupType::Playlist(PlaylistAction::CreateWithSongs) => {
                 let placeholder = get_random_playlist_idea();
 
                 self.input.set_placeholder_text(format!(" {placeholder} "));

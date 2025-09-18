@@ -21,7 +21,9 @@ impl StatefulWidget for PlaylistPopup {
     ) {
         if let PopupType::Playlist(action) = &state.popup.current {
             match action {
-                PlaylistAction::Create => render_create_popup(area, buf, state),
+                PlaylistAction::Create | PlaylistAction::CreateWithSongs => {
+                    render_create_popup(area, buf, state)
+                }
                 PlaylistAction::AddSong => render_add_song_popup(area, buf, state),
                 PlaylistAction::Delete => render_delete_popup(area, buf, state),
                 PlaylistAction::Rename => render_rename_popup(area, buf, state),
@@ -84,7 +86,7 @@ fn render_add_song_popup(
 
     let block = Block::bordered()
         .title(" Select Playlist ")
-        .title_bottom(" [Enter] confirm / [Esc] cancel ")
+        .title_bottom(" [Enter] / [c]reate playlist / [Esc] ")
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))

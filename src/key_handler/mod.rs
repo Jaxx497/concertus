@@ -42,6 +42,9 @@ pub enum Action {
     AddToPlaylist,
     AddToPlaylistConfirm,
 
+    CreatePlaylistWithSongs,
+    CreatePlaylistWithSongsConfirm,
+
     // Updating App State
     UpdateLibrary,
     SendSearch,
@@ -49,7 +52,6 @@ pub enum Action {
     SortColumnsNext,
     SortColumnsPrev,
     ToggleAlbumSort(bool),
-    ToggleSideBar,
     ChangeMode(Mode),
     ChangePane(Pane),
     GoToAlbum,
