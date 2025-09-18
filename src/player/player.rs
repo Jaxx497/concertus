@@ -1,8 +1,5 @@
 use super::{PlaybackState, PlayerState};
-use crate::{
-    domain::{QueueSong, SongInfo},
-    get_readable_duration,
-};
+use crate::{domain::QueueSong, get_readable_duration};
 use anyhow::Result;
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, decoder::builder::SeekMode};
 use std::{
@@ -221,11 +218,11 @@ impl Player {
 fn decode(song: &Arc<QueueSong>) -> Result<Decoder<BufReader<File>>> {
     let path = PathBuf::from(&song.path);
     let file = std::fs::File::open(&song.path)?;
-    let duration = song.get_duration();
+    let len = file.metadata()?.len();
 
     let mut builder = Decoder::builder()
         .with_data(BufReader::new(file))
-        .with_total_duration(duration)
+        .with_byte_len(len)
         .with_seek_mode(SeekMode::Fastest)
         .with_seekable(true);
 
