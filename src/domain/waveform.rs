@@ -15,7 +15,7 @@ pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Vec<f32> {
     match extract_waveform_data(path) {
         Ok(waveform) => waveform,
         Err(_) => {
-            vec![0.3; WF_LEN] // Return a flat line if all fails
+            vec![0.2; WF_LEN] // Return a flat line if all fails
         }
     }
 }
@@ -84,9 +84,10 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
             "-ac",
             "1", // Convert to mono
             "-ar",
-            "44100",
+            "22050", // Maintain resolution, half as many datapoints
+            // "44100",
             "-af",
-            "highpass=f=300,volume=2,treble=gain=3", // Extreme filtering for visual effect
+            "dynaudnorm=f=500:g=31,highpass=f=350,volume=2,bass=gain=-8:frequency=200,treble=gain=10:frequency=6000", // I wish I could explain this, but this is the best we're gonna get without having a masters in audio engineering
             "-loglevel",
             "warning",
             "-f",
@@ -104,12 +105,10 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
         ));
     }
 
-    // Process the PCM data to generate waveform
     let pcm_data = output.stdout;
     let mut waveform = process_pcm_to_waveform(&pcm_data, samples_per_point)?;
 
     smooth_waveform(&mut waveform);
-    // Normalize the waveform
     normalize_waveform(&mut waveform);
 
     Ok(waveform)
@@ -131,12 +130,11 @@ fn calculate_adaptive_samples(duration: Duration) -> usize {
     ideal_samples.clamp(MIN_SAMPLES_PER_POINT, MAX_SAMPLES_PER_POINT)
 }
 
-/// Process raw PCM float data into a waveform
+/// Process raw PCM float data into a vector of f32 values
 fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<Vec<f32>> {
     // Create a cursor to read the PCM data as 32-bit floats
     let mut cursor = Cursor::new(pcm_data);
 
-    // Calculate total samples and step size
     let total_samples = pcm_data.len() / 4; // Each float is 4 bytes
 
     // If the file is very short, we might need to adapt our approach
@@ -158,7 +156,6 @@ fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<
         let mut samples_read = 0;
         let mut max_value = 0.0f32;
 
-        // Read samples_per_point samples or up to the next point
         let max_samples = samples_per_point.min(sample_step);
         for _ in 0..max_samples {
             if cursor.position() >= pcm_data.len() as u64 {
@@ -181,19 +178,17 @@ fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<
             }
         }
 
-        if samples_read > 0 {
-            // Use a combination of RMS and peak for better representation
-            let rms = (sum_squares / samples_read as f32).sqrt();
-
-            // FIXME: let value = (rms * 0.8 + max_value * 0.2).min(1.0);
-            let value = rms.min(1.0);
-            waveform.push(value);
-        } else {
-            waveform.push(0.0);
+        match samples_read > 0 {
+            true => {
+                let rms = (sum_squares / samples_read as f32).sqrt();
+                let value = rms.min(1.0);
+                waveform.push(value);
+            }
+            false => waveform.push(0.0),
         }
     }
 
-    // Ensure we have exactly WF_LEN points
+    // Fill additional values if necessary
     while waveform.len() < WF_LEN {
         waveform.push(0.0);
     }
@@ -317,7 +312,6 @@ fn normalize_waveform(waveform: &mut [f32]) {
         return;
     }
 
-    // Find min and max using exact values (no percentile)
     let min = *waveform
         .iter()
         .min_by(|a, b| a.total_cmp(b))
@@ -328,7 +322,6 @@ fn normalize_waveform(waveform: &mut [f32]) {
         .max_by(|a, b| a.total_cmp(b))
         .unwrap_or(&1.0);
 
-    // Simple normalization like in the old code
     if (max - min).abs() < f32::EPSILON {
         for value in waveform.iter_mut() {
             *value = 0.3;
