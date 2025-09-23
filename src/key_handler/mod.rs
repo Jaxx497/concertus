@@ -72,7 +72,7 @@ pub enum Action {
     RenamePlaylistConfirm,
 
     ShiftPosition(MoveDirection),
-    WaveformSmooth(MoveDirection),
+    IncrementWFSmoothness(MoveDirection),
 
     ClosePopup,
     PopupScrollUp,

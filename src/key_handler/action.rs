@@ -76,8 +76,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('g')) => Some(Action::Scroll(Director::Top)),
             (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
 
-            (X, Char('[')) => Some(Action::WaveformSmooth(MoveDirection::Down)),
-            (X, Char(']')) => Some(Action::WaveformSmooth(MoveDirection::Up)),
+            (X, Char('[')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
+            (X, Char(']')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
 
             (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
@@ -307,7 +307,7 @@ impl Concertus {
             Action::ClearBulkSelect => self.ui.clear_bulk_sel(),
 
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
-            Action::WaveformSmooth(direction) => self.ui.smooth_waveform(direction),
+            Action::IncrementWFSmoothness(direction) => self.ui.playback.increment_smoothness(direction),
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

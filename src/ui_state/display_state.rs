@@ -3,7 +3,7 @@ use crate::{
     domain::{Album, Playlist, SimpleSong, SongInfo},
     key_handler::{Director, MoveDirection},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
@@ -23,7 +23,6 @@ pub struct DisplayState {
     table_pos_cached: usize,
 
     pub bulk_select: IndexSet<Arc<SimpleSong>>,
-    pub wf_smooth: f32,
 }
 
 impl DisplayState {
@@ -43,7 +42,6 @@ impl DisplayState {
             table_pos_cached: 0,
 
             bulk_select: IndexSet::default(),
-            wf_smooth: 1.0,
         }
     }
 }

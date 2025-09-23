@@ -29,5 +29,5 @@ pub trait SongDatabase {
     fn get_path(&self) -> anyhow::Result<String>;
     fn update_play_count(&self) -> anyhow::Result<()>;
     fn get_waveform(&self) -> anyhow::Result<Vec<f32>>;
-    fn set_waveform(&self, wf: &[f32]) -> anyhow::Result<()>;
+    fn set_waveform_db(&self, wf: &[f32]) -> anyhow::Result<()>;
 }

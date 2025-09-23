@@ -107,7 +107,6 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
     let pcm_data = output.stdout;
     let mut waveform = process_pcm_to_waveform(&pcm_data, samples_per_point)?;
 
-    // smooth_waveform(&mut waveform);
     normalize_waveform(&mut waveform);
 
     Ok(waveform)

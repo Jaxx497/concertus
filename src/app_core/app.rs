@@ -147,9 +147,9 @@ impl Concertus {
         }
 
         self.ui.clear_waveform();
+        self.player.play_song(Arc::clone(&song))?;
         self.waveform_handler(&song)?;
         song.update_play_count()?;
-        self.player.play_song(song)?;
 
         Ok(())
     }
@@ -203,7 +203,7 @@ impl Concertus {
         let path_clone = song.path.clone();
 
         match song.get_waveform() {
-            Ok(wf) => self.ui.set_waveform(wf),
+            Ok(wf) => self.ui.set_waveform_visual(wf),
             _ => {
                 let (tx, rx) = mpsc::channel();
 
@@ -223,8 +223,11 @@ impl Concertus {
                 if let Ok(waveform) = rx.try_recv() {
                     let song = self.player.get_now_playing().unwrap();
 
-                    song.set_waveform(&waveform)?;
-                    self.ui.set_waveform(waveform);
+                    if Some(&song) == self.ui.get_now_playing().as_ref() {
+                        song.set_waveform_db(&waveform)?;
+                        self.ui.set_waveform_visual(waveform);
+                    }
+
                     self.waveform_rec = None;
                     return Ok(());
                 }

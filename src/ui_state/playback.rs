@@ -1,6 +1,7 @@
 use super::{Mode, UiState};
 use crate::{
-    domain::{QueueSong, SimpleSong, SongDatabase},
+    domain::{QueueSong, SimpleSong, SongDatabase, smooth_waveform},
+    key_handler::MoveDirection,
     player::{PlaybackState, PlayerState},
     strip_win_prefix,
     ui_state::LibraryView,
@@ -13,10 +14,13 @@ use std::{
 };
 
 const HISTORY_CAPACITY: usize = 50;
+
 pub struct PlaybackCoordinator {
     pub queue: VecDeque<Arc<QueueSong>>,
     pub history: VecDeque<Arc<SimpleSong>>,
-    pub waveform: Vec<f32>,
+    pub waveform_raw: Vec<f32>,
+    pub waveform_smooth: Vec<f32>,
+    pub wf_smoothing: f32,
     pub player_state: Arc<Mutex<PlayerState>>,
 }
 
@@ -25,7 +29,9 @@ impl PlaybackCoordinator {
         PlaybackCoordinator {
             queue: VecDeque::new(),
             history: VecDeque::new(),
-            waveform: Vec::new(),
+            waveform_raw: Vec::new(),
+            waveform_smooth: Vec::new(),
+            wf_smoothing: 1.0,
             player_state,
         }
     }
@@ -294,15 +300,17 @@ impl UiState {
 // ==========
 impl UiState {
     pub fn get_waveform_visual(&self) -> &[f32] {
-        self.playback.waveform.as_slice()
+        self.playback.waveform_smooth.as_slice()
     }
 
-    pub fn set_waveform(&mut self, wf: Vec<f32>) {
-        self.playback.waveform = wf
+    pub fn set_waveform_visual(&mut self, wf: Vec<f32>) {
+        self.playback.waveform_raw = wf;
+        self.playback.smooth_waveform();
     }
 
     pub fn clear_waveform(&mut self) {
-        self.playback.waveform.clear();
+        self.playback.waveform_raw.clear();
+        self.playback.waveform_smooth.clear();
     }
 
     fn check_player_error(&mut self) {
@@ -317,5 +325,30 @@ impl UiState {
         if let Some(e) = error {
             self.set_error(e);
         }
+    }
+}
+
+static WAVEFORM_STEP: f32 = 0.5;
+impl PlaybackCoordinator {
+    pub fn increment_smoothness(&mut self, direction: MoveDirection) {
+        match direction {
+            MoveDirection::Up => {
+                if self.wf_smoothing < 3.9 {
+                    self.wf_smoothing += WAVEFORM_STEP;
+                    self.smooth_waveform();
+                }
+            }
+            MoveDirection::Down => {
+                if self.wf_smoothing > 0.1 {
+                    self.wf_smoothing -= WAVEFORM_STEP;
+                    self.smooth_waveform();
+                }
+            }
+        }
+    }
+
+    pub fn smooth_waveform(&mut self) {
+        self.waveform_smooth = self.waveform_raw.clone();
+        smooth_waveform(&mut self.waveform_smooth, self.wf_smoothing);
     }
 }

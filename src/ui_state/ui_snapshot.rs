@@ -72,7 +72,7 @@ impl UiState {
             album_selection: self.display_state.album_pos.selected(),
             playlist_selection: self.display_state.playlist_pos.selected(),
             song_selection: self.display_state.table_pos.selected(),
-            ui_smoothing: self.display_state.wf_smooth,
+            ui_smoothing: self.playback.wf_smoothing,
         }
     }
 
@@ -104,7 +104,7 @@ impl UiState {
             self.set_mode(Mode::from_str(&snapshot.mode));
             self.set_pane(Pane::from_str(&snapshot.pane));
 
-            self.display_state.wf_smooth = snapshot.ui_smoothing;
+            self.playback.wf_smoothing = snapshot.ui_smoothing;
 
             if let Some(pos) = snapshot.song_selection {
                 if pos < self.legal_songs.len() {

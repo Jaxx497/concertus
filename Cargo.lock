@@ -1000,7 +1000,7 @@ dependencies = [
 [[package]]
 name = "rodio"
 version = "0.21.1"
-source = "git+https://github.com/RustAudio/rodio?branch=feat%2Fcomprehensive-seeking-and-bit-depth#53c2b8168aa2a876c8984ed41da0bfc99503be7f"
+source = "git+https://github.com/RustAudio/rodio?branch=feat%2Fcomprehensive-seeking-and-bit-depth#2d6071376b99b770ecbdead6b48879f0b95cb9df"
 dependencies = [
  "cpal",
  "dasp_sample",

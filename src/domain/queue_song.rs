@@ -59,7 +59,7 @@ impl SongDatabase for QueueSong {
     }
 
     /// Store the waveform of a song in the databse
-    fn set_waveform(&self, wf: &[f32]) -> Result<()> {
+    fn set_waveform_db(&self, wf: &[f32]) -> Result<()> {
         let mut db = Database::open()?;
         db.set_waveform(self.meta.id, wf)
     }

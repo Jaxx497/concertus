@@ -1,5 +1,5 @@
 use crate::{
-    domain::{SongInfo, smooth_waveform},
+    domain::SongInfo,
     tui::widgets::{DUR_WIDTH, WAVEFORM_WIDGET_HEIGHT},
     ui_state::UiState,
 };
@@ -29,8 +29,7 @@ impl StatefulWidget for Waveform {
             .get_now_playing()
             .expect("Expected a song to be playing. [Widget: Waveform]");
 
-        let mut waveform = state.get_waveform_visual().to_vec();
-        smooth_waveform(&mut waveform, state.display_state.wf_smooth);
+        let waveform = state.get_waveform_visual().to_vec();
         let wf_len = waveform.len();
 
         let x_duration = area.width - 8;
