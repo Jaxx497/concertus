@@ -122,10 +122,6 @@ pub const UPDATE_PLAY_COUNT: &str = "
         WHERE song_id = ?1
 ";
 
-pub const GET_SESSION_STATE: &str = "
-    SELECT value FROM session_state WHERE key = ?
-";
-
 pub const GET_UI_SNAPSHOT: &str = "
     SELECT key, value 
         FROM session_state 

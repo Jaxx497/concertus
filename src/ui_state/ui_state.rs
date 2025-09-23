@@ -1,14 +1,14 @@
-use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState, theme::Theme};
+use super::{playback::PlaybackCoordinator, search_state::SearchState, theme::Theme, DisplayState};
 use crate::{
-    Library,
     database::DbWorker,
     domain::{Album, Playlist, SimpleSong},
-    key_handler::InputContext,
+    key_handler::{InputContext, MoveDirection},
     player::PlayerState,
     ui_state::{
-        LibraryView, Mode, Pane,
         popup::{PopupState, PopupType},
+        LibraryView, Mode, Pane,
     },
+    Library,
 };
 use anyhow::{Error, Result};
 use indexmap::IndexSet;
@@ -127,4 +127,21 @@ impl UiState {
             _ => InputContext::TrackList(self.get_mode().clone()),
         }
     }
+
+    pub fn smooth_waveform(&mut self, direction: MoveDirection) {
+        match direction {
+            MoveDirection::Up => {
+                if self.display_state.wf_smooth < 3.9 {
+                    self.display_state.wf_smooth += WAVEFORM_STEP;
+                }
+            }
+            MoveDirection::Down => {
+                if self.display_state.wf_smooth > 0.1 {
+                    self.display_state.wf_smooth -= WAVEFORM_STEP;
+                }
+            }
+        }
+    }
 }
+
+static WAVEFORM_STEP: f32 = 0.2;

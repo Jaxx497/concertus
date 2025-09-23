@@ -10,6 +10,7 @@ pub struct UiSnapshot {
     pub album_selection: Option<usize>,
     pub playlist_selection: Option<usize>,
     pub song_selection: Option<usize>,
+    pub ui_smoothing: f32,
 }
 
 impl UiSnapshot {
@@ -18,6 +19,7 @@ impl UiSnapshot {
             ("ui_mode", self.mode.clone()),
             ("ui_pane", self.pane.clone()),
             ("ui_album_sort", self.album_sort.clone()),
+            ("ui_smooth", format!("{:.1}", self.ui_smoothing)),
         ];
 
         if let Some(pos) = self.album_selection {
@@ -46,6 +48,7 @@ impl UiSnapshot {
                 "ui_album_pos" => snapshot.album_selection = value.parse().ok(),
                 "ui_playlist_pos" => snapshot.playlist_selection = value.parse().ok(),
                 "ui_song_pos" => snapshot.song_selection = value.parse().ok(),
+                "ui_smooth" => snapshot.ui_smoothing = value.parse::<f32>().unwrap_or(1.0),
                 _ => {}
             }
         }
@@ -69,6 +72,7 @@ impl UiState {
             album_selection: self.display_state.album_pos.selected(),
             playlist_selection: self.display_state.playlist_pos.selected(),
             song_selection: self.display_state.table_pos.selected(),
+            ui_smoothing: self.display_state.wf_smooth,
         }
     }
 
@@ -99,6 +103,8 @@ impl UiState {
 
             self.set_mode(Mode::from_str(&snapshot.mode));
             self.set_pane(Pane::from_str(&snapshot.pane));
+
+            self.display_state.wf_smooth = snapshot.ui_smoothing;
 
             if let Some(pos) = snapshot.song_selection {
                 if pos < self.legal_songs.len() {

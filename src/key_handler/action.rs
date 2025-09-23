@@ -21,7 +21,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
         InputContext::TrackList(_) => handle_tracklist(&key_event, &state),
         InputContext::AlbumView => handle_album_browser(&key_event),
         InputContext::PlaylistView => handle_playlist_browswer(&key_event),
-        InputContext::Search => handle_search_pane(&key_event),
+        InputContext::Search => handle_search_pane(&key_event, &state),
         _ => None,
     }
 }
@@ -34,7 +34,6 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match (key.modifiers, key.code) {
         (C, Char('c')) => Some(Action::QUIT),
 
-        (X, Esc) => Some(Action::SoftReset),
         (C, Char(' ')) => Some(Action::TogglePause),
 
         (C, Char('n')) => Some(Action::PlayNext),
@@ -47,6 +46,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         // Works on everything except search or popup
         _ if (!in_search && !popup_active) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
+            (X, Esc) => Some(Action::SoftReset),
+
             (X, Char('`')) => Some(Action::ViewSettings),
             (X, Char(' ')) => Some(Action::TogglePause),
             (C, Char('s')) => Some(Action::Stop),
@@ -74,6 +75,9 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('U')) => Some(Action::Scroll(Director::Up(SCROLL_XTRA))),
             (X, Char('g')) => Some(Action::Scroll(Director::Top)),
             (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
+
+            (X, Char('[')) => Some(Action::WaveformSmooth(MoveDirection::Down)),
+            (X, Char(']')) => Some(Action::WaveformSmooth(MoveDirection::Up)),
 
             (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
@@ -161,8 +165,11 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
     }
 }
 
-fn handle_search_pane(key: &KeyEvent) -> Option<Action> {
+fn handle_search_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match (key.modifiers, key.code) {
+        (X, Esc) => Some(Action::ChangeMode(Mode::Library(
+            state.display_state.sidebar_view,
+        ))),
         (X, Tab) | (X, Enter) => Some(Action::SendSearch),
         (C, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
 
@@ -192,6 +199,7 @@ fn root_manager(key: &KeyEvent, variant: &SettingsMode) -> Option<Action> {
             Up | Char('k') => Some(Action::PopupScrollUp),
             Down | Char('j') => Some(Action::PopupScrollDown),
             Char('`') => Some(Action::ClosePopup),
+            Esc => Some(Action::ClosePopup),
             _ => None,
         },
         AddRoot => match key.code {
@@ -209,6 +217,11 @@ fn root_manager(key: &KeyEvent, variant: &SettingsMode) -> Option<Action> {
 
 fn handle_playlist(key: &KeyEvent, variant: &PlaylistAction) -> Option<Action> {
     use PlaylistAction::*;
+
+    if key.code == Esc {
+        return Some(Action::ClosePopup);
+    }
+
     match variant {
         Create => match key.code {
             Enter => Some(Action::CreatePlaylistConfirm),
@@ -294,6 +307,7 @@ impl Concertus {
             Action::ClearBulkSelect => self.ui.clear_bulk_sel(),
 
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
+            Action::WaveformSmooth(direction) => self.ui.smooth_waveform(direction),
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

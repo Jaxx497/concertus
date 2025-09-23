@@ -13,8 +13,7 @@ pub use playlist::Playlist;
 pub use playlist::PlaylistSong;
 pub use queue_song::QueueSong;
 pub use simple_song::SimpleSong;
-
-pub use waveform::generate_waveform;
+pub use waveform::{generate_waveform, smooth_waveform};
 
 pub trait SongInfo {
     fn get_id(&self) -> u64;

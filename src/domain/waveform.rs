@@ -5,7 +5,6 @@ use std::{io::Cursor, path::Path, process::Command, time::Duration};
 const WF_LEN: usize = 500;
 const MIN_SAMPLES_PER_POINT: usize = 200; // Minimum for short files
 const MAX_SAMPLES_PER_POINT: usize = 5000; // Maximum for very long files
-const SMOOTHING_FACTOR: f32 = 0.2;
 
 /// Generate a waveform using ffmpeg by piping output directly to memory
 pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Vec<f32> {
@@ -108,7 +107,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
     let pcm_data = output.stdout;
     let mut waveform = process_pcm_to_waveform(&pcm_data, samples_per_point)?;
 
-    smooth_waveform(&mut waveform);
+    // smooth_waveform(&mut waveform);
     normalize_waveform(&mut waveform);
 
     Ok(waveform)
@@ -265,10 +264,9 @@ fn process_short_pcm(pcm_data: &[u8]) -> Result<Vec<f32>> {
 }
 
 /// Apply a smoothing filter to the waveform with float smoothing factor
-fn smooth_waveform(waveform: &mut Vec<f32>) {
-    let smoothing_factor = SMOOTHING_FACTOR;
+pub fn smooth_waveform(waveform: &mut Vec<f32>, smoothing_factor: f32) {
     if waveform.len() <= (smoothing_factor.ceil() as usize * 2 + 1) {
-        return; // Not enough points to smooth
+        return;
     }
 
     let original = waveform.clone();
@@ -322,13 +320,10 @@ fn normalize_waveform(waveform: &mut [f32]) {
         .max_by(|a, b| a.total_cmp(b))
         .unwrap_or(&1.0);
 
-    if (max - min).abs() < f32::EPSILON {
-        for value in waveform.iter_mut() {
-            *value = 0.3;
-        }
-    } else {
-        for value in waveform.iter_mut() {
-            *value = (*value - min) / (max - min);
-        }
+    match (max - min).abs() < f32::EPSILON {
+        true => waveform.iter_mut().for_each(|value| *value = 0.3),
+        false => waveform
+            .iter_mut()
+            .for_each(|value| *value = (*value - min) / (max - min)),
     }
 }
