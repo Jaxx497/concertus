@@ -29,7 +29,7 @@ impl AppLayout {
         let [upper_block, progress_bar, buffer_line] = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Min(12),
+                Constraint::Min(16),
                 Constraint::Length(wf_height),
                 Constraint::Length(buffer_line_height),
             ])

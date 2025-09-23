@@ -2,7 +2,7 @@
 
 Concertus is a lightweight, simple to use TUI music player written in Rust.
 
-![concertus.png](https://i.postimg.cc/GmfgdZt7/concertus-img.png)
+![concertus.png](./docs/header.png)
 
 ## Usage
 
