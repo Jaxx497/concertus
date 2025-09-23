@@ -33,5 +33,6 @@ impl Default for PlayerState {
 pub enum PlaybackState {
     Playing,
     Paused,
+    Transitioning,
     Stopped,
 }

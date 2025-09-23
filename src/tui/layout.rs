@@ -11,7 +11,7 @@ pub struct AppLayout {
 
 impl AppLayout {
     pub fn new(area: Rect, state: &UiState) -> Self {
-        let wf_height = match state.get_now_playing().is_some() {
+        let wf_height = match state.display_waveform() {
             true => 7,
             false => 0,
         };

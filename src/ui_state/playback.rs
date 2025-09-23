@@ -270,6 +270,11 @@ impl UiState {
         state.now_playing.clone()
     }
 
+    pub fn set_playback_state(&mut self, playback: PlaybackState) {
+        let mut state = self.playback.player_state.lock().unwrap();
+        state.state = playback
+    }
+
     pub fn get_playback_elapsed(&self) -> Duration {
         let state = self.playback.player_state.lock().unwrap();
         state.elapsed
@@ -278,6 +283,11 @@ impl UiState {
     pub fn is_not_playing(&self) -> bool {
         let state = self.playback.player_state.lock().unwrap();
         state.state == PlaybackState::Stopped
+    }
+
+    pub fn display_waveform(&self) -> bool {
+        let state = self.playback.player_state.lock().unwrap();
+        state.state != PlaybackState::Stopped || !self.queue_is_empty()
     }
 
     pub fn make_playable_song(&mut self, song: &Arc<SimpleSong>) -> Result<Arc<QueueSong>> {

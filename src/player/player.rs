@@ -119,13 +119,6 @@ impl Player {
         state.state = PlaybackState::Stopped;
     }
 
-    // BUG: Due to the development status of the symphonia crate, some decoders do not
-    // implement seeking. FLAC files are dodgy, and often fail while testing in DEBUG
-    // mode, however most problems seem to be solved in RELEASE mode. OGG files fail
-    // with a 100% rate regardless of mode.
-    // --
-    // We'll try testing the symphonia 0.6 branch at some point to see how it fares.
-
     /// Fast forwards playback 5 seconds
     /// Will skip to next track if in last 5 seconds
     pub(crate) fn seek_forward(&mut self, secs: usize) -> Result<()> {
@@ -137,7 +130,9 @@ impl Player {
             (state.now_playing.clone(), state.state)
         };
 
-        if playback_state != PlaybackState::Stopped {
+        if playback_state != PlaybackState::Stopped
+            && playback_state != PlaybackState::Transitioning
+        {
             let elapsed = self.sink.get_pos();
             let duration = &now_playing.unwrap().duration;
 
@@ -173,7 +168,9 @@ impl Player {
             state.state
         };
 
-        if playback_state != PlaybackState::Stopped {
+        if playback_state != PlaybackState::Stopped
+            && playback_state != PlaybackState::Transitioning
+        {
             let elapsed = self.sink.get_pos();
 
             match elapsed < Duration::from_secs(secs as u64) {

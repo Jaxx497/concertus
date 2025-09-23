@@ -3,7 +3,7 @@ use crate::{
     domain::{QueueSong, SongDatabase as _, SongInfo, generate_waveform},
     key_handler::{self},
     overwrite_line,
-    player::PlayerController,
+    player::{PlaybackState, PlayerController},
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
 };
@@ -15,7 +15,7 @@ use std::{
         mpsc::{self, Receiver},
     },
     thread,
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 pub struct Concertus {
@@ -78,11 +78,11 @@ impl Concertus {
             // Play next song if song in queue and current song has ended
             if self.ui.is_not_playing() {
                 if !self.ui.queue_is_empty() {
+                    self.ui.set_playback_state(PlaybackState::Transitioning);
                     if let Some(song) = self.ui.playback.queue.pop_front() {
                         if let Err(e) = self.play_song(song) {
                             self.ui.set_error(e);
                         };
-                        thread::sleep(Duration::from_millis(75)); // Prevents flickering on waveform widget during song change
                     }
                 }
                 self.ui.set_legal_songs();
