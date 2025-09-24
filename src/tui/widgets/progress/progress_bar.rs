@@ -1,10 +1,4 @@
-use crate::{
-    DurationStyle,
-    domain::SongInfo,
-    get_readable_duration,
-    tui::widgets::{DUR_WIDTH, PAUSE_ICON},
-    ui_state::UiState,
-};
+use crate::{domain::SongInfo, tui::widgets::DUR_WIDTH, ui_state::UiState};
 use ratatui::{
     layout::Rect,
     style::{Color, Stylize},

@@ -9,6 +9,24 @@ pub enum ProgressDisplay {
     ProgressBar,
 }
 
+impl ProgressDisplay {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "progress_bar" => Self::ProgressBar,
+            _ => Self::Waveform,
+        }
+    }
+}
+
+impl std::fmt::Display for ProgressDisplay {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProgressDisplay::Waveform => write!(f, "waveform"),
+            ProgressDisplay::ProgressBar => write!(f, "progress_bar"),
+        }
+    }
+}
+
 pub struct PlaybackView {
     pub waveform_raw: Vec<f32>,
     pub waveform_smooth: Vec<f32>,

@@ -15,6 +15,7 @@ pub struct DisplayState {
     table_sort: TableSort,
     pub(super) album_sort: AlbumSort,
 
+    pub sidebar_percent: u16,
     pub sidebar_view: LibraryView,
     pub album_pos: ListState,
     pub playlist_pos: ListState,
@@ -34,6 +35,7 @@ impl DisplayState {
             table_sort: TableSort::Title,
             album_sort: AlbumSort::Artist,
 
+            sidebar_percent: 30,
             sidebar_view: LibraryView::Albums,
             album_pos: ListState::default().with_selected(Some(0)),
             playlist_pos: ListState::default().with_selected(Some(0)),
@@ -511,6 +513,21 @@ impl UiState {
         match self.display_state.pane {
             Pane::TrackList => self.display_state.table_pos.select_last(),
             _ => (),
+        }
+    }
+
+    pub fn adjust_sidebar_size(&mut self, x: isize) {
+        match x > 0 {
+            true => {
+                if self.display_state.sidebar_percent < 39 {
+                    self.display_state.sidebar_percent += x as u16;
+                }
+            }
+            false => {
+                if self.display_state.sidebar_percent >= 16 {
+                    self.display_state.sidebar_percent -= -x as u16;
+                }
+            }
         }
     }
 }

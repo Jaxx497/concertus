@@ -76,10 +76,13 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('g')) => Some(Action::Scroll(Director::Top)),
             (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
 
-            (X, Char('[')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
-            (X, Char(']')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
+            (X, Char('[')) => Some(Action::IncrementSidebarSize(-2)),
+            (X, Char(']')) => Some(Action::IncrementSidebarSize(2)),
 
-            (C, Char('w')) => Some(Action::ToggleProgressDisplay),
+            (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
+            (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
+
+            (X, Char('w')) => Some(Action::ToggleProgressDisplay),
             (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
@@ -309,6 +312,7 @@ impl Concertus {
 
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
             Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),
+            Action::IncrementSidebarSize(x) => self.ui.adjust_sidebar_size(x),
             Action::ToggleProgressDisplay => self.ui.toggle_progress_display(),
 
             // Ops

@@ -42,9 +42,9 @@ impl AppLayout {
         let [sidebar, _, upper_block] = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
-                Constraint::Percentage(30),
+                Constraint::Percentage(state.display_state.sidebar_percent),
                 Constraint::Length(1),
-                Constraint::Min(40),
+                Constraint::Fill(1),
             ])
             .areas(upper_block);
 

@@ -1,5 +1,7 @@
 use anyhow::Result;
 
+use crate::ui_state::ProgressDisplay;
+
 use super::{AlbumSort, Mode, Pane, UiState};
 
 #[derive(Default)]
@@ -9,8 +11,10 @@ pub struct UiSnapshot {
     pub album_sort: String,
     pub album_selection: Option<usize>,
     pub playlist_selection: Option<usize>,
+    pub progress_display: String,
     pub song_selection: Option<usize>,
-    pub ui_smoothing: f32,
+    pub smoothing_factor: f32,
+    pub sidebar_percentage: u16,
 }
 
 impl UiSnapshot {
@@ -19,7 +23,9 @@ impl UiSnapshot {
             ("ui_mode", self.mode.clone()),
             ("ui_pane", self.pane.clone()),
             ("ui_album_sort", self.album_sort.clone()),
-            ("ui_smooth", format!("{:.1}", self.ui_smoothing)),
+            ("ui_smooth", format!("{:.1}", self.smoothing_factor)),
+            ("ui_sidebar_percent", format!("{}", self.sidebar_percentage)),
+            ("ui_progress_display", self.progress_display.to_string()),
         ];
 
         if let Some(pos) = self.album_selection {
@@ -44,11 +50,15 @@ impl UiSnapshot {
             match key.as_str() {
                 "ui_mode" => snapshot.mode = value,
                 "ui_pane" => snapshot.pane = value,
+                "ui_progress_display" => snapshot.progress_display = value,
                 "ui_album_sort" => snapshot.album_sort = value,
                 "ui_album_pos" => snapshot.album_selection = value.parse().ok(),
                 "ui_playlist_pos" => snapshot.playlist_selection = value.parse().ok(),
                 "ui_song_pos" => snapshot.song_selection = value.parse().ok(),
-                "ui_smooth" => snapshot.ui_smoothing = value.parse::<f32>().unwrap_or(1.0),
+                "ui_smooth" => snapshot.smoothing_factor = value.parse::<f32>().unwrap_or(1.0),
+                "ui_sidebar_percent" => {
+                    snapshot.sidebar_percentage = value.parse::<u16>().unwrap_or(30)
+                }
                 _ => {}
             }
         }
@@ -71,8 +81,10 @@ impl UiState {
             album_sort: self.display_state.album_sort.to_string(),
             album_selection: self.display_state.album_pos.selected(),
             playlist_selection: self.display_state.playlist_pos.selected(),
+            progress_display: self.playback_view.progress_display.to_string(),
             song_selection: self.display_state.table_pos.selected(),
-            ui_smoothing: self.playback_view.waveform_smoothing,
+            smoothing_factor: self.playback_view.waveform_smoothing,
+            sidebar_percentage: self.display_state.sidebar_percent,
         }
     }
 
@@ -104,7 +116,10 @@ impl UiState {
             self.set_mode(Mode::from_str(&snapshot.mode));
             self.set_pane(Pane::from_str(&snapshot.pane));
 
-            self.playback_view.waveform_smoothing = snapshot.ui_smoothing;
+            self.playback_view.waveform_smoothing = snapshot.smoothing_factor;
+            self.playback_view.progress_display =
+                ProgressDisplay::from_str(&snapshot.progress_display);
+            self.display_state.sidebar_percent = snapshot.sidebar_percentage;
 
             if let Some(pos) = snapshot.song_selection {
                 if pos < self.legal_songs.len() {

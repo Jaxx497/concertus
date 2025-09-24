@@ -17,11 +17,13 @@ with the exception of searching as not to affect a user's search query.
 | Scroll Down (5 / 25 Items) | `d` `D`|
 | Scroll Up (5 / 25 Items) | `u` `U`|
 | Go to Top / Bottom | `g` `G` |
-| Smooth Waveform | `[` `]` |
 **Views**
 | Album View |  `1` \| `Ctrl` + `a`|
 | Playlist View|  `2` \| `Ctrl` + `t`|
 | View Queue | `3` \| `Ctrl` + `q`|
+| Change Sidebar Size | `[` `]` |
+| Toggle Waveform View | `w` |
+| Smooth Waveform | `{` `}` |
 **General**
 | Search | `/`|
 | Open Settings | ``` ` ``` |
