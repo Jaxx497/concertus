@@ -51,7 +51,7 @@ impl PlayerController {
                     false => player.update_elapsed(),
                 }
                 // Lessen cpu intensity, but avoid stutters between songs
-                thread::sleep(Duration::from_millis(10))
+                thread::sleep(Duration::from_millis(16))
             }
         });
 

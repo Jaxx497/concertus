@@ -14,9 +14,9 @@ mod ui_state;
 
 pub use album_sort::AlbumSort;
 pub use display_state::DisplayState;
-pub use mode::LibraryView;
-pub use mode::Mode;
+pub use mode::{LibraryView, Mode};
 pub use pane::Pane;
+pub use playback::{PlaybackView, ProgressDisplay};
 pub use playlist::PlaylistAction;
 pub use popup::PopupType;
 pub use settings::SettingsMode;

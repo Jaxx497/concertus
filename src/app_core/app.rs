@@ -23,8 +23,7 @@ pub struct Concertus {
     library: Arc<Library>,
     pub(crate) ui: UiState,
     pub(crate) player: PlayerController,
-    waveform_rec: Option<Receiver<Vec<f32>>>,
-    requires_setup: bool,
+    waveform_rec: Option<Receiver<Result<Vec<f32>>>>,
 }
 
 impl Concertus {
@@ -42,7 +41,6 @@ impl Concertus {
             player: PlayerController::new(),
             ui: UiState::new(lib_clone, shared_state_clone),
             waveform_rec: None,
-            requires_setup: true,
         }
     }
 
@@ -53,10 +51,9 @@ impl Concertus {
         self.preload_lib();
         self.initialize_ui();
 
-        if self.requires_setup {
+        if self.library.roots.is_empty() {
             self.ui
                 .show_popup(PopupType::Settings(SettingsMode::AddRoot));
-            self.ui.display_state.album_pos.select_first();
         }
 
         // MAIN ROUTINE
@@ -75,14 +72,11 @@ impl Concertus {
                 _ => (),
             }
 
-            // Play next song if song in queue and current song has ended
             if self.ui.is_not_playing() {
-                if !self.ui.queue_is_empty() {
+                if let Some(song) = self.ui.playback.queue.pop_front() {
                     self.ui.set_playback_state(PlaybackState::Transitioning);
-                    if let Some(song) = self.ui.playback.queue.pop_front() {
-                        if let Err(e) = self.play_song(song) {
-                            self.ui.set_error(e);
-                        };
+                    if let Err(e) = self.play_song(song) {
+                        self.ui.set_error(e);
                     }
                 }
                 self.ui.set_legal_songs();
@@ -111,10 +105,6 @@ impl Concertus {
 
     pub fn preload_lib(&mut self) {
         let mut updated_lib = Library::init();
-
-        if !updated_lib.roots.is_empty() {
-            self.requires_setup = false
-        };
 
         // TODO: MAKE THIS OPTIONAL
         // updated_lib.update_db().unwrap();
@@ -203,13 +193,16 @@ impl Concertus {
         let path_clone = song.path.clone();
 
         match song.get_waveform() {
-            Ok(wf) => self.ui.set_waveform_visual(wf),
+            Ok(wf) => {
+                self.ui.set_waveform_valid();
+                self.ui.set_waveform_visual(wf);
+            }
             _ => {
                 let (tx, rx) = mpsc::channel();
 
                 thread::spawn(move || {
-                    let waveform = generate_waveform(&path_clone);
-                    let _ = tx.send(waveform);
+                    let waveform_res = generate_waveform(&path_clone);
+                    let _ = tx.send(waveform_res);
                 });
                 self.waveform_rec = Some(rx);
             }
@@ -220,12 +213,18 @@ impl Concertus {
     fn await_waveform_completion(&mut self) -> Result<()> {
         if self.ui.get_waveform_visual().is_empty() && self.ui.get_now_playing().is_some() {
             if let Some(rx) = &self.waveform_rec {
-                if let Ok(waveform) = rx.try_recv() {
+                if let Ok(waveform_result) = rx.try_recv() {
                     let song = self.player.get_now_playing().unwrap();
 
                     if Some(&song) == self.ui.get_now_playing().as_ref() {
-                        song.set_waveform_db(&waveform)?;
-                        self.ui.set_waveform_visual(waveform);
+                        match waveform_result {
+                            Ok(waveform) => {
+                                self.ui.set_waveform_valid();
+                                song.set_waveform_db(&waveform)?;
+                                self.ui.set_waveform_visual(waveform);
+                            }
+                            Err(_) => self.ui.set_waveform_invalid(),
+                        }
                     }
 
                     self.waveform_rec = None;

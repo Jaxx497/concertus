@@ -79,6 +79,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('[')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
             (X, Char(']')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
 
+            (C, Char('w')) => Some(Action::ToggleProgressDisplay),
             (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
@@ -307,7 +308,8 @@ impl Concertus {
             Action::ClearBulkSelect => self.ui.clear_bulk_sel(),
 
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
-            Action::IncrementWFSmoothness(direction) => self.ui.playback.increment_smoothness(direction),
+            Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),
+            Action::ToggleProgressDisplay => self.ui.toggle_progress_display(),
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

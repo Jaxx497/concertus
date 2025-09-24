@@ -8,7 +8,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::Stylize,
     text::{Line, Span},
-    widgets::{StatefulWidget, Widget},
+    widgets::{Block, StatefulWidget, Widget},
 };
 
 pub struct BufferLine;
@@ -23,6 +23,8 @@ impl StatefulWidget for BufferLine {
         state: &mut Self::State,
     ) {
         let theme = state.get_theme(state.get_pane());
+
+        Block::new().bg(state.theme.bg_unfocused).render(area, buf);
 
         let [left, center, right] = Layout::default()
             .direction(Direction::Horizontal)

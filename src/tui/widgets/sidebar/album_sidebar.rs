@@ -1,10 +1,8 @@
-use crate::ui_state::{AlbumSort, Pane, UiState, GOLD_FADED};
+use crate::ui_state::{AlbumSort, GOLD_FADED, Pane, UiState};
 use ratatui::{
     style::{Color, Style, Stylize},
     text::{Line, Span},
-    widgets::{
-        Block, BorderType, HighlightSpacing, List, ListItem, ListState, Padding, StatefulWidget,
-    },
+    widgets::{Block, HighlightSpacing, List, ListItem, ListState, Padding, StatefulWidget},
 };
 
 // album_view.rs
@@ -105,9 +103,9 @@ impl StatefulWidget for SideBarAlbum {
 
         let block = Block::bordered()
             .borders(theme.border_display)
-            .border_type(BorderType::Thick)
+            .border_type(theme.border_type)
             .border_style(theme.border)
-            .bg(theme.bg)
+            .bg(theme.bg_panel)
             .title_top(format!(" ⟪ {} Albums! ⟫ ", albums.len()))
             .title_top(
                 Line::from_iter([" 󰒿 ", &pane_sort])

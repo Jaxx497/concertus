@@ -1,10 +1,15 @@
-use super::PAUSE_ICON;
-use crate::{domain::SongInfo, get_readable_duration, ui_state::UiState, DurationStyle};
+use crate::{
+    DurationStyle,
+    domain::SongInfo,
+    get_readable_duration,
+    tui::widgets::{DUR_WIDTH, PAUSE_ICON},
+    ui_state::UiState,
+};
 use ratatui::{
-    layout::Alignment,
+    layout::Rect,
     style::{Color, Stylize},
-    symbols,
-    text::{Line, Span},
+    symbols::line,
+    text::Text,
     widgets::{Block, LineGauge, Padding, StatefulWidget, Widget},
 };
 
@@ -24,7 +29,6 @@ impl StatefulWidget for ProgressBar {
         let elapsed = state.get_playback_elapsed();
         let duration = np.get_duration().as_secs_f32();
         let progress_raw = elapsed.as_secs_f32() / duration;
-        // let theme = &state.get_theme(&Pane::TrackList);
 
         // The program will crash if this hit's 1.0
         let ratio = match progress_raw {
@@ -32,43 +36,37 @@ impl StatefulWidget for ProgressBar {
             _ => 0.0,
         };
 
-        let is_paused = state.is_paused().then(|| PAUSE_ICON).unwrap_or("");
+        let player_state = state.playback.player_state.lock().unwrap();
+        let elapsed_str = player_state.elapsed_display.as_str();
+        let duration_str = player_state.duration_display.as_str();
 
-        // BUG: This label creation MAY cause the search
-        // cursor to flicker indcredibly quickly
-        // specifically in the Windows terminal/cmd
-        let label = match state.is_not_playing() {
-            true => "0:00.00 / 0:00".into(),
-            false => {
-                format!(
-                    "{:1} {} / {}", // :1 Prevents shift in widget when pause icon appears
-                    is_paused,
-                    get_readable_duration(elapsed, DurationStyle::Compact),
-                    get_readable_duration(np.get_duration(), DurationStyle::Compact),
-                )
-            }
-        };
+        let x_duration = area.width - 8;
+        let y = buf.area().height
+            - match area.height {
+                0 => 1,
+                _ => area.height / 2 + 1,
+            };
 
-        let playing_title = Line::from_iter([
-            Span::from(np.get_title()).fg(Color::Red),
-            Span::from(" ✧ ").fg(Color::DarkGray),
-            Span::from(np.get_artist()).fg(Color::Gray),
-        ]);
+        Text::from(elapsed_str)
+            .fg(Color::DarkGray)
+            .right_aligned()
+            .render(Rect::new(2, y, DUR_WIDTH, 1), buf);
+
+        Text::from(duration_str)
+            .fg(Color::DarkGray)
+            .right_aligned()
+            .render(Rect::new(x_duration, y, DUR_WIDTH, 1), buf);
 
         let guage = LineGauge::default()
-            .block(
-                Block::new()
-                    .title_top(playing_title.alignment(Alignment::Center))
-                    .padding(Padding {
-                        left: 10,
-                        right: 10,
-                        top: 2,
-                        bottom: 0,
-                    }),
-            )
-            .filled_style(ratatui::style::Color::Magenta)
-            .line_set(symbols::line::THICK)
-            .label(label)
+            .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
+                left: 10,
+                right: 10,
+                top: 2,
+                bottom: 0,
+            }))
+            .filled_style(state.theme.text_secondary)
+            .line_set(line::THICK)
+            .label("")
             .ratio(ratio as f64);
 
         guage.render(area, buf);

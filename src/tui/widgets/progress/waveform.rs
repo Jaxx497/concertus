@@ -36,7 +36,7 @@ impl StatefulWidget for Waveform {
         let y = buf.area().height
             - match area.height {
                 0 => 1,
-                _ => area.height / 2 + 2,
+                _ => area.height / 2 + 1,
             };
 
         let player_state = state.playback.player_state.lock().unwrap();
@@ -79,11 +79,12 @@ impl StatefulWidget for Waveform {
                     }
                 }
             })
-            .block(Block::new().padding(Padding {
+            .background_color(state.theme.bg_unfocused)
+            .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
                 left: 10,
                 right: 10,
                 top: 1,
-                bottom: 1,
+                bottom: 0,
             }))
             .render(area, buf)
     }

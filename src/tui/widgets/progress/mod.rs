@@ -1,7 +1,11 @@
+mod progress_bar;
 mod waveform;
 use ratatui::widgets::StatefulWidget;
 
-use crate::{tui::widgets::progress::waveform::Waveform, ui_state::UiState};
+use crate::{
+    tui::widgets::progress::{progress_bar::ProgressBar, waveform::Waveform},
+    ui_state::{ProgressDisplay, UiState},
+};
 
 pub struct Progress;
 impl StatefulWidget for Progress {
@@ -13,7 +17,10 @@ impl StatefulWidget for Progress {
         state: &mut Self::State,
     ) {
         if state.get_now_playing().is_some() {
-            Waveform.render(area, buf, state);
+            match (state.waveform_is_valid(), &state.which_display_style()) {
+                (true, ProgressDisplay::Waveform) => Waveform.render(area, buf, state),
+                _ => ProgressBar.render(area, buf, state),
+            }
         }
     }
 }

@@ -1,10 +1,10 @@
 use ratatui::{
     style::{Color, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, BorderType, List, ListItem, Padding, StatefulWidget},
+    widgets::{Block, List, ListItem, Padding, StatefulWidget},
 };
 
-use crate::ui_state::{Pane, UiState, GOLD_FADED};
+use crate::ui_state::{GOLD_FADED, Pane, UiState};
 
 pub struct SideBarPlaylist;
 impl StatefulWidget for SideBarPlaylist {
@@ -39,9 +39,10 @@ impl StatefulWidget for SideBarPlaylist {
         };
 
         let block = Block::bordered()
-            .border_type(BorderType::Thick)
+            .borders(theme.border_display)
+            .border_type(theme.border_type)
             .border_style(theme.border)
-            .bg(theme.bg)
+            .bg(theme.bg_panel)
             .title_top(
                 Line::from(format!(" ⟪ {} Playlists! ⟫ ", playlists.len()))
                     .left_aligned()

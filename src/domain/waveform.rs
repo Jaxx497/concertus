@@ -7,16 +7,9 @@ const MIN_SAMPLES_PER_POINT: usize = 200; // Minimum for short files
 const MAX_SAMPLES_PER_POINT: usize = 5000; // Maximum for very long files
 
 /// Generate a waveform using ffmpeg by piping output directly to memory
-pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Vec<f32> {
+pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
     let path = audio_path.as_ref();
-
-    // TODO: Handle bad waveform data
-    match extract_waveform_data(path) {
-        Ok(waveform) => waveform,
-        Err(_) => {
-            vec![0.2; WF_LEN] // Return a flat line if all fails
-        }
-    }
+    extract_waveform_data(path)
 }
 
 /// Extract duration from audio file using ffmpeg

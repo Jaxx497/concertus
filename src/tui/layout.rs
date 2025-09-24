@@ -1,4 +1,4 @@
-use crate::ui_state::{Mode, UiState};
+use crate::ui_state::{Mode, ProgressDisplay, UiState};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 pub struct AppLayout {
@@ -11,9 +11,13 @@ pub struct AppLayout {
 
 impl AppLayout {
     pub fn new(area: Rect, state: &UiState) -> Self {
-        let wf_height = match state.display_waveform() {
-            true => 7,
-            false => 0,
+        let wf_height = if state.display_waveform() {
+            match (state.which_display_style(), area.height > 25) {
+                (ProgressDisplay::Waveform, true) => 6,
+                _ => 4,
+            }
+        } else {
+            0
         };
 
         let search_height = match state.get_mode() == Mode::Search {

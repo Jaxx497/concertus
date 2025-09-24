@@ -22,7 +22,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Flex, Rect},
     style::{Color, Style, Stylize},
     text::{Line, Span, Text},
-    widgets::{Block, BorderType, Cell, HighlightSpacing, Padding, Row, Table},
+    widgets::{Block, Cell, HighlightSpacing, Padding, Row, Table},
 };
 
 const COLUMN_SPACING: u16 = 2;
@@ -122,14 +122,16 @@ pub fn create_standard_table<'a>(
     };
 
     let block = Block::bordered()
+        .borders(theme.border_display)
+        .border_type(theme.border_type)
+        .border_style(theme.border)
         .title_top(Line::from(title).alignment(Alignment::Center))
         .title_bottom(Line::from(keymaps.fg(theme.text_faded)))
         .title_alignment(Alignment::Center)
-        .borders(theme.border_display)
-        .border_type(BorderType::Thick)
-        .border_style(theme.border)
         .padding(PADDING)
-        .bg(theme.bg);
+        .bg(theme.bg_panel);
+
+    let highlight_style = Style::new().bg(theme.bg_panel);
 
     Table::new(rows, widths)
         .block(block)
@@ -139,22 +141,22 @@ pub fn create_standard_table<'a>(
         .highlight_symbol(SELECTOR)
         .highlight_spacing(HighlightSpacing::Always)
         .row_highlight_style(
-            Style::new()
-                .fg(Color::Black)
-                .bg(theme.text_highlighted)
-                .italic(),
+            highlight_style, // Style::new()
+                             //     .fg(Color::Black)
+                             //     .bg(theme.text_highlighted)
+                             //     .italic(),
         )
 }
 
 pub fn create_empty_block(theme: &DisplayTheme, title: &str) -> Block<'static> {
     Block::bordered()
+        .borders(theme.border_display)
         .title_top(format!(" {} ", title))
         .title_alignment(Alignment::Center)
-        .borders(theme.border_display)
-        .border_type(BorderType::Thick)
+        .border_type(theme.border_type)
         .border_style(theme.border)
         .padding(PADDING)
-        .bg(theme.bg)
+        .bg(theme.bg_panel)
 }
 
 pub struct CellFactory;

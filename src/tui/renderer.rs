@@ -4,6 +4,7 @@ use super::{ErrorMsg, Progress, SearchBar, SideBar};
 use crate::UiState;
 use crate::tui::widgets::{BufferLine, PlaylistPopup};
 use crate::ui_state::PopupType;
+use ratatui::style::Stylize;
 use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
@@ -12,6 +13,10 @@ use ratatui::{
 
 pub fn render(f: &mut Frame, state: &mut UiState) {
     let layout = AppLayout::new(f.area(), &state);
+
+    Block::new()
+        .bg(state.theme.bg_global)
+        .render(f.area(), f.buffer_mut());
 
     SearchBar.render(layout.search_bar, f.buffer_mut(), state);
     SideBar.render(layout.sidebar, f.buffer_mut(), state);

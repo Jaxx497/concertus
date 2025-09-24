@@ -11,6 +11,7 @@ use ratatui::crossterm::event::KeyModifiers;
 use crate::ui_state::Mode;
 use crate::ui_state::Pane;
 use crate::ui_state::PopupType;
+use crate::ui_state::ProgressDisplay;
 
 static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from([';']));
 
@@ -72,7 +73,9 @@ pub enum Action {
     RenamePlaylistConfirm,
 
     ShiftPosition(MoveDirection),
+
     IncrementWFSmoothness(MoveDirection),
+    ToggleProgressDisplay,
 
     ClosePopup,
     PopupScrollUp,
