@@ -1,5 +1,5 @@
 use crate::{
-    domain::{QueueSong, SimpleSong, SongDatabase},
+    domain::{QueueSong, SimpleSong, SongDatabase, SongInfo},
     player::{PlaybackState, PlayerState},
     strip_win_prefix,
     ui_state::{LibraryView, Mode, UiState},
@@ -15,6 +15,7 @@ const HISTORY_CAPACITY: usize = 50;
 
 pub struct PlaybackCoordinator {
     pub queue: VecDeque<Arc<QueueSong>>,
+    pub queue_ids: HashSet<u64>,
     pub history: VecDeque<Arc<SimpleSong>>,
     pub player_state: Arc<Mutex<PlayerState>>,
 }
@@ -23,8 +24,50 @@ impl PlaybackCoordinator {
     pub fn new(player_state: Arc<Mutex<PlayerState>>) -> Self {
         PlaybackCoordinator {
             queue: VecDeque::new(),
+            queue_ids: HashSet::new(),
             history: VecDeque::new(),
             player_state,
+        }
+    }
+
+    pub fn rebuild_queue_ids(&mut self) {
+        self.queue_ids.clear();
+        self.queue.iter().for_each(|song| {
+            self.queue_ids.insert(song.get_id());
+        });
+    }
+
+    pub fn queue_push_back(&mut self, song: Arc<QueueSong>) {
+        self.queue_ids.insert(song.get_id());
+        self.queue.push_back(song);
+    }
+
+    pub fn queue_push_front(&mut self, song: Arc<QueueSong>) {
+        self.queue_ids.insert(song.get_id());
+        self.queue.push_front(song);
+    }
+
+    pub fn queue_pop_front(&mut self) -> Option<Arc<QueueSong>> {
+        if let Some(song) = self.queue.pop_front() {
+            // Check if this ID still exists elsewhere in queue
+            if !self.queue.iter().any(|s| s.get_id() == song.get_id()) {
+                self.queue_ids.remove(&song.get_id());
+            }
+            Some(song)
+        } else {
+            None
+        }
+    }
+
+    pub fn remove_from_queue(&mut self, index: usize) -> Option<Arc<QueueSong>> {
+        if let Some(song) = self.queue.remove(index) {
+            // Check if this ID still exists elsewhere in queue
+            if !self.queue.iter().any(|s| s.get_id() == song.get_id()) {
+                self.queue_ids.remove(&song.get_id());
+            }
+            Some(song)
+        } else {
+            None
         }
     }
 }
@@ -54,7 +97,7 @@ impl UiState {
         };
 
         let queue_song = self.make_playable_song(&simple_song)?;
-        self.playback.queue.push_back(queue_song);
+        self.playback.queue_push_back(queue_song);
         Ok(())
     }
 
@@ -176,7 +219,7 @@ impl UiState {
                 self.display_state
                     .table_pos
                     .selected()
-                    .and_then(|idx| self.playback.queue.remove(idx));
+                    .and_then(|idx| self.playback.remove_from_queue(idx));
             }
             _ => (),
         };
@@ -234,6 +277,7 @@ impl UiState {
                 self.playback
                     .queue
                     .retain(|qs| !removal_ids.contains(&qs.meta.id));
+                self.playback.rebuild_queue_ids();
             }
             _ => (),
         }

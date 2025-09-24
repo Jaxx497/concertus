@@ -15,21 +15,21 @@ use crate::{
     DurationStyle,
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
-    tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED, SELECTED, SELECTOR},
+    tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED, SELECTED},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
 };
 use ratatui::{
     layout::{Alignment, Constraint, Flex, Rect},
     style::{Color, Style, Stylize},
     text::{Line, Span, Text},
-    widgets::{Block, Cell, HighlightSpacing, Padding, Row, Table},
+    widgets::{Block, Cell, Padding, Row, Table},
 };
 
 const COLUMN_SPACING: u16 = 2;
 
 const PADDING: Padding = Padding {
-    left: 2,
-    right: 3,
+    left: 4,
+    right: 4,
     top: 1,
     bottom: 1,
 };
@@ -131,21 +131,19 @@ pub fn create_standard_table<'a>(
         .padding(PADDING)
         .bg(theme.bg_panel);
 
-    let highlight_style = Style::new().bg(theme.bg_panel);
+    let highlight_style = match state.get_pane() {
+        Pane::TrackList => Style::new().fg(Color::Black).bg(theme.text_highlighted),
+        _ => Style::new(),
+    };
 
     Table::new(rows, widths)
         .block(block)
         .header(header.fg(theme.text_secondary))
         .column_spacing(COLUMN_SPACING)
         .flex(Flex::Start)
-        .highlight_symbol(SELECTOR)
-        .highlight_spacing(HighlightSpacing::Always)
-        .row_highlight_style(
-            highlight_style, // Style::new()
-                             //     .fg(Color::Black)
-                             //     .bg(theme.text_highlighted)
-                             //     .italic(),
-        )
+        // .highlight_symbol(selector)
+        // .highlight_spacing(HighlightSpacing::Always)
+        .row_highlight_style(highlight_style)
 }
 
 pub fn create_empty_block(theme: &DisplayTheme, title: &str) -> Block<'static> {
@@ -166,21 +164,14 @@ impl CellFactory {
         let theme = state.get_theme(&Pane::TrackList);
 
         let is_playing = state.get_now_playing().map(|s| s.id) == Some(song.id);
-
-        let is_queued = state
-            .playback
-            .queue
-            .iter()
-            .map(|s| s.get_id())
-            .collect::<HashSet<_>>()
-            .contains(&song.id);
+        let is_queued = state.playback.queue_ids.contains(&song.id);
         let is_bulk_selected = state.get_bulk_sel().contains(song);
 
         Cell::from(if is_playing {
             MUSIC_NOTE.fg(theme.text_secondary)
         } else if is_bulk_selected {
             SELECTED.fg(theme.text_highlighted)
-        } else if is_queued {
+        } else if is_queued && !matches!(state.get_mode(), Mode::Queue) {
             QUEUED.fg(theme.text_highlighted)
         } else {
             "".into()

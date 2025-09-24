@@ -73,7 +73,7 @@ impl Concertus {
             }
 
             if self.ui.is_not_playing() {
-                if let Some(song) = self.ui.playback.queue.pop_front() {
+                if let Some(song) = self.ui.playback.queue_pop_front() {
                     self.ui.set_playback_state(PlaybackState::Transitioning);
                     if let Err(e) = self.play_song(song) {
                         self.ui.set_error(e);
@@ -158,7 +158,7 @@ impl Concertus {
     }
 
     pub(crate) fn play_next(&mut self) -> Result<()> {
-        match self.ui.playback.queue.pop_front() {
+        match self.ui.playback.queue_pop_front() {
             Some(song) => {
                 self.ui.add_to_history(Arc::clone(&song.meta));
                 self.play_song(song)?;
@@ -175,7 +175,7 @@ impl Concertus {
             Some(prev) => {
                 if let Some(now_playing) = self.ui.get_now_playing() {
                     let queue_song = self.ui.make_playable_song(&now_playing)?;
-                    self.ui.playback.queue.push_front(queue_song);
+                    self.ui.playback.queue_push_front(queue_song);
                 }
                 let queue_song = self.ui.make_playable_song(&prev)?;
                 self.play_song(queue_song)?;

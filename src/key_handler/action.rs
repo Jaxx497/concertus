@@ -164,7 +164,7 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
         }
 
         (X, Char('c')) => Some(Action::CreatePlaylist),
-        (C, Char('d')) => Some(Action::DeletePlaylist),
+        (S, Char('D')) => Some(Action::DeletePlaylist),
         _ => None,
     }
 }

@@ -87,7 +87,7 @@ These keymaps apply when the sidebar on the left is focused.
 **Playlist-View Specific**
 | Create New Playlist | `c` |
 | Rename Playlist | `r` |
-| Delete Playlist | `Ctrl` + `d` |
+| Delete Playlist | `D` |
 **Album-View Specific**
 | Toggle Album Sorting Algorithm | `Ctrl` + `h` <br> `Ctrl` + `l` |
 

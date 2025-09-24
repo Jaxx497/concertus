@@ -1,8 +1,11 @@
-use crate::ui_state::{AlbumSort, GOLD_FADED, Pane, UiState};
+use crate::{
+    tui::widgets::sidebar::create_standard_list,
+    ui_state::{AlbumSort, GOLD_FADED, Pane, UiState},
+};
 use ratatui::{
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, HighlightSpacing, List, ListItem, ListState, Padding, StatefulWidget},
+    widgets::{ListItem, ListState, StatefulWidget},
 };
 
 // album_view.rs
@@ -20,7 +23,7 @@ impl StatefulWidget for SideBarAlbum {
 
         let albums = &state.albums;
         let pane_sort = state.get_album_sort_string();
-        let pane_sort = format!("{pane_sort:5} ");
+        let pane_sort = format!(" 󰒿 {pane_sort:5} ");
 
         let selected_album_idx = state.display_state.album_pos.selected();
         let selected_artist = state.get_selected_album().map(|a| a.artist.as_str());
@@ -94,44 +97,16 @@ impl StatefulWidget for SideBarAlbum {
             }
         }
 
-        let keymaps = match state.get_pane() {
-            Pane::SideBar => Line::from(" [q] Queue Album ")
-                .centered()
-                .fg(theme.text_faded),
-            _ => Line::default(),
-        };
+        let title = Line::from(format!(" ⟪ {} Albums! ⟫ ", albums.len()));
+        let sorting = Line::from(pane_sort)
+            .right_aligned()
+            .fg(theme.text_secondary);
 
-        let block = Block::bordered()
-            .borders(theme.border_display)
-            .border_type(theme.border_type)
-            .border_style(theme.border)
-            .bg(theme.bg_panel)
-            .title_top(format!(" ⟪ {} Albums! ⟫ ", albums.len()))
-            .title_top(
-                Line::from_iter([" 󰒿 ", &pane_sort])
-                    .right_aligned()
-                    .fg(theme.text_secondary),
-            )
-            .title_bottom(Line::from(keymaps).centered().fg(theme.text_faded))
-            .padding(Padding {
-                left: 3,
-                right: 4,
-                top: 1,
-                bottom: 1,
-            });
-
-        let list = List::new(list_items)
-            .block(block)
-            .highlight_style(
-                Style::new()
-                    .fg(Color::Black)
-                    .bg(theme.text_highlighted)
-                    .italic(),
-            )
-            .scroll_padding(5)
-            .highlight_spacing(HighlightSpacing::Always);
-
-        list.render(area, buf, &mut render_state);
+        create_standard_list(list_items, (title, sorting), state).render(
+            area,
+            buf,
+            &mut render_state,
+        );
 
         // Sync offset back
         *state.display_state.album_pos.offset_mut() = render_state.offset();

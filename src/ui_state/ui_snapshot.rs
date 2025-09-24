@@ -113,7 +113,13 @@ impl UiState {
                 }
             }
 
-            self.set_mode(Mode::from_str(&snapshot.mode));
+            // Do not restore to queue mode
+            let mode_to_restore = match snapshot.mode.as_str() {
+                "queue" => "library_album",
+                _ => &snapshot.mode,
+            };
+
+            self.set_mode(Mode::from_str(mode_to_restore));
             self.set_pane(Pane::from_str(&snapshot.pane));
 
             self.playback_view.waveform_smoothing = snapshot.smoothing_factor;

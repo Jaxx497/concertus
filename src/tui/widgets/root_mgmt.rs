@@ -1,6 +1,6 @@
 use crate::{
     strip_win_prefix,
-    tui::widgets::POPUP_PADDING,
+    tui::widgets::{POPUP_PADDING, SELECTOR},
     ui_state::{GOOD_RED, SettingsMode, UiState},
 };
 use ratatui::{
@@ -87,10 +87,8 @@ fn render_roots_list(
         })
         .collect();
 
-    let theme = state.get_theme(state.get_pane());
-
     let list = List::new(items)
-        .highlight_style(Style::default().fg(Color::Black).bg(theme.text_highlighted))
+        .highlight_symbol(SELECTOR)
         .highlight_spacing(HighlightSpacing::Always);
 
     ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
