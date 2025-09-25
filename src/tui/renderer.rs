@@ -12,7 +12,7 @@ use ratatui::{
 };
 
 pub fn render(f: &mut Frame, state: &mut UiState) {
-    let layout = AppLayout::new(f.area(), &state);
+    let layout = AppLayout::new(f.area(), state);
 
     Block::new()
         .bg(state.theme.bg_global)

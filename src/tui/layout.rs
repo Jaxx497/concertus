@@ -10,10 +10,10 @@ pub struct AppLayout {
 }
 
 impl AppLayout {
-    pub fn new(area: Rect, state: &UiState) -> Self {
+    pub fn new(area: Rect, state: &mut UiState) -> Self {
         let wf_height = if state.display_waveform() {
-            match (state.which_display_style(), area.height > 25) {
-                (ProgressDisplay::Waveform, true) => 6,
+            match (state.get_progress_display(), area.height > 25) {
+                (ProgressDisplay::Waveform | ProgressDisplay::Oscilloscope, true) => 6,
                 _ => 4,
             }
         } else {

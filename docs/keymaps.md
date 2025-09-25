@@ -22,8 +22,10 @@ with the exception of searching as not to affect a user's search query.
 | Playlist View|  `2` \| `Ctrl` + `t`|
 | View Queue | `3` \| `Ctrl` + `q`|
 | Change Sidebar Size | `[` `]` |
-| Toggle Waveform View | `w` |
 | Smooth Waveform | `{` `}` |
+| Oscilloscope View | `o` |
+| Waveform View | `w` |
+| ProgressBar View | `b` |
 **General**
 | Search | `/`|
 | Open Settings | ``` ` ``` |

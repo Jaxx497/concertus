@@ -4,15 +4,18 @@ use crate::{
     domain::smooth_waveform, key_handler::MoveDirection, player::PlaybackState, ui_state::UiState,
 };
 
+#[derive(PartialEq, Eq)]
 pub enum ProgressDisplay {
     Waveform,
     ProgressBar,
+    Oscilloscope,
 }
 
 impl ProgressDisplay {
     pub fn from_str(s: &str) -> Self {
         match s {
             "progress_bar" => Self::ProgressBar,
+            "oscilloscope" => Self::Oscilloscope,
             _ => Self::Waveform,
         }
     }
@@ -23,6 +26,7 @@ impl std::fmt::Display for ProgressDisplay {
         match self {
             ProgressDisplay::Waveform => write!(f, "waveform"),
             ProgressDisplay::ProgressBar => write!(f, "progress_bar"),
+            ProgressDisplay::Oscilloscope => write!(f, "oscilloscope"),
         }
     }
 }
@@ -42,7 +46,7 @@ impl PlaybackView {
             waveform_smooth: Vec::new(),
             waveform_smoothing: 1.0,
             waveform_valid: true,
-            progress_display: ProgressDisplay::Waveform,
+            progress_display: ProgressDisplay::Oscilloscope,
         }
     }
 }
@@ -72,32 +76,73 @@ impl UiState {
     }
 
     pub fn set_waveform_invalid(&mut self) {
+        self.playback_view.waveform_valid = false;
         self.clear_waveform();
-        self.playback_view.waveform_valid = false
+        self.enable_oscilloscope();
     }
 
     pub fn waveform_is_valid(&self) -> bool {
         self.playback_view.waveform_valid
     }
 
-    pub fn which_display_style(&self) -> &ProgressDisplay {
-        if !&self.playback_view.waveform_valid {
-            return &ProgressDisplay::ProgressBar;
-        } else {
-            &self.playback_view.progress_display
+    pub fn get_progress_display(&self) -> &ProgressDisplay {
+        &self.playback_view.progress_display
+    }
+
+    pub fn set_progress_display(&mut self, display: ProgressDisplay) {
+        self.playback_view.progress_display = match display {
+            ProgressDisplay::Waveform => match !self.playback_view.waveform_valid {
+                true => {
+                    self.set_error(anyhow!("Invalid waveform! \nFallback to Oscilloscope"));
+                    ProgressDisplay::Oscilloscope
+                }
+                false => {
+                    self.disable_oscilloscope();
+                    display
+                }
+            },
+            ProgressDisplay::Oscilloscope => {
+                self.enable_oscilloscope();
+                display
+            }
+            ProgressDisplay::ProgressBar => {
+                self.disable_oscilloscope();
+                display
+            }
         }
     }
 
-    pub fn toggle_progress_display(&mut self) {
-        match self.playback_view.progress_display {
-            ProgressDisplay::Waveform => {
-                self.playback_view.progress_display = ProgressDisplay::ProgressBar
-            }
+    pub fn enable_oscilloscope(&mut self) {
+        if let Ok(mut state) = self.playback.player_state.lock() {
+            state.oscilloscope_enabled = true;
+        }
+    }
+
+    pub fn disable_oscilloscope(&mut self) {
+        if let Ok(mut state) = self.playback.player_state.lock() {
+            state.oscilloscope_enabled = false;
+            state.oscilloscope_buffer.clear(); // Free memory
+        }
+    }
+
+    pub fn get_oscilloscope_data(&self) -> Vec<f32> {
+        match self.playback.player_state.lock() {
+            Ok(state) => state.oscilloscope_buffer.iter().copied().collect(),
+            Err(_) => Vec::new(),
+        }
+    }
+
+    pub fn next_progress_display(&mut self) {
+        self.playback_view.progress_display = match self.playback_view.progress_display {
+            ProgressDisplay::Waveform => ProgressDisplay::Oscilloscope,
+            ProgressDisplay::Oscilloscope => ProgressDisplay::ProgressBar,
             ProgressDisplay::ProgressBar => {
                 if !self.playback_view.waveform_valid {
                     self.set_error(anyhow!("Invalid Waveform!\n"));
+                    ProgressDisplay::Oscilloscope
+                } else {
+                    ProgressDisplay::Waveform
                 }
-                self.playback_view.progress_display = ProgressDisplay::Waveform
             }
         }
     }

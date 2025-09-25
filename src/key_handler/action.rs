@@ -2,7 +2,9 @@ use crate::{
     REFRESH_RATE,
     app_core::Concertus,
     key_handler::*,
-    ui_state::{LibraryView, Mode, Pane, PlaylistAction, PopupType, SettingsMode, UiState},
+    ui_state::{
+        LibraryView, Mode, Pane, PlaylistAction, PopupType, ProgressDisplay, SettingsMode, UiState,
+    },
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -83,7 +85,9 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
             (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
 
-            (X, Char('w')) => Some(Action::ToggleProgressDisplay),
+            (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
+            (X, Char('o')) => Some(Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)),
+            (X, Char('b')) => Some(Action::SetProgressDisplay(ProgressDisplay::ProgressBar)),
             (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
@@ -314,7 +318,8 @@ impl Concertus {
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
             Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),
             Action::IncrementSidebarSize(x) => self.ui.adjust_sidebar_size(x),
-            Action::ToggleProgressDisplay => self.ui.toggle_progress_display(),
+            // Action::ToggleProgressDisplay => self.ui.next_progress_display(),
+            Action::SetProgressDisplay(p) => self.ui.set_progress_display(p),
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

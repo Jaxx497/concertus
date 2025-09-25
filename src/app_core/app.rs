@@ -198,6 +198,7 @@ impl Concertus {
                 self.ui.set_waveform_visual(wf);
             }
             _ => {
+                // self.ui.set_waveform_invalid();
                 let (tx, rx) = mpsc::channel();
 
                 thread::spawn(move || {

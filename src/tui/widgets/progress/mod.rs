@@ -1,9 +1,12 @@
+mod oscilloscope;
 mod progress_bar;
 mod waveform;
 use ratatui::widgets::StatefulWidget;
 
 use crate::{
-    tui::widgets::progress::{progress_bar::ProgressBar, waveform::Waveform},
+    tui::widgets::progress::{
+        oscilloscope::Oscilloscope, progress_bar::ProgressBar, waveform::Waveform,
+    },
     ui_state::{ProgressDisplay, UiState},
 };
 
@@ -17,9 +20,13 @@ impl StatefulWidget for Progress {
         state: &mut Self::State,
     ) {
         if state.get_now_playing().is_some() {
-            match (state.waveform_is_valid(), &state.which_display_style()) {
-                (true, ProgressDisplay::Waveform) => Waveform.render(area, buf, state),
-                _ => ProgressBar.render(area, buf, state),
+            match &state.get_progress_display() {
+                ProgressDisplay::ProgressBar => ProgressBar.render(area, buf, state),
+                ProgressDisplay::Waveform => match state.waveform_is_valid() {
+                    true => Waveform.render(area, buf, state),
+                    false => Oscilloscope.render(area, buf, state),
+                },
+                ProgressDisplay::Oscilloscope => Oscilloscope.render(area, buf, state),
             }
         }
     }

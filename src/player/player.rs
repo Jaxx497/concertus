@@ -1,8 +1,9 @@
 use super::{PlaybackState, PlayerState};
-use crate::{domain::QueueSong, get_readable_duration};
+use crate::{domain::QueueSong, get_readable_duration, player::TappedSource};
 use anyhow::Result;
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, decoder::builder::SeekMode};
 use std::{
+    collections::VecDeque,
     fs::File,
     io::BufReader,
     ops::Sub,
@@ -14,6 +15,7 @@ use std::{
 pub struct Player {
     sink: Sink,
     pub shared_state: Arc<Mutex<PlayerState>>,
+    pub oscillo_buffer: Arc<Mutex<VecDeque<f32>>>,
     _stream: OutputStream,
 }
 
@@ -25,6 +27,7 @@ impl Player {
         Player {
             sink,
             shared_state,
+            oscillo_buffer: Arc::new(Mutex::new(VecDeque::with_capacity(1024))),
             _stream,
         }
     }
@@ -34,8 +37,10 @@ impl Player {
     pub(crate) fn play_song(&mut self, song: &Arc<QueueSong>) -> Result<()> {
         let source = decode(song)?;
 
+        let tapped_source = TappedSource::new(source, Arc::clone(&self.shared_state));
+
         self.sink.clear();
-        self.sink.append(source);
+        self.sink.append(tapped_source);
         self.sink.play();
 
         let mut player_state = self
