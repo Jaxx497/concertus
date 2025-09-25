@@ -3,7 +3,7 @@ mod generic_tracklist;
 mod search_results;
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     sync::{Arc, LazyLock},
 };
 

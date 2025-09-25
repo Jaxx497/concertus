@@ -1,6 +1,6 @@
 use crate::{
     tui::widgets::POPUP_PADDING,
-    ui_state::{GOLD, PlaylistAction, PopupType, UiState},
+    ui_state::{DARK_GRAY, GOLD, GOOD_RED, PlaylistAction, PopupType, UiState},
 };
 use ratatui::{
     layout::{Alignment, Constraint, Layout},
@@ -81,6 +81,8 @@ fn render_add_song_popup(
         .map(|p| {
             let playlist_name = p.name.to_string();
             Line::from(playlist_name)
+                .fg(Color::Rgb(150, 150, 150))
+                .centered()
         })
         .collect::<Vec<Line>>();
 
@@ -89,14 +91,16 @@ fn render_add_song_popup(
         .title_bottom(" [Enter] / [c]reate playlist / [Esc] ")
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
-        .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
-        .bg(Color::Rgb(25, 25, 25))
+        .border_style(Style::new().fg(GOOD_RED))
+        .bg(DARK_GRAY)
         .padding(POPUP_PADDING);
 
     let list = List::new(list_items)
         .block(block)
-        .highlight_style(Style::new().fg(Color::Black).bg(GOLD));
-    ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
+        .scroll_padding(area.height as usize - 5)
+        .highlight_style(Style::new().fg(GOLD));
+
+    StatefulWidget::render(list, area, buf, &mut state.popup.selection);
 }
 
 fn render_delete_popup(

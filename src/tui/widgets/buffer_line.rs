@@ -1,7 +1,7 @@
 use crate::{
     domain::SongInfo,
     truncate_at_last_space,
-    tui::widgets::{PAUSE_ICON, SELECTED},
+    tui::widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
     ui_state::{DisplayTheme, GOLD_FADED, UiState},
 };
 use ratatui::{
@@ -43,7 +43,13 @@ impl StatefulWidget for BufferLine {
     }
 }
 
+const SEPARATOR_LEN: usize = 3;
+const MIN_TITLE_LEN: usize = 20;
+const MIN_ARTIST_LEN: usize = 15;
+
 fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
+    let song = state.get_now_playing()?;
+
     let separator = match state.is_paused() {
         true => Span::from(format!(" {PAUSE_ICON} "))
             .fg(theme.text_focused)
@@ -51,41 +57,54 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
         false => Span::from(" ✧ ").fg(theme.text_faded),
     };
 
-    if let Some(s) = state.get_now_playing() {
-        let available_width = width.saturating_sub(3); // 3 is the length of " ✧ "
+    let title = song.get_title().to_string();
+    let artist = song.get_artist().to_string();
 
-        let title = s.get_title();
-        let artist = s.get_artist();
+    let title_len = title.chars().count();
+    let artist_len = artist.chars().count();
 
-        let (final_title, final_artist) =
-            if title.chars().count() + artist.chars().count() <= available_width {
-                (title.to_string(), artist.to_string())
-            } else if title.chars().count() <= available_width * 2 / 3 {
-                // Title fits in 2/3, truncate artist
-                let artist_space = available_width.saturating_sub(title.chars().count());
-                (
-                    title.to_string(),
-                    truncate_at_last_space(artist, artist_space),
-                )
-            } else {
-                let title_space = (available_width * 3) / 5;
-                let artist_space = available_width.saturating_sub(title_space);
-                (
-                    truncate_at_last_space(title, available_width),
-                    truncate_at_last_space(artist, artist_space),
-                )
-            };
+    if width >= title_len + SEPARATOR_LEN + artist_len {
+        Some(
+            Line::from_iter([
+                Span::from(title).fg(theme.text_secondary),
+                Span::from(separator).fg(theme.text_focused),
+                Span::from(artist).fg(theme.text_faded),
+            ])
+            .centered(),
+        )
+    } else if width >= MIN_TITLE_LEN + SEPARATOR_LEN + MIN_ARTIST_LEN {
+        let available_space = width.saturating_sub(SEPARATOR_LEN);
+        let title_space = (available_space * 2) / 3;
+        let artist_space = available_space.saturating_sub(title_space);
+
+        let truncated_title = truncate_at_last_space(&title, title_space);
+        let truncated_artist = truncate_at_last_space(&artist, artist_space);
 
         Some(
             Line::from_iter([
-                Span::from(final_title).fg(theme.text_secondary),
-                Span::from(separator).fg(theme.text_focused),
-                Span::from(final_artist).fg(theme.text_faded),
+                Span::from(truncated_title).fg(theme.text_secondary),
+                separator,
+                Span::from(truncated_artist).fg(theme.text_faded),
             ])
             .centered(),
         )
     } else {
-        None
+        match state.is_paused() {
+            true => {
+                let truncated_title = truncate_at_last_space(&title, title_len - SEPARATOR_LEN);
+                Some(
+                    Line::from_iter([
+                        separator,
+                        Span::from(truncated_title).fg(theme.text_secondary),
+                    ])
+                    .centered(),
+                )
+            }
+            false => {
+                let truncated_title = truncate_at_last_space(&title, width);
+                Some(Line::from(Span::from(truncated_title).fg(theme.text_secondary)).centered())
+            }
+        }
     }
 }
 
@@ -100,6 +119,7 @@ fn get_bulk_selection(size: usize) -> Option<Line<'static>> {
     Some(output)
 }
 
+const BAD_WIDTH: usize = 22;
 fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
     let up_next = state.peek_queue()?;
 
@@ -109,25 +129,38 @@ fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
             let duration = np.duration.as_secs_f32();
             let elapsed = state.get_playback_elapsed().as_secs_f32();
 
+            // Flash when less than 3 seconds left on now_playing
             (duration - elapsed) < 3.0
         })
         .unwrap_or(false);
 
     let up_next_str = up_next.get_title();
-    let truncated = truncate_at_last_space(up_next_str, width - 12);
-    let total = state.playback.queue.len();
+
+    // [width - 5] should produce enough room to avoid overlapping with other displays
+    let truncated = truncate_at_last_space(up_next_str, width - 5);
 
     let up_next_line = match alert {
         true => Span::from(truncated).fg(GOLD_FADED).rapid_blink(),
         false => Span::from(truncated).fg(GOLD_FADED),
     };
 
-    Some(
-        Line::from_iter([
-            Span::from("Up next ✧ ").fg(theme.text_faded),
-            up_next_line,
-            format!(" [{total}] ").fg(theme.text_faded),
-        ])
-        .right_aligned(),
-    )
+    let total = state.playback.queue.len();
+    let queue_total = format!(" [{total}] ").fg(theme.text_faded);
+
+    match width < BAD_WIDTH {
+        true => Some(
+            Line::from_iter([Span::from(QUEUE_ICON).fg(theme.text_faded), queue_total])
+                .right_aligned(),
+        ),
+
+        false => Some(
+            Line::from_iter([
+                Span::from(QUEUE_ICON).fg(theme.text_faded),
+                " ".into(),
+                up_next_line,
+                queue_total,
+            ])
+            .right_aligned(),
+        ),
+    }
 }

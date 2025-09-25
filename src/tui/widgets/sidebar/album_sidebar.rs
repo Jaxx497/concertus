@@ -97,12 +97,12 @@ impl StatefulWidget for SideBarAlbum {
             }
         }
 
-        let title = Line::from(format!(" ⟪ {} Albums! ⟫ ", albums.len()));
+        let title = Line::from(format!(" ⟪ {} Albums ⟫ ", albums.len()));
         let sorting = Line::from(pane_sort)
             .right_aligned()
             .fg(theme.text_secondary);
 
-        create_standard_list(list_items, (title, sorting), state).render(
+        create_standard_list(list_items, (title, sorting), state, area).render(
             area,
             buf,
             &mut render_state,

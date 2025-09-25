@@ -7,7 +7,7 @@ use crate::ui_state::{Pane, UiState};
 
 const DARK_WHITE: Color = Color::Rgb(210, 210, 210);
 const MID_GRAY: Color = Color::Rgb(100, 100, 100);
-const DARK_GRAY: Color = Color::Rgb(25, 25, 25);
+pub const DARK_GRAY: Color = Color::Rgb(25, 25, 25);
 pub const DARK_GRAY_FADED: Color = Color::Rgb(10, 10, 10);
 pub const GOOD_RED: Color = Color::Rgb(255, 70, 70);
 pub const GOOD_RED_DARK: Color = Color::Rgb(180, 30, 30);
@@ -63,7 +63,7 @@ impl Theme {
 impl UiState {
     pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
         let border_display = Borders::ALL;
-        let border_type = BorderType::Rounded;
+        let border_type = BorderType::Thick;
 
         match pane == self.get_pane() {
             true => DisplayTheme {
@@ -89,6 +89,7 @@ impl UiState {
                 text_secondary: self.theme.text_secondary_u,
                 text_faded: self.theme.text_unfocused,
                 text_highlighted: self.theme.text_highlighted_u,
+
                 border_display,
                 border_type,
             },

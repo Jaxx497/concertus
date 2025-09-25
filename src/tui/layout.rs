@@ -43,7 +43,7 @@ impl AppLayout {
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Percentage(state.display_state.sidebar_percent),
-                Constraint::Length(1),
+                Constraint::Length(0),
                 Constraint::Fill(1),
             ])
             .areas(upper_block);

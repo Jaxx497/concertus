@@ -20,6 +20,7 @@ pub use song_window::SongTable;
 const DUR_WIDTH: u16 = 5;
 const PAUSE_ICON: &str = "󰏤";
 const SELECTOR: &str = "⮞  ";
+const QUEUE_ICON: &str = "󰐑";
 const MUSIC_NOTE: &str = "♫";
 const QUEUED: &str = "";
 const SELECTED: &str = "󱕣";
@@ -30,5 +31,5 @@ static POPUP_PADDING: ratatui::widgets::Padding = ratatui::widgets::Padding {
     left: 5,
     right: 5,
     top: 2,
-    bottom: 1,
+    bottom: 2,
 };

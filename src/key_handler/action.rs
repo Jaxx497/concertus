@@ -10,18 +10,19 @@ use std::time::Duration;
 
 use KeyCode::*;
 
-// #[rustfmt::skip]
+#[rustfmt::skip]
 pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> {
     if let Some(action) = global_commands(&key_event, &state) {
         return Some(action);
     }
 
     match state.get_input_context() {
-        InputContext::Popup(popup) => handle_popup(&key_event, &popup),
-        InputContext::TrackList(_) => handle_tracklist(&key_event, &state),
-        InputContext::AlbumView => handle_album_browser(&key_event),
-        InputContext::PlaylistView => handle_playlist_browswer(&key_event),
-        InputContext::Search => handle_search_pane(&key_event, &state),
+        InputContext::Popup(popup)  => handle_popup(&key_event, &popup),
+        InputContext::TrackList(_)  => handle_tracklist(&key_event, &state),
+        InputContext::AlbumView     => handle_album_browser(&key_event),
+        InputContext::PlaylistView  => handle_playlist_browswer(&key_event),
+        InputContext::Search        => handle_search_pane(&key_event, &state),
+
         _ => None,
     }
 }
@@ -76,8 +77,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('g')) => Some(Action::Scroll(Director::Top)),
             (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
 
-            (X, Char('[')) => Some(Action::IncrementSidebarSize(-2)),
-            (X, Char(']')) => Some(Action::IncrementSidebarSize(2)),
+            (X, Char('[')) => Some(Action::IncrementSidebarSize(-SIDEBAR_INCREMENT)),
+            (X, Char(']')) => Some(Action::IncrementSidebarSize(SIDEBAR_INCREMENT)),
 
             (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
             (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
@@ -164,7 +165,7 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
         }
 
         (X, Char('c')) => Some(Action::CreatePlaylist),
-        (S, Char('D')) => Some(Action::DeletePlaylist),
+        (C, Char('d')) => Some(Action::DeletePlaylist),
         _ => None,
     }
 }

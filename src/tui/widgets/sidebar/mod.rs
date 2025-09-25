@@ -6,6 +6,7 @@ pub use album_sidebar::SideBarAlbum;
 pub use handler::SideBarHandler;
 pub use playlist_sidebar::SideBarPlaylist;
 use ratatui::{
+    layout::Rect,
     style::{Color, Style, Stylize},
     text::Line,
     widgets::{Block, HighlightSpacing, List, ListItem, Padding},
@@ -15,7 +16,7 @@ use crate::ui_state::{LibraryView, Pane, UiState};
 
 const PADDING: Padding = Padding {
     left: 3,
-    right: 4,
+    right: 2,
     top: 1,
     bottom: 1,
 };
@@ -24,6 +25,7 @@ pub fn create_standard_list<'a>(
     list_items: Vec<ListItem<'a>>,
     titles: (Line<'static>, Line<'static>),
     state: &UiState,
+    area: Rect,
 ) -> List<'a> {
     let theme = state.get_theme(&Pane::SideBar);
 
@@ -32,9 +34,13 @@ pub fn create_standard_list<'a>(
             LibraryView::Albums => Line::from(" [q] Queue Album ")
                 .centered()
                 .fg(theme.text_faded),
-            LibraryView::Playlists => Line::from(" [c]reate 󰲸 | [D]elete 󰐓 ")
-                .centered()
-                .fg(theme.text_faded),
+            LibraryView::Playlists => {
+                let playlist_keymaps = " [c]reate 󰲸 | [C-D]elete 󰐓 ";
+                match area.width as usize + 2 < playlist_keymaps.len() {
+                    true => Line::default(),
+                    false => Line::from(playlist_keymaps).centered().fg(theme.text_faded),
+                }
+            }
         }
     } else {
         Line::default()

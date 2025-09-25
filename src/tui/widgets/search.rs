@@ -4,7 +4,7 @@ use crate::{
 };
 use ratatui::{
     style::Stylize,
-    widgets::{Block, Borders, StatefulWidget, Widget},
+    widgets::{Block, StatefulWidget, Widget},
 };
 
 pub struct SearchBar;
@@ -21,11 +21,12 @@ impl StatefulWidget for SearchBar {
         let search = state.get_search_widget();
         search.set_block(
             Block::bordered()
-                .borders(Borders::ALL)
+                .borders(theme.border_display)
                 .border_type(theme.border_type)
                 .border_style(theme.border)
                 .padding(SEARCH_PADDING)
-                .fg(theme.text_highlighted),
+                .fg(theme.text_highlighted)
+                .bg(theme.bg_panel),
         );
 
         search.render(area, buf);
