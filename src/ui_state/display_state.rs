@@ -421,7 +421,7 @@ impl UiState {
                         }
                     }
                 }
-                *self.display_state.table_pos.offset_mut() = 0;
+                // *self.display_state.table_pos.offset_mut() = 0;
             }
             Mode::Queue => {
                 self.playback.queue.make_contiguous();

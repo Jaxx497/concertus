@@ -9,12 +9,18 @@ pub struct UiSnapshot {
     pub mode: String,
     pub pane: String,
     pub album_sort: String,
+    pub sidebar_percentage: u16,
+
+    pub song_selection: Option<usize>,
     pub album_selection: Option<usize>,
     pub playlist_selection: Option<usize>,
+
+    pub song_sel_offset: usize,
+    pub album_sel_offset: usize,
+    pub playlist_sel_offset: usize,
+
     pub progress_display: String,
-    pub song_selection: Option<usize>,
     pub smoothing_factor: f32,
-    pub sidebar_percentage: u16,
 }
 
 impl UiSnapshot {
@@ -24,20 +30,23 @@ impl UiSnapshot {
             ("ui_pane", self.pane.clone()),
             ("ui_album_sort", self.album_sort.clone()),
             ("ui_smooth", format!("{:.1}", self.smoothing_factor)),
-            ("ui_sidebar_percent", format!("{}", self.sidebar_percentage)),
+            ("ui_sidebar_percent", self.sidebar_percentage.to_string()),
             ("ui_progress_display", self.progress_display.to_string()),
         ];
 
         if let Some(pos) = self.album_selection {
             pairs.push(("ui_album_pos", pos.to_string()));
+            pairs.push(("ui_album_offset", self.album_sel_offset.to_string()))
         }
 
         if let Some(pos) = self.playlist_selection {
             pairs.push(("ui_playlist_pos", pos.to_string()));
+            pairs.push(("ui_playlist_offset", self.playlist_sel_offset.to_string()))
         }
 
         if let Some(pos) = self.song_selection {
             pairs.push(("ui_song_pos", pos.to_string()));
+            pairs.push(("ui_song_offset", self.song_sel_offset.to_string()))
         }
 
         pairs
@@ -54,7 +63,10 @@ impl UiSnapshot {
                 "ui_album_sort" => snapshot.album_sort = value,
                 "ui_album_pos" => snapshot.album_selection = value.parse().ok(),
                 "ui_playlist_pos" => snapshot.playlist_selection = value.parse().ok(),
+                "ui_album_offset" => snapshot.album_sel_offset = value.parse().unwrap_or(0),
+                "ui_playlist_offset" => snapshot.playlist_sel_offset = value.parse().unwrap_or(0),
                 "ui_song_pos" => snapshot.song_selection = value.parse().ok(),
+                "ui_song_offset" => snapshot.song_sel_offset = value.parse::<usize>().unwrap_or(0),
                 "ui_smooth" => snapshot.smoothing_factor = value.parse::<f32>().unwrap_or(1.0),
                 "ui_sidebar_percent" => {
                     snapshot.sidebar_percentage = value.parse::<u16>().unwrap_or(30)
@@ -79,12 +91,18 @@ impl UiState {
             mode: self.get_mode().to_string(),
             pane: pane.to_string(),
             album_sort: self.display_state.album_sort.to_string(),
+            sidebar_percentage: self.display_state.sidebar_percent,
+
+            song_selection: self.display_state.table_pos.selected(),
             album_selection: self.display_state.album_pos.selected(),
             playlist_selection: self.display_state.playlist_pos.selected(),
+
+            song_sel_offset: self.display_state.table_pos.offset(),
+            album_sel_offset: self.display_state.album_pos.offset(),
+            playlist_sel_offset: self.display_state.playlist_pos.offset(),
+
             progress_display: self.playback_view.progress_display.to_string(),
-            song_selection: self.display_state.table_pos.selected(),
             smoothing_factor: self.playback_view.waveform_smoothing,
-            sidebar_percentage: self.display_state.sidebar_percent,
         }
     }
 
@@ -104,12 +122,14 @@ impl UiState {
             if let Some(pos) = snapshot.album_selection {
                 if pos < self.albums.len() {
                     self.display_state.album_pos.select(Some(pos));
+                    *self.display_state.album_pos.offset_mut() = snapshot.album_sel_offset
                 }
             }
 
             if let Some(pos) = snapshot.playlist_selection {
                 if pos < self.playlists.len() {
                     self.display_state.playlist_pos.select(Some(pos));
+                    *self.display_state.playlist_pos.offset_mut() = snapshot.playlist_sel_offset
                 }
             }
 
@@ -130,6 +150,7 @@ impl UiState {
             if let Some(pos) = snapshot.song_selection {
                 if pos < self.legal_songs.len() {
                     self.display_state.table_pos.select(Some(pos));
+                    *self.display_state.table_pos.offset_mut() = snapshot.song_sel_offset
                 }
             }
         }
