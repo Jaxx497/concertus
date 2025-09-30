@@ -25,20 +25,27 @@ pub struct DisplayTheme {
 
     pub border_display: Borders,
     pub border_type: BorderType,
+
+    pub progress_complete: Color,
+    pub progress_incomplete: Color,
 }
 
 pub(crate) struct Theme {
     pub bg_focused: Color,
     pub bg_unfocused: Color,
     pub bg_global: Color,
-    pub border_focused: Color,
-    pub border_unfocused: Color,
     pub text_focused: Color,
     pub text_secondary: Color,
     pub text_secondary_u: Color,
     pub text_unfocused: Color,
     pub text_highlighted: Color,
     pub text_highlighted_u: Color,
+
+    pub border_focused: Color,
+    pub border_unfocused: Color,
+
+    pub progress_complete: Color,
+    pub progress_incomplete: Color,
 }
 
 impl Theme {
@@ -46,7 +53,7 @@ impl Theme {
         Theme {
             bg_focused: DARK_GRAY,
             bg_unfocused: DARK_GRAY_FADED,
-            bg_global: DARK_GRAY,
+            bg_global: DARK_GRAY_FADED,
             text_focused: DARK_WHITE,
             text_unfocused: MID_GRAY,
             text_secondary: GOOD_RED,
@@ -56,6 +63,9 @@ impl Theme {
 
             border_focused: GOLD,
             border_unfocused: Color::Rgb(50, 50, 50),
+
+            progress_complete: GOOD_RED,
+            progress_incomplete: MID_GRAY,
         }
     }
 }
@@ -78,6 +88,9 @@ impl UiState {
 
                 border_display,
                 border_type,
+
+                progress_complete: self.theme.progress_complete,
+                progress_incomplete: self.theme.progress_incomplete,
             },
 
             false => DisplayTheme {
@@ -92,6 +105,9 @@ impl UiState {
 
                 border_display,
                 border_type,
+
+                progress_complete: self.theme.progress_complete,
+                progress_incomplete: self.theme.progress_incomplete,
             },
         }
     }

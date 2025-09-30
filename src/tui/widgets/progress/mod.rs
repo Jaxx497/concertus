@@ -1,11 +1,12 @@
 mod oscilloscope;
 mod progress_bar;
+mod timer;
 mod waveform;
 use ratatui::widgets::StatefulWidget;
 
 use crate::{
     tui::widgets::progress::{
-        oscilloscope::Oscilloscope, progress_bar::ProgressBar, waveform::Waveform,
+        oscilloscope::Oscilloscope, progress_bar::ProgressBar, timer::Timer, waveform::Waveform,
     },
     ui_state::{ProgressDisplay, UiState},
 };
@@ -28,6 +29,7 @@ impl StatefulWidget for Progress {
                 },
                 ProgressDisplay::Oscilloscope => Oscilloscope.render(area, buf, state),
             }
+            Timer.render(area, buf, state);
         }
     }
 }

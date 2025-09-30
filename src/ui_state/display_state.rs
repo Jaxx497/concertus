@@ -388,7 +388,7 @@ impl UiState {
 
         // Select song and try to visually center it
         self.display_state.table_pos.select(Some(track_idx));
-        *self.display_state.table_pos.offset_mut() = track_idx.checked_sub(20).unwrap_or(0);
+        *self.display_state.table_pos.offset_mut() = track_idx.checked_sub(7).unwrap_or(0);
 
         // Select album and try to visually center it
         self.display_state.album_pos.select(Some(album_idx));
@@ -402,27 +402,24 @@ impl UiState {
                 self.legal_songs = self.library.get_all_songs().to_vec();
                 self.sort_by_table_column();
             }
-            Mode::Library(view) => {
-                match view {
-                    LibraryView::Albums => {
-                        if let Some(idx) = self.display_state.album_pos.selected() {
-                            if let Some(album) = self.albums.get(idx) {
-                                self.legal_songs = album.tracklist.clone();
-                            }
-                        }
-                    }
-                    LibraryView::Playlists => {
-                        if let Some(idx) = self.display_state.playlist_pos.selected() {
-                            if let Some(playlist) = self.playlists.get(idx) {
-                                self.legal_songs = playlist.get_tracks()
-                            }
-                        } else {
-                            self.legal_songs.clear()
+            Mode::Library(view) => match view {
+                LibraryView::Albums => {
+                    if let Some(idx) = self.display_state.album_pos.selected() {
+                        if let Some(album) = self.albums.get(idx) {
+                            self.legal_songs = album.tracklist.clone();
                         }
                     }
                 }
-                // *self.display_state.table_pos.offset_mut() = 0;
-            }
+                LibraryView::Playlists => {
+                    if let Some(idx) = self.display_state.playlist_pos.selected() {
+                        if let Some(playlist) = self.playlists.get(idx) {
+                            self.legal_songs = playlist.get_tracks()
+                        }
+                    } else {
+                        self.legal_songs.clear()
+                    }
+                }
+            },
             Mode::Queue => {
                 self.playback.queue.make_contiguous();
                 self.legal_songs = self

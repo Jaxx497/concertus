@@ -1,13 +1,11 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::{DUR_WIDTH, WAVEFORM_WIDGET_HEIGHT},
-    ui_state::UiState,
+    tui::widgets::WAVEFORM_WIDGET_HEIGHT,
+    ui_state::{Pane, UiState},
 };
 use canvas::Context;
 use ratatui::{
-    layout::Rect,
     style::{Color, Stylize},
-    text::Text,
     widgets::{
         StatefulWidget,
         canvas::{Canvas, Rectangle},
@@ -25,36 +23,14 @@ impl StatefulWidget for Waveform {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
+        let theme = state.get_theme(&Pane::TrackList);
+
         let np = state
             .get_now_playing()
             .expect("Expected a song to be playing. [Widget: Waveform]");
 
         let waveform = state.get_waveform_visual().to_vec();
         let wf_len = waveform.len();
-
-        let x_duration = area.width - 8;
-        let y = buf.area().height
-            - match area.height {
-                0 => 1,
-                _ => area.height / 2 + 1,
-            };
-
-        let player_state = state.playback.player_state.lock().unwrap();
-        let elapsed_str = player_state.elapsed_display.as_str();
-        let duration_str = player_state.duration_display.as_str();
-
-        Text::from(elapsed_str)
-            .fg(Color::DarkGray)
-            .right_aligned()
-            .render(Rect::new(2, y, DUR_WIDTH, 1), buf);
-
-        Text::from(duration_str)
-            .fg(Color::DarkGray)
-            .right_aligned()
-            .render(Rect::new(x_duration, y, DUR_WIDTH, 1), buf);
-
-        // PREVENT DEADLOCKS
-        drop(player_state);
 
         Canvas::default()
             .x_bounds([0.0, wf_len as f64])
@@ -69,8 +45,8 @@ impl StatefulWidget for Waveform {
                 for (idx, amp) in waveform.iter().enumerate() {
                     let hgt = (*amp as f64 * WAVEFORM_WIDGET_HEIGHT).round();
                     let color = match (idx as f32 / wf_len as f32) < progress {
-                        true => Color::Rgb(170, 0, 170),
-                        false => Color::default(),
+                        true => theme.progress_complete,
+                        false => theme.progress_incomplete,
                     };
 
                     match line_mode {
@@ -79,8 +55,8 @@ impl StatefulWidget for Waveform {
                     }
                 }
             })
-            .background_color(state.theme.bg_unfocused)
-            .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
+            .background_color(theme.bg_global)
+            .block(Block::new().bg(theme.bg_global).padding(Padding {
                 left: 10,
                 right: 10,
                 top: 1,

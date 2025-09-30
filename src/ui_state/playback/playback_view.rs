@@ -36,7 +36,7 @@ pub struct PlaybackView {
     pub waveform_smooth: Vec<f32>,
     pub waveform_smoothing: f32,
     waveform_valid: bool,
-    pub progress_display: ProgressDisplay,
+    progress_display: ProgressDisplay,
 }
 
 impl PlaybackView {
@@ -78,7 +78,6 @@ impl UiState {
     pub fn set_waveform_invalid(&mut self) {
         self.playback_view.waveform_valid = false;
         self.clear_waveform();
-        self.enable_oscilloscope();
     }
 
     pub fn waveform_is_valid(&self) -> bool {
@@ -91,37 +90,15 @@ impl UiState {
 
     pub fn set_progress_display(&mut self, display: ProgressDisplay) {
         self.playback_view.progress_display = match display {
-            ProgressDisplay::Waveform => match !self.playback_view.waveform_valid {
+            ProgressDisplay::Waveform => match !self.waveform_is_valid() {
                 true => {
                     self.set_error(anyhow!("Invalid waveform! \nFallback to Oscilloscope"));
                     ProgressDisplay::Oscilloscope
                 }
-                false => {
-                    self.disable_oscilloscope();
-                    display
-                }
+                false => display,
             },
-            ProgressDisplay::Oscilloscope => {
-                self.enable_oscilloscope();
-                display
-            }
-            ProgressDisplay::ProgressBar => {
-                self.disable_oscilloscope();
-                display
-            }
-        }
-    }
-
-    pub fn enable_oscilloscope(&mut self) {
-        if let Ok(mut state) = self.playback.player_state.lock() {
-            state.oscilloscope_enabled = true;
-        }
-    }
-
-    pub fn disable_oscilloscope(&mut self) {
-        if let Ok(mut state) = self.playback.player_state.lock() {
-            state.oscilloscope_enabled = false;
-            state.oscilloscope_buffer.clear(); // Free memory
+            ProgressDisplay::Oscilloscope => display,
+            ProgressDisplay::ProgressBar => display,
         }
     }
 

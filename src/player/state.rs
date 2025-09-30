@@ -8,8 +8,6 @@ pub struct PlayerState {
     pub elapsed: Duration,
     pub player_error: Option<Error>,
     pub oscilloscope_buffer: VecDeque<f32>,
-    pub oscilloscope_enabled: bool,
-
     pub elapsed_display: String,
     pub duration_display: String,
     pub last_elapsed_secs: u64,
@@ -23,8 +21,6 @@ impl Default for PlayerState {
             state: PlaybackState::Stopped,
             player_error: None,
             oscilloscope_buffer: VecDeque::with_capacity(1024),
-            oscilloscope_enabled: false,
-
             duration_display: String::new(),
             elapsed_display: String::new(),
 

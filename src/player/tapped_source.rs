@@ -30,12 +30,10 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(sample) = self.input.next() {
             if let Ok(mut state) = self.player_state.try_lock() {
-                if state.oscilloscope_enabled {
-                    if state.oscilloscope_buffer.len() >= 1024 {
-                        state.oscilloscope_buffer.pop_front();
-                    }
-                    state.oscilloscope_buffer.push_back(sample);
+                if state.oscilloscope_buffer.len() >= 1024 {
+                    state.oscilloscope_buffer.pop_front();
                 }
+                state.oscilloscope_buffer.push_back(sample);
             }
             Some(sample)
         } else {

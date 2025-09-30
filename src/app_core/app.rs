@@ -79,7 +79,10 @@ impl Concertus {
                         self.ui.set_error(e);
                     }
                 }
-                self.ui.set_legal_songs();
+                // Responsive update to queue visual when song ends
+                if self.ui.get_mode() == Mode::Queue {
+                    self.ui.set_legal_songs();
+                }
             }
 
             let _ = self.await_waveform_completion();
@@ -198,7 +201,6 @@ impl Concertus {
                 self.ui.set_waveform_visual(wf);
             }
             _ => {
-                // self.ui.set_waveform_invalid();
                 let (tx, rx) = mpsc::channel();
 
                 thread::spawn(move || {
@@ -232,6 +234,7 @@ impl Concertus {
                     return Ok(());
                 }
             }
+            self.ui.set_waveform_invalid();
             return Err(anyhow!("Invalid waveform"));
         }
         Ok(())

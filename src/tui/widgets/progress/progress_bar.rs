@@ -1,9 +1,7 @@
-use crate::{domain::SongInfo, tui::widgets::DUR_WIDTH, ui_state::UiState};
+use crate::{domain::SongInfo, ui_state::UiState};
 use ratatui::{
-    layout::Rect,
-    style::{Color, Stylize},
+    style::Stylize,
     symbols::line,
-    text::Text,
     widgets::{Block, LineGauge, Padding, StatefulWidget, Widget},
 };
 
@@ -30,27 +28,6 @@ impl StatefulWidget for ProgressBar {
             _ => 0.0,
         };
 
-        let player_state = state.playback.player_state.lock().unwrap();
-        let elapsed_str = player_state.elapsed_display.as_str();
-        let duration_str = player_state.duration_display.as_str();
-
-        let x_duration = area.width - 8;
-        let y = buf.area().height
-            - match area.height {
-                0 => 1,
-                _ => area.height / 2,
-            };
-
-        Text::from(elapsed_str)
-            .fg(Color::DarkGray)
-            .right_aligned()
-            .render(Rect::new(2, y, DUR_WIDTH, 1), buf);
-
-        Text::from(duration_str)
-            .fg(Color::DarkGray)
-            .right_aligned()
-            .render(Rect::new(x_duration, y, DUR_WIDTH, 1), buf);
-
         let guage = LineGauge::default()
             .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
                 left: 2,
@@ -58,7 +35,8 @@ impl StatefulWidget for ProgressBar {
                 top: 2,
                 bottom: 0,
             }))
-            .filled_style(state.theme.text_secondary)
+            .filled_style(state.theme.progress_complete)
+            .unfilled_style(state.theme.progress_incomplete)
             .line_set(line::THICK)
             .label("")
             .ratio(ratio as f64);

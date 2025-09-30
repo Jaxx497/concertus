@@ -101,7 +101,7 @@ impl UiState {
             album_sel_offset: self.display_state.album_pos.offset(),
             playlist_sel_offset: self.display_state.playlist_pos.offset(),
 
-            progress_display: self.playback_view.progress_display.to_string(),
+            progress_display: self.get_progress_display().to_string(),
             smoothing_factor: self.playback_view.waveform_smoothing,
         }
     }
@@ -143,8 +143,9 @@ impl UiState {
             self.set_pane(Pane::from_str(&snapshot.pane));
 
             self.playback_view.waveform_smoothing = snapshot.smoothing_factor;
-            self.playback_view.progress_display =
-                ProgressDisplay::from_str(&snapshot.progress_display);
+
+            self.set_progress_display(ProgressDisplay::from_str(&snapshot.progress_display));
+
             self.display_state.sidebar_percent = snapshot.sidebar_percentage;
 
             if let Some(pos) = snapshot.song_selection {
