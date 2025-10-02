@@ -316,9 +316,9 @@ impl UiState {
         state.elapsed
     }
 
-    pub fn is_not_playing(&self) -> bool {
+    pub fn is_playing(&self) -> bool {
         let state = self.playback.player_state.lock().unwrap();
-        state.state == PlaybackState::Stopped
+        state.state != PlaybackState::Stopped
     }
 
     fn check_player_error(&mut self) {

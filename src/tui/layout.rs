@@ -25,7 +25,7 @@ impl AppLayout {
             false => 0,
         };
 
-        let buffer_line_height = match !state.is_not_playing() || !state.bulk_select_empty() {
+        let buffer_line_height = match state.is_playing() || !state.bulk_select_empty() {
             true => 1,
             false => 0,
         };

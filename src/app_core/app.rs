@@ -72,11 +72,17 @@ impl Concertus {
                 _ => (),
             }
 
-            if self.ui.is_not_playing() {
+            // If nothing is playing...
+            if !self.ui.is_playing() {
+                // If there is a song in the queue
                 if let Some(song) = self.ui.playback.queue_pop_front() {
                     self.ui.set_playback_state(PlaybackState::Transitioning);
                     if let Err(e) = self.play_song(song) {
                         self.ui.set_error(e);
+                    }
+                } else {
+                    if self.ui.get_mode() == Mode::Fullscreen {
+                        self.ui.revert_fullscreen();
                     }
                 }
                 // Responsive update to queue visual when song ends

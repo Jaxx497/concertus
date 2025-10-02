@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 pub struct DisplayState {
     mode: Mode,
+    mode_cached: Option<Mode>,
     pub pane: Pane,
 
     table_sort: TableSort,
@@ -30,6 +31,7 @@ impl DisplayState {
     pub fn new() -> Self {
         DisplayState {
             mode: Mode::Library(LibraryView::Albums),
+            mode_cached: None,
             pane: Pane::TrackList,
 
             table_sort: TableSort::Title,
@@ -114,6 +116,12 @@ impl UiState {
                 *self.display_state.table_pos.offset_mut() = 0;
                 self.set_legal_songs();
             }
+            Mode::Fullscreen => {
+                if self.is_playing() || !self.queue_is_empty() {
+                    self.display_state.mode_cached = Some(self.display_state.mode.to_owned());
+                    self.display_state.mode = Mode::Fullscreen
+                }
+            }
             Mode::Queue => {
                 if !self.queue_is_empty() {
                     *self.display_state.table_pos.offset_mut() = 0;
@@ -163,7 +171,7 @@ impl UiState {
                     .ok_or_else(|| anyhow!("No song selected!"))?;
                 Ok(Arc::clone(&self.legal_songs[idx]))
             }
-            Mode::QUIT => unreachable!(),
+            _ => Err(anyhow!("Should not be reachable")),
         }
     }
 
@@ -444,6 +452,15 @@ impl UiState {
         // Autoselect first entry if table_pos selection is none
         if !self.legal_songs.is_empty() && self.display_state.table_pos.selected().is_none() {
             self.display_state.table_pos.select(Some(0));
+        }
+    }
+
+    pub fn revert_fullscreen(&mut self) {
+        if matches!(self.get_mode(), Mode::Fullscreen) {
+            if let Some(mode) = &self.display_state.mode_cached {
+                self.set_mode(mode.to_owned());
+                self.display_state.mode_cached = None;
+            }
         }
     }
 }

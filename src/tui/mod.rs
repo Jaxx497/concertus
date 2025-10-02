@@ -4,11 +4,7 @@ mod widgets;
 
 pub use layout::AppLayout;
 pub use renderer::render;
-pub use widgets::ErrorMsg;
-pub use widgets::Progress;
-pub use widgets::SearchBar;
-pub use widgets::SideBarHandler as SideBar;
-pub use widgets::SongTable;
+pub use widgets::{ErrorMsg, Progress, SearchBar, SideBarHandler as SideBar, SongTable};
 
 use ratatui::widgets::Padding;
 pub(crate) const SEARCH_PADDING: Padding = Padding {

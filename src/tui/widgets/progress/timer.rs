@@ -7,7 +7,7 @@ use ratatui::{
 
 use crate::{
     tui::widgets::DUR_WIDTH,
-    ui_state::{ProgressDisplay, UiState},
+    ui_state::{Mode, ProgressDisplay, UiState},
 };
 
 pub struct Timer;
@@ -20,12 +20,19 @@ impl StatefulWidget for Timer {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let x_pos = area.width - 8;
-        let mut y_pos = buf.area().height - area.height / 2;
+        let state_mode = state.get_mode();
 
-        if let ProgressDisplay::Waveform = state.get_progress_display() {
-            y_pos -= 1
+        let x_pos = area.width - 8;
+        let mut y_pos = match matches!(state_mode, Mode::Fullscreen) {
+            false => buf.area().height - area.height / 2,
+            true => area.height - 1,
         };
+
+        if let ProgressDisplay::Waveform = state.get_progress_display()
+            && !matches!(state_mode, Mode::Fullscreen)
+        {
+            y_pos -= 1
+        }
 
         let player_state = state.playback.player_state.lock().unwrap();
         {

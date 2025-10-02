@@ -32,7 +32,7 @@ impl StatefulWidget for ProgressBar {
             .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
                 left: 2,
                 right: 2,
-                top: 2,
+                top: area.height / 2,
                 bottom: 0,
             }))
             .filled_style(state.theme.progress_complete)

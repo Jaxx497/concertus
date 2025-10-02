@@ -20,6 +20,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
 
     match state.get_input_context() {
         InputContext::Popup(popup)  => handle_popup(&key_event, &popup),
+        InputContext::Fullscreen => handle_fullscreen(&key_event),
         InputContext::TrackList(_)  => handle_tracklist(&key_event, &state),
         InputContext::AlbumView     => handle_album_browser(&key_event),
         InputContext::PlaylistView  => handle_playlist_browswer(&key_event),
@@ -31,6 +32,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
 
 fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
     let in_search = state.get_pane() == Pane::Search;
+    let fullscreen = matches!(state.get_mode(), Mode::Fullscreen);
     let popup_active = state.popup.is_open();
 
     // Works on every pane, even search
@@ -42,13 +44,12 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (C, Char('n')) => Some(Action::PlayNext),
         (C, Char('p')) => Some(Action::PlayPrev),
 
-        (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
-        (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
-        (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
-
         // Works on everything except search or popup
-        _ if (!in_search && !popup_active) => match (key.modifiers, key.code) {
+        _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
+            (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
+            (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
+            (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
             (X, Esc) => Some(Action::SoftReset),
 
             (X, Char('`')) => Some(Action::ViewSettings),
@@ -85,6 +86,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
             (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
 
+            (S, Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
             (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
             (X, Char('o')) => Some(Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)),
             (X, Char('b')) => Some(Action::SetProgressDisplay(ProgressDisplay::ProgressBar)),
@@ -187,6 +189,26 @@ fn handle_search_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (_, Char(x)) if ILLEGAL_CHARS.contains(&x) => None,
 
         _ => Some(Action::UpdateSearch(*key)),
+    }
+}
+
+fn handle_fullscreen(key: &KeyEvent) -> Option<Action> {
+    match (key.modifiers, key.code) {
+        (X, Char(' ')) => Some(Action::TogglePause),
+
+        (X, Char('n')) => Some(Action::SeekForward(SEEK_SMALL)),
+        (S, Char('N')) => Some(Action::SeekForward(SEEK_LARGE)),
+
+        (X, Char('p')) => Some(Action::SeekBack(SEEK_SMALL)),
+        (S, Char('P')) => Some(Action::SeekBack(SEEK_LARGE)),
+
+        (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
+        (X, Char('o')) => Some(Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)),
+        (X, Char('b')) => Some(Action::SetProgressDisplay(ProgressDisplay::ProgressBar)),
+        (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
+        (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
+
+        _ => Some(Action::RevertFullscreen),
     }
 }
 
@@ -320,6 +342,7 @@ impl Concertus {
             Action::IncrementSidebarSize(x) => self.ui.adjust_sidebar_size(x),
             // Action::ToggleProgressDisplay => self.ui.next_progress_display(),
             Action::SetProgressDisplay(p) => self.ui.set_progress_display(p),
+            Action::RevertFullscreen => self.ui.revert_fullscreen(),
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

@@ -1,17 +1,29 @@
-use super::widgets::Settings;
-use super::{AppLayout, widgets::SongTable};
-use super::{ErrorMsg, Progress, SearchBar, SideBar};
-use crate::UiState;
-use crate::tui::widgets::{BufferLine, PlaylistPopup};
-use crate::ui_state::PopupType;
-use ratatui::style::Stylize;
+use super::{
+    AppLayout, ErrorMsg, Progress, SearchBar, SideBar,
+    widgets::{Settings, SongTable},
+};
+use crate::{
+    UiState,
+    tui::widgets::{BufferLine, PlaylistPopup},
+    ui_state::{Mode, PopupType},
+};
 use ratatui::{
     Frame,
-    layout::{Constraint, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
+    style::Stylize,
     widgets::{Widget, *},
 };
 
 pub fn render(f: &mut Frame, state: &mut UiState) {
+    if matches!(state.get_mode(), Mode::Fullscreen) {
+        let [progress, bufferline] = get_full_screen_layout(f.area());
+
+        Progress.render(progress, f.buffer_mut(), state);
+        BufferLine.render(bufferline, f.buffer_mut(), state);
+
+        return;
+    }
+
     let layout = AppLayout::new(f.area(), state);
 
     Block::new()
@@ -56,4 +68,11 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         Constraint::Percentage((100 - percent_x) / 2),
     ])
     .split(popup_layout[1])[1]
+}
+
+fn get_full_screen_layout(area: Rect) -> [Rect; 2] {
+    Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(99), Constraint::Length(1)])
+        .areas::<2>(area)
 }

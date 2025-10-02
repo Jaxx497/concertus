@@ -9,6 +9,7 @@ pub enum LibraryView {
 pub enum Mode {
     Power,
     Library(LibraryView),
+    Fullscreen,
     Queue,
     Search,
     QUIT,
@@ -32,6 +33,7 @@ impl std::fmt::Display for Mode {
             Mode::Power => write!(f, "power"),
             Mode::Library(LibraryView::Albums) => write!(f, "library_album"),
             Mode::Library(LibraryView::Playlists) => write!(f, "library_playlist"),
+            Mode::Fullscreen => write!(f, "fullscreen"),
             Mode::Queue => write!(f, "queue"),
             Mode::Search => write!(f, "search"),
             Mode::QUIT => write!(f, "quit"),

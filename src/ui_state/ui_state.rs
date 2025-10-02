@@ -121,6 +121,7 @@ impl UiState {
         }
 
         match (self.get_mode(), self.get_pane()) {
+            (Mode::Fullscreen, _) => InputContext::Fullscreen,
             (Mode::Library(LibraryView::Albums), Pane::SideBar) => InputContext::AlbumView,
             (Mode::Library(LibraryView::Playlists), Pane::SideBar) => InputContext::PlaylistView,
             (Mode::Search, Pane::Search) => InputContext::Search,

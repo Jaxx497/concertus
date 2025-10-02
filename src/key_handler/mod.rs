@@ -80,6 +80,7 @@ pub enum Action {
 
     SetProgressDisplay(ProgressDisplay),
     ToggleProgressDisplay,
+    RevertFullscreen,
 
     ClosePopup,
     PopupScrollUp,
@@ -101,6 +102,7 @@ pub enum InputContext {
     AlbumView,
     PlaylistView,
     TrackList(Mode),
+    Fullscreen,
     Search,
     Queue,
     Popup(PopupType),
