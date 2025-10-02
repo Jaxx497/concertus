@@ -50,6 +50,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
             (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
+
             (X, Esc) => Some(Action::SoftReset),
 
             (X, Char('`')) => Some(Action::ViewSettings),
@@ -86,10 +87,13 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
             (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
 
-            (S, Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
+            (_, Char('f') | Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
             (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
             (X, Char('o')) => Some(Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)),
             (X, Char('b')) => Some(Action::SetProgressDisplay(ProgressDisplay::ProgressBar)),
+            (S, Char('W')) => Some(Action::SetFullscreen(ProgressDisplay::Waveform)),
+            (S, Char('O')) => Some(Action::SetFullscreen(ProgressDisplay::Oscilloscope)),
+            (S, Char('B')) => Some(Action::SetFullscreen(ProgressDisplay::ProgressBar)),
             (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
@@ -193,23 +197,26 @@ fn handle_search_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
 }
 
 fn handle_fullscreen(key: &KeyEvent) -> Option<Action> {
-    match (key.modifiers, key.code) {
-        (X, Char(' ')) => Some(Action::TogglePause),
+    let action = match (key.modifiers, key.code) {
+        (X, Char(' ')) => Action::TogglePause,
 
-        (X, Char('n')) => Some(Action::SeekForward(SEEK_SMALL)),
-        (S, Char('N')) => Some(Action::SeekForward(SEEK_LARGE)),
+        (X, Char('n')) => Action::SeekForward(SEEK_SMALL),
+        (S, Char('N')) => Action::SeekForward(SEEK_LARGE),
 
-        (X, Char('p')) => Some(Action::SeekBack(SEEK_SMALL)),
-        (S, Char('P')) => Some(Action::SeekBack(SEEK_LARGE)),
+        (X, Char('p')) => Action::SeekBack(SEEK_SMALL),
+        (S, Char('P')) => Action::SeekBack(SEEK_LARGE),
 
-        (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
-        (X, Char('o')) => Some(Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)),
-        (X, Char('b')) => Some(Action::SetProgressDisplay(ProgressDisplay::ProgressBar)),
-        (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
-        (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
+        (X, Char('w') | Char('W')) => Action::SetProgressDisplay(ProgressDisplay::Waveform),
+        (X, Char('o') | Char('O')) => Action::SetProgressDisplay(ProgressDisplay::Oscilloscope),
+        (X, Char('b') | Char('B')) => Action::SetProgressDisplay(ProgressDisplay::ProgressBar),
 
-        _ => Some(Action::RevertFullscreen),
-    }
+        (S, Char('{')) => Action::IncrementWFSmoothness(MoveDirection::Down),
+        (S, Char('}')) => Action::IncrementWFSmoothness(MoveDirection::Up),
+
+        _ => Action::RevertFullscreen,
+    };
+
+    Some(action)
 }
 
 fn handle_popup(key: &KeyEvent, popup: &PopupType) -> Option<Action> {
@@ -341,8 +348,9 @@ impl Concertus {
             Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),
             Action::IncrementSidebarSize(x) => self.ui.adjust_sidebar_size(x),
             // Action::ToggleProgressDisplay => self.ui.next_progress_display(),
-            Action::SetProgressDisplay(p) => self.ui.set_progress_display(p),
-            Action::RevertFullscreen => self.ui.revert_fullscreen(),
+            Action::SetProgressDisplay(p)   => self.ui.set_progress_display(p),
+            Action::SetFullscreen(p)        => self.ui.set_fullscreen(p),
+            Action::RevertFullscreen        => self.ui.revert_fullscreen(),
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

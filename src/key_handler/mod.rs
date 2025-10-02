@@ -75,11 +75,13 @@ pub enum Action {
 
     ShiftPosition(MoveDirection),
 
+    // Progress Display
     IncrementWFSmoothness(MoveDirection),
     IncrementSidebarSize(isize),
 
     SetProgressDisplay(ProgressDisplay),
     ToggleProgressDisplay,
+    SetFullscreen(ProgressDisplay),
     RevertFullscreen,
 
     ClosePopup,

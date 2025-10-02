@@ -30,7 +30,7 @@ impl StatefulWidget for ProgressBar {
 
         let guage = LineGauge::default()
             .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
-                left: 2,
+                left: 1,
                 right: 2,
                 top: area.height / 2,
                 bottom: 0,

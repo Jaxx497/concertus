@@ -66,7 +66,7 @@ impl UiState {
         self.playback_view.waveform_smooth.clear();
     }
 
-    pub fn display_waveform(&self) -> bool {
+    pub fn display_progress(&self) -> bool {
         let state = self.playback.player_state.lock().unwrap();
         state.state != PlaybackState::Stopped || !self.queue_is_empty()
     }

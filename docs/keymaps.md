@@ -18,6 +18,7 @@ with the exception of searching as not to affect a user's search query.
 | Scroll Up (5 / 25 Items) | `u` `U`|
 | Go to Top / Bottom | `g` `G` |
 **Views**
+| Fullscreen View | `F` |
 | Album View |  `1` \| `Ctrl` + `a`|
 | Playlist View|  `2` \| `Ctrl` + `t`|
 | View Queue | `3` \| `Ctrl` + `q`|

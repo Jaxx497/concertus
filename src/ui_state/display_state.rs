@@ -2,6 +2,7 @@ use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
     domain::{Album, Playlist, SimpleSong, SongInfo},
     key_handler::{Director, MoveDirection},
+    ui_state::ProgressDisplay,
 };
 use anyhow::{Result, anyhow};
 use indexmap::IndexSet;
@@ -453,6 +454,11 @@ impl UiState {
         if !self.legal_songs.is_empty() && self.display_state.table_pos.selected().is_none() {
             self.display_state.table_pos.select(Some(0));
         }
+    }
+
+    pub fn set_fullscreen(&mut self, display: ProgressDisplay) {
+        self.set_progress_display(display);
+        self.set_mode(Mode::Fullscreen);
     }
 
     pub fn revert_fullscreen(&mut self) {

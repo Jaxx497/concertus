@@ -21,6 +21,7 @@ impl StatefulWidget for Progress {
         state: &mut Self::State,
     ) {
         if state.get_now_playing().is_some() {
+            Timer.render(area, buf, state);
             match &state.get_progress_display() {
                 ProgressDisplay::ProgressBar => ProgressBar.render(area, buf, state),
                 ProgressDisplay::Waveform => match state.waveform_is_valid() {
@@ -29,7 +30,6 @@ impl StatefulWidget for Progress {
                 },
                 ProgressDisplay::Oscilloscope => Oscilloscope.render(area, buf, state),
             }
-            Timer.render(area, buf, state);
         }
     }
 }

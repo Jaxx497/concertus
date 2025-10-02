@@ -11,7 +11,7 @@ pub struct AppLayout {
 
 impl AppLayout {
     pub fn new(area: Rect, state: &mut UiState) -> Self {
-        let wf_height = if state.display_waveform() {
+        let prog_height = if state.display_progress() {
             match (state.get_progress_display(), area.height > 25) {
                 (ProgressDisplay::Waveform | ProgressDisplay::Oscilloscope, true) => 6,
                 _ => 4,
@@ -34,7 +34,7 @@ impl AppLayout {
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Min(16),
-                Constraint::Length(wf_height),
+                Constraint::Length(prog_height),
                 Constraint::Length(buffer_line_height),
             ])
             .areas(area);
