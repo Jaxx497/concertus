@@ -18,12 +18,12 @@ with the exception of searching as not to affect a user's search query.
 | Scroll Up (5 / 25 Items) | `u` `U`|
 | Go to Top / Bottom | `g` `G` |
 **Views**
-| Fullscreen View | `F` |
 | Album View |  `1` \| `Ctrl` + `a`|
 | Playlist View|  `2` \| `Ctrl` + `t`|
-| View Queue | `3` \| `Ctrl` + `q`|
+| Queue View | `3` \| `Ctrl` + `q`|
 | Change Sidebar Size | `[` `]` |
 | Smooth Waveform | `{` `}` |
+| Fullscreen Progress View | `f` |
 | Oscilloscope View | `o` |
 | Waveform View | `w` |
 | ProgressBar View | `b` |
@@ -34,9 +34,9 @@ with the exception of searching as not to affect a user's search query.
 | Clear Popup / Search | `Esc`|
 | Quit | `Ctrl` + `c`|
 
- > **Note:** The update logic is currently handled in the main thread meaning the
- UI will hang until the update is complete. This will be addressed in
- future versions.
+ > **Note:** The update logic is currently handled in the main thread meaning
+ > the UI will hang until the update is complete. This will be addressed in
+ > future versions.
 
 # Playback Keymaps
 These keymaps will work in most contexts.
@@ -50,12 +50,11 @@ These keymaps will work in most contexts.
 | Play Prev in History | `Ctrl` + `p`|
 | Stop | `Ctrl` + `s`|
 
-> **Tip:** To toggle pause while searching or in a popup, use `Ctrl` +
-> `Space`
+> **Tip:** To toggle pause while searching or in a popup, use `Ctrl` + `Space`
 
 ## Main Pane Keymaps
-The main pane is defined as the larger pane on the right where
-individual songs are displayed. 
+The main pane is defined as the larger pane on the right where individual songs
+are displayed. 
 
 | Action      | Keymap |
 | ----------- | ----------- |
@@ -72,11 +71,11 @@ individual songs are displayed.
 | Shift Song Position Down | `J` |
 | Shift Song Position Up | `K` |
 
-> **Multi-selection** enables users to select multiple songs to queue
-> or add to a playlist. Selection order is preserved.
+> **Multi-selection** enables users to select multiple songs to queue or add to
+> a playlist. Selection order is preserved.
 
-> **Playlist Shortcut:** Press `aa` on a song (or selection) to add it
-> to the most recently modified playlist, bypassing the popup. 
+> **Playlist Shortcut:** Press `aa` on a song (or selection) to add it to the
+> most recently modified playlist, bypassing the popup. 
 
 
 ## Sidebar (Album) Keymaps
@@ -94,6 +93,6 @@ These keymaps apply when the sidebar on the left is focused.
 **Album-View Specific**
 | Toggle Album Sorting Algorithm | `Ctrl` + `h` <br> `Ctrl` + `l` |
 
-> **Note:** Add an entire album or playlist to the queue by pressing
-> `q` directly from the sidebar pane. If nothing is playing, the
-> selected entity will begin playing automatically.
+> **Note:** Add an entire album or playlist to the queue by pressing `q`
+> directly from the sidebar pane. If nothing is playing, then the first element
+> of the selected entity will begin playing automatically.

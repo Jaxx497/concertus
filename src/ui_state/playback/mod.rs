@@ -1,5 +1,5 @@
 mod playback;
-mod playback_view;
+mod progress_view;
 
 pub use playback::PlaybackCoordinator;
-pub use playback_view::{PlaybackView, ProgressDisplay};
+pub use progress_view::{PlaybackView, ProgressDisplay};

@@ -16,7 +16,7 @@ use ratatui::{
 
 pub fn render(f: &mut Frame, state: &mut UiState) {
     if matches!(state.get_mode(), Mode::Fullscreen) {
-        let [progress, bufferline] = get_full_screen_layout(f.area());
+        let [progress, bufferline] = get_fullscreen_layout(f.area());
 
         Progress.render(progress, f.buffer_mut(), state);
         BufferLine.render(bufferline, f.buffer_mut(), state);
@@ -70,7 +70,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     .split(popup_layout[1])[1]
 }
 
-fn get_full_screen_layout(area: Rect) -> [Rect; 2] {
+fn get_fullscreen_layout(area: Rect) -> [Rect; 2] {
     Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(99), Constraint::Length(1)])

@@ -1,4 +1,4 @@
-# Concertus - v0.0.7a
+# Concertus - v0.0.8a
 
 Concertus is a lightweight, simple to use TUI music player written in Rust.
 
@@ -32,10 +32,9 @@ their libraries are properly tagged with a tool like
 
 1. Symphonia/Rodio Related*
     1. There are no reliable Rodio compatible OPUS decoders.
-    1. Seeking can be potentially unstable on the occasional file.
-    1. Gapless playback is not viable as of now.
-
-2. Waveforms may generate on songs that cannot be played.
+    1. Seeking can be potentially unstable.
+    1. Gapless playback is not viable.
+    1. Waveforms may generate on songs that cannot be played.
 
 > **Note:** This project is heavily reliant on the Symphonia and Rodio crates.
 Many of the playback related issues are due to upstream issues in the
@@ -46,9 +45,9 @@ crate, which may solve several of these problems in time.
 ## TODO 
 
 - Provide visual progress when scanning in songs
+- Custom themeing
 - Improved testing for various formats
 - Re-work sort-by-column approach
-- Custom themeing
 - Implement a secondary player backend (gstreamer?)
 
 ## Other

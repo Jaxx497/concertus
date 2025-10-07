@@ -28,7 +28,7 @@ pub use library::Library;
 pub use player::Player;
 
 // ~30fps
-pub const REFRESH_RATE: u64 = 33;
+pub const REFRESH_RATE: u64 = 16;
 
 /// Create a hash based on...
 ///  - date of last modification (millis)
