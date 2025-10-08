@@ -8,7 +8,7 @@ use ratatui::{
     style::{Color, Stylize},
     widgets::{
         StatefulWidget,
-        canvas::{Canvas, Rectangle},
+        canvas::{Canvas, Line, Rectangle},
         *,
     },
 };
@@ -25,6 +25,22 @@ impl StatefulWidget for Waveform {
     ) {
         let theme = state.get_theme(&Pane::TrackList);
 
+        let height = area.height as f32;
+
+        let normalized = ((height - 6.0) / 20.0).max(0.0);
+        let smoothed = normalized / (1.0 + normalized);
+        let padding_vertical = (smoothed * height * 0.45) as u16;
+
+        let padding = Padding {
+            left: 10,
+            right: 10,
+            top: match area.height > 6 {
+                true => padding_vertical,
+                false => 1,
+            },
+            bottom: padding_vertical,
+        };
+
         let np = state
             .get_now_playing()
             .expect("Expected a song to be playing. [Widget: Waveform]");
@@ -39,14 +55,19 @@ impl StatefulWidget for Waveform {
                 let duration_f32 = &np.get_duration_f32();
                 let elapsed = &state.get_playback_elapsed();
 
-                let progress = elapsed.as_secs_f32() / duration_f32;
+                let elapsed_secs = elapsed.as_secs_f32();
+                let progress = elapsed_secs / duration_f32;
+
                 let line_mode = area.width < 170;
 
                 for (idx, amp) in waveform.iter().enumerate() {
                     let hgt = (*amp as f64 * WAVEFORM_WIDGET_HEIGHT).round();
-                    let color = match (idx as f32 / wf_len as f32) < progress {
-                        true => theme.progress_complete,
-                        false => theme.progress_incomplete,
+                    let position = idx as f32 / wf_len as f32;
+
+                    let color = if position < progress {
+                        get_vibrant_color(position, elapsed_secs)
+                    } else {
+                        get_unplayed_color(position, *amp)
                     };
 
                     match line_mode {
@@ -56,12 +77,7 @@ impl StatefulWidget for Waveform {
                 }
             })
             .background_color(theme.bg_global)
-            .block(Block::new().bg(theme.bg_global).padding(Padding {
-                left: 10,
-                right: 10,
-                top: 1,
-                bottom: 0,
-            }))
+            .block(Block::new().bg(theme.bg_global).padding(padding))
             .render(area, buf)
     }
 }
@@ -69,7 +85,7 @@ impl StatefulWidget for Waveform {
 /// Lines create a more detailed and cleaner look
 /// especially when seen in smaller windows
 fn draw_waveform_line(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
-    ctx.draw(&canvas::Line {
+    ctx.draw(&Line {
         x1: idx,
         x2: idx,
         y1: hgt,
@@ -82,10 +98,25 @@ fn draw_waveform_line(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
 /// full-screen view
 fn draw_waveform_rect(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
     ctx.draw(&Rectangle {
-        x: idx as f64,
+        x: idx,
         y: hgt * -1.0,
-        width: f64::from(0.5), // This value makes the waveform cleaner on resize
-        height: hgt * 2.0,
+        width: 0.5,        // This value makes the waveform cleaner on resize
+        height: hgt * 2.0, // Rectangles are drawn from the bottom
         color,
     });
+}
+
+fn get_vibrant_color(position: f32, time: f32) -> Color {
+    let hue = (position * 360.0 + time * 300.0) % 360.0;
+    let saturation = 1.0;
+    let value = 0.9;
+
+    super::hsv_to_rgb(hue, saturation, value)
+}
+
+fn get_unplayed_color(position: f32, amplitude: f32) -> Color {
+    let hue = (position * 360.0) % 360.0;
+    let saturation = 0.4;
+    let value = 0.3 + (amplitude * 0.15);
+    super::hsv_to_rgb(hue, saturation, value)
 }

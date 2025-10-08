@@ -1,5 +1,8 @@
 use super::{PlaybackState, Player, PlayerCommand, PlayerState};
-use crate::domain::{QueueSong, SimpleSong};
+use crate::{
+    REFRESH_RATE,
+    domain::{QueueSong, SimpleSong},
+};
 use anyhow::Result;
 use std::{
     sync::{
@@ -51,7 +54,7 @@ impl PlayerController {
                     false => player.update_elapsed(),
                 }
                 // Lessen cpu intensity, but avoid stutters between songs
-                thread::sleep(Duration::from_millis(16))
+                thread::sleep(Duration::from_millis(REFRESH_RATE))
             }
         });
 

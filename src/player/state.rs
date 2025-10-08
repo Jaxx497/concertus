@@ -6,25 +6,28 @@ pub struct PlayerState {
     pub now_playing: Option<Arc<SimpleSong>>,
     pub state: PlaybackState,
     pub elapsed: Duration,
-    pub player_error: Option<Error>,
     pub oscilloscope_buffer: VecDeque<f32>,
+
+    pub last_elapsed_secs: u64,
     pub elapsed_display: String,
     pub duration_display: String,
-    pub last_elapsed_secs: u64,
+
+    pub player_error: Option<Error>,
 }
 
 impl Default for PlayerState {
     fn default() -> Self {
         PlayerState {
+            state: PlaybackState::Stopped,
             now_playing: None,
             elapsed: Duration::default(),
-            state: PlaybackState::Stopped,
-            player_error: None,
             oscilloscope_buffer: VecDeque::with_capacity(1024),
-            duration_display: String::new(),
-            elapsed_display: String::new(),
 
             last_elapsed_secs: 0,
+            elapsed_display: String::new(),
+            duration_display: String::new(),
+
+            player_error: None,
         }
     }
 }

@@ -64,6 +64,6 @@ pub fn create_standard_list<'a>(
                 .bg(theme.text_highlighted)
                 .italic(),
         )
-        .scroll_padding(7)
+        .scroll_padding((area.height as f32 * 0.15) as usize)
         .highlight_spacing(HighlightSpacing::Always)
 }

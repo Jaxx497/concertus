@@ -1,6 +1,6 @@
 use crate::ui_state::UiState;
 use ratatui::{
-    style::{Color, Stylize},
+    style::Stylize,
     widgets::{
         Block, Padding, StatefulWidget, Widget,
         canvas::{Canvas, Context, Line},
@@ -25,7 +25,7 @@ impl StatefulWidget for Oscilloscope {
         }
 
         let v_marg = match area.height > 20 {
-            true => ((area.height as f32) * 0.2) as u16,
+            true => ((area.height as f32) * 0.1) as u16,
             false => 0,
         };
 
@@ -82,7 +82,7 @@ fn draw_vibrant_gradient(ctx: &mut Context, samples: &[f32], time: f32) {
         let saturation = 1.0; // Always max saturation
         let value = 0.7 + (boosted * 0.3); // 0.7 to 1.0
 
-        let color = hsv_to_rgb(hue, saturation, value);
+        let color = super::hsv_to_rgb(hue, saturation, value);
 
         ctx.draw(&Line {
             x1,
@@ -92,25 +92,4 @@ fn draw_vibrant_gradient(ctx: &mut Context, samples: &[f32], time: f32) {
             color,
         });
     }
-}
-
-fn hsv_to_rgb(h: f32, s: f32, v: f32) -> Color {
-    let c = v * s;
-    let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
-    let m = v - c;
-
-    let (r, g, b) = match h as u16 {
-        0..=59 => (c, x, 0.0),
-        60..=119 => (x, c, 0.0),
-        120..=179 => (0.0, c, x),
-        180..=239 => (0.0, x, c),
-        240..=299 => (x, 0.0, c),
-        _ => (c, 0.0, x),
-    };
-
-    Color::Rgb(
-        ((r + m) * 255.0) as u8,
-        ((g + m) * 255.0) as u8,
-        ((b + m) * 255.0) as u8,
-    )
 }

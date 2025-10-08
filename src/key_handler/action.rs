@@ -20,7 +20,7 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
 
     match state.get_input_context() {
         InputContext::Popup(popup)  => handle_popup(&key_event, &popup),
-        InputContext::Fullscreen => handle_fullscreen(&key_event),
+        InputContext::Fullscreen    => handle_fullscreen(&key_event),
         InputContext::TrackList(_)  => handle_tracklist(&key_event, &state),
         InputContext::AlbumView     => handle_album_browser(&key_event),
         InputContext::PlaylistView  => handle_playlist_browswer(&key_event),
@@ -206,9 +206,11 @@ fn handle_fullscreen(key: &KeyEvent) -> Option<Action> {
         (X, Char('p')) => Action::SeekBack(SEEK_SMALL),
         (S, Char('P')) => Action::SeekBack(SEEK_LARGE),
 
-        (X, Char('w') | Char('W')) => Action::SetProgressDisplay(ProgressDisplay::Waveform),
-        (X, Char('o') | Char('O')) => Action::SetProgressDisplay(ProgressDisplay::Oscilloscope),
-        (X, Char('b') | Char('B')) => Action::SetProgressDisplay(ProgressDisplay::ProgressBar),
+        (X, Char('w')) | (S, Char('W')) => Action::SetProgressDisplay(ProgressDisplay::Waveform),
+        (X, Char('o')) | (S, Char('O')) => {
+            Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)
+        }
+        (X, Char('b')) | (S, Char('B')) => Action::SetProgressDisplay(ProgressDisplay::ProgressBar),
 
         (S, Char('{')) => Action::IncrementWFSmoothness(MoveDirection::Down),
         (S, Char('}')) => Action::IncrementWFSmoothness(MoveDirection::Up),
