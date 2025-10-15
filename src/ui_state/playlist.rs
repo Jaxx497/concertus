@@ -2,7 +2,7 @@ use crate::{
     domain::{Playlist, PlaylistSong},
     ui_state::{LibraryView, PopupType, UiState},
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 
 #[derive(PartialEq, Clone)]
 pub enum PlaylistAction {
@@ -55,7 +55,7 @@ impl UiState {
         let name = self.get_popup_string();
 
         if name.is_empty() {
-            return Err(anyhow!("Playlist name cannot be empty!"));
+            bail!("Playlist name cannot be empty!");
         }
 
         if self
@@ -63,7 +63,7 @@ impl UiState {
             .iter()
             .any(|p| p.name.to_lowercase() == name.to_lowercase())
         {
-            return Err(anyhow!("Playlist name already exists!"));
+            bail!("Playlist name already exists!");
         }
 
         self.db_worker.create_playlist(name)?;
@@ -92,7 +92,7 @@ impl UiState {
         let new_name = self.get_popup_string();
 
         if new_name.is_empty() {
-            return Err(anyhow!("Playlist name cannot be empty!"));
+            bail!("Playlist name cannot be empty!");
         }
 
         if self
@@ -101,7 +101,7 @@ impl UiState {
             .filter(|p| p.id != playlist.id)
             .any(|p| p.name.to_lowercase() == new_name.to_lowercase())
         {
-            return Err(anyhow!("Playlist name already exists!"));
+            bail!("Playlist name already exists!");
         }
 
         self.db_worker.rename_playlist(playlist.id, new_name)?;
@@ -159,7 +159,7 @@ impl UiState {
                 }
                 self.close_popup()
             }
-            None => return Err(anyhow!("Could not add to playlist")),
+            None => bail!("Could not add to playlist"),
         };
 
         self.get_playlists()?;
@@ -175,7 +175,7 @@ impl UiState {
         let name = self.get_popup_string();
 
         if name.is_empty() {
-            return Err(anyhow!("Playlist name cannot be empty!"));
+            bail!("Playlist name cannot be empty!");
         }
 
         if self
@@ -183,7 +183,7 @@ impl UiState {
             .iter()
             .any(|p| p.name.to_lowercase() == name.to_lowercase())
         {
-            return Err(anyhow!("Playlist name already exists!"));
+            bail!("Playlist name already exists!");
         }
 
         self.db_worker.create_playlist(name)?;

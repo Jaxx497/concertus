@@ -76,8 +76,8 @@ impl StatefulWidget for Waveform {
                     }
                 }
             })
-            .background_color(theme.bg_global)
-            .block(Block::new().bg(theme.bg_global).padding(padding))
+            .background_color(theme.bg)
+            .block(Block::new().bg(theme.bg).padding(padding))
             .render(area, buf)
     }
 }

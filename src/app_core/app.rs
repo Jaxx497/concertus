@@ -7,7 +7,7 @@ use crate::{
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use ratatui::crossterm::event::{Event, KeyEventKind};
 use std::{
     sync::{
@@ -142,7 +142,7 @@ impl Concertus {
         }
 
         if !std::fs::metadata(&song.path).is_ok() {
-            return Err(anyhow!("File not found: {}", &song.path));
+            bail!("File not found: {}", &song.path);
         }
 
         self.ui.clear_waveform();
@@ -241,7 +241,7 @@ impl Concertus {
                 }
             }
             self.ui.set_waveform_invalid();
-            return Err(anyhow!("Invalid waveform"));
+            bail!("Invalid waveform");
         }
         Ok(())
     }

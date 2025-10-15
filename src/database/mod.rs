@@ -1,4 +1,7 @@
-use crate::domain::{LongSong, SimpleSong, SongInfo};
+use crate::{
+    CONFIG_DIRECTORY, DATABASE_FILENAME,
+    domain::{LongSong, SimpleSong, SongInfo},
+};
 use anyhow::Result;
 use indexmap::IndexMap;
 use queries::*;
@@ -18,9 +21,6 @@ mod tables;
 mod worker;
 
 pub use worker::DbWorker;
-
-const CONFIG_DIRECTORY: &'static str = "Concertus";
-const DATABASE_FILENAME: &'static str = "concertus.db";
 
 pub struct Database {
     conn: Connection,

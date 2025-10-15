@@ -2,7 +2,7 @@ use super::{FileType, SongInfo};
 use crate::{
     calculate_signature, database::Database, get_readable_duration, normalize_metadata_str,
 };
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, bail};
 use std::{
     path::{Path, PathBuf},
     sync::Arc,
@@ -44,7 +44,7 @@ impl LongSong {
         let extension = path.extension();
         let format = match extension {
             Some(n) => FileType::from(n.to_str().unwrap()),
-            None => return Err(anyhow!("Unsuppored extension: {:?}", path.extension())),
+            None => bail!("Unsuppored extension: {:?}", path.extension()),
         };
 
         let src = std::fs::File::open(path)?;

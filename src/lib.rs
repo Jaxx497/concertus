@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use ratatui::crossterm::{
     ExecutableCommand,
     cursor::MoveToColumn,
@@ -27,7 +27,10 @@ pub use database::Database;
 pub use library::Library;
 pub use player::Player;
 
-// ~30fps
+// ~60fps
+pub const CONFIG_DIRECTORY: &'static str = "Concertus";
+pub const THEME_DIRECTORY: &'static str = "themes";
+pub const DATABASE_FILENAME: &'static str = "concertus.db";
 pub const REFRESH_RATE: u64 = 16;
 
 /// Create a hash based on...
@@ -147,9 +150,9 @@ pub fn expand_tilde<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
     }
 
     if path_str == "~" {
-        return Err(anyhow!(
+        bail!(
             "Setting the home directory would read every file in your system. Please provide a more specific path!"
-        ));
+        );
     }
 
     if path_str.starts_with("~") || path_str.starts_with("~\\") {

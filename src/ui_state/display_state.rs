@@ -4,7 +4,7 @@ use crate::{
     key_handler::{Director, MoveDirection},
     ui_state::ProgressDisplay,
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
@@ -160,7 +160,7 @@ impl UiState {
     pub fn get_selected_song(&mut self) -> Result<Arc<SimpleSong>> {
         if self.legal_songs.is_empty() {
             self.display_state.table_pos.select(None);
-            return Err(anyhow!("No songs to select!"));
+            bail!("No songs to select!");
         }
 
         match self.display_state.mode {

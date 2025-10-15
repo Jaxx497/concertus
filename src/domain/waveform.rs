@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::{io::Cursor, path::Path, process::Command, time::Duration};
 
@@ -34,10 +34,10 @@ fn get_audio_duration<P: AsRef<Path>>(audio_path: P) -> Result<Duration> {
         .context("Failed to execute ffprobe")?;
 
     if !output.status.success() {
-        return Err(anyhow!(
+        bail!(
             "ffprobe failed: {}",
             String::from_utf8_lossy(&output.stderr)
-        ));
+        );
     }
 
     let duration_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -54,7 +54,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
     let duration = match get_audio_duration(&audio_path) {
         Ok(d) => d,
         Err(_) => {
-            return Err(anyhow!("Could not determine audio length"));
+            bail!("Could not determine audio length");
         }
     };
 
@@ -76,8 +76,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
             "-ac",
             "1", // Convert to mono
             "-ar",
-            "22050", // Maintain resolution, half as many datapoints
-            // "44100",
+            "22050",
             "-af",
             "dynaudnorm=f=500:g=31,highpass=f=350,volume=2,bass=gain=-8:frequency=200,treble=gain=10:frequency=6000", // I wish I could explain this, but this is the best we're gonna get without having a masters in audio engineering
             "-loglevel",
@@ -91,10 +90,10 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
 
     // Check for errors
     if !output.status.success() {
-        return Err(anyhow!(
+        bail!(
             "FFmpeg conversion failed: {}",
             String::from_utf8_lossy(&output.stderr)
-        ));
+        );
     }
 
     let pcm_data = output.stdout;
@@ -110,25 +109,19 @@ fn calculate_adaptive_samples(duration: Duration) -> usize {
     let duration_secs = duration.as_secs_f32();
     let sample_rate = 44100.0; // Standard sample rate
 
-    // Calculate total samples in the file
     let total_samples = (duration_secs * sample_rate) as usize;
-
-    // Calculate base samples per point
-    // This ensures we consider at least ~10% of the audio total
     let ideal_samples = total_samples / (WF_LEN * 10);
 
-    // Clamp between min and max values
     ideal_samples.clamp(MIN_SAMPLES_PER_POINT, MAX_SAMPLES_PER_POINT)
 }
 
 /// Process raw PCM float data into a vector of f32 values
 fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<Vec<f32>> {
-    // Create a cursor to read the PCM data as 32-bit floats
     let mut cursor = Cursor::new(pcm_data);
 
-    let total_samples = pcm_data.len() / 4; // Each float is 4 bytes
+    let total_samples = pcm_data.len() / 4;
 
-    // If the file is very short, we might need to adapt our approach
+    // If the file is very short, adapt the approach
     if total_samples < WF_LEN * samples_per_point {
         return process_short_pcm(pcm_data);
     }
@@ -137,7 +130,7 @@ fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<
     let mut waveform = Vec::with_capacity(WF_LEN);
 
     for i in 0..WF_LEN {
-        let position = i * sample_step * 4; // 4 bytes per float
+        let position = i * sample_step * 4;
         if position >= pcm_data.len() {
             break;
         }
@@ -155,7 +148,6 @@ fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<
 
             match cursor.read_f32::<LittleEndian>() {
                 Ok(sample) => {
-                    // Track maximum absolute value
                     let abs_sample = sample.abs();
                     if abs_sample > max_value {
                         max_value = abs_sample;
@@ -179,7 +171,6 @@ fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<
         }
     }
 
-    // Fill additional values if necessary
     while waveform.len() < WF_LEN {
         waveform.push(0.0);
     }
@@ -200,7 +191,6 @@ fn process_short_pcm(pcm_data: &[u8]) -> Result<Vec<f32>> {
     let mut position = 0;
 
     for i in 0..WF_LEN {
-        // Calculate how many samples this section should have
         let samples_this_section = if i < extra_samples {
             samples_per_section + 1
         } else {
@@ -238,13 +228,13 @@ fn process_short_pcm(pcm_data: &[u8]) -> Result<Vec<f32>> {
 
         position += samples_this_section;
 
-        if samples_read > 0 {
-            let rms = (sum_squares / samples_read as f32).sqrt();
-            //FIXME:  let value = (rms * 0.8 + max_value * 0.2).min(1.0);
-            let value = rms.min(1.0);
-            waveform.push(value);
-        } else {
-            waveform.push(0.0);
+        match samples_read > 0 {
+            true => {
+                let rms = (sum_squares / samples_read as f32).sqrt();
+                let value = rms.min(1.0);
+                waveform.push(value);
+            }
+            false => waveform.push(0.0),
         }
     }
 
@@ -296,7 +286,7 @@ pub fn smooth_waveform(waveform: &mut Vec<f32>, smoothing_factor: f32) {
     }
 }
 
-/// Normalize the waveform to a 0.0-1.0 range with improved dynamics
+/// Normalize the waveform to a 0.0-1.0 range
 fn normalize_waveform(waveform: &mut [f32]) {
     if waveform.is_empty() {
         return;

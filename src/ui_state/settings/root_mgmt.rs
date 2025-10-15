@@ -3,7 +3,7 @@ use crate::{
     app_core::Concertus,
     ui_state::{PopupType, SettingsMode, UiState},
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Result, bail};
 use std::sync::Arc;
 
 impl UiState {
@@ -39,7 +39,7 @@ impl UiState {
         if let Some(selected) = self.popup.selection.selected() {
             let roots = self.get_roots();
             if selected >= roots.len() {
-                return Err(anyhow!("Invalid root index!"));
+                bail!("Invalid root index!");
             }
 
             let mut lib = Library::init();

@@ -1,4 +1,4 @@
-use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState, theme::Theme};
+use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState};
 use crate::{
     Library,
     database::DbWorker,
@@ -6,7 +6,7 @@ use crate::{
     key_handler::InputContext,
     player::PlayerState,
     ui_state::{
-        LibraryView, Mode, Pane, PlaybackView,
+        LibraryView, Mode, Pane, PlaybackView, ThemeConfig,
         popup::{PopupState, PopupType},
     },
 };
@@ -22,7 +22,7 @@ pub struct UiState {
     pub playback_view: PlaybackView,
 
     // Visual Elements
-    pub(crate) theme: Theme,
+    pub(crate) theme: ThemeConfig,
     pub(crate) popup: PopupState,
     pub(super) search: SearchState,
     pub(crate) display_state: DisplayState,
@@ -44,7 +44,7 @@ impl UiState {
             playback: PlaybackCoordinator::new(player_state),
             playback_view: PlaybackView::new(),
             popup: PopupState::new(),
-            theme: Theme::set_generic_theme(),
+            theme: ThemeConfig::load_or_default(),
             albums: Vec::new(),
             legal_songs: Vec::new(),
             playlists: Vec::new(),

@@ -1,9 +1,13 @@
+mod theme_config;
+mod theme_import;
+mod theme_utils;
+
+use crate::ui_state::{Pane, UiState};
 use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
 };
-
-use crate::ui_state::{Pane, UiState};
+pub use theme_config::ThemeConfig;
 
 const DARK_WHITE: Color = Color::Rgb(210, 210, 210);
 const MID_GRAY: Color = Color::Rgb(100, 100, 100);
@@ -15,9 +19,10 @@ pub const GOLD: Color = Color::Rgb(220, 220, 100);
 pub const GOLD_FADED: Color = Color::Rgb(130, 130, 60);
 
 pub struct DisplayTheme {
+    pub bg: Color,
     pub bg_panel: Color,
-    pub bg_global: Color,
     pub border: Color,
+
     pub text_focused: Color,
     pub text_secondary: Color,
     pub text_faded: Color,
@@ -30,56 +35,16 @@ pub struct DisplayTheme {
     pub progress_incomplete: Color,
 }
 
-pub(crate) struct Theme {
-    pub bg_focused: Color,
-    pub bg_unfocused: Color,
-    pub bg_global: Color,
-    pub text_focused: Color,
-    pub text_secondary: Color,
-    pub text_secondary_u: Color,
-    pub text_unfocused: Color,
-    pub text_highlighted: Color,
-    pub text_highlighted_u: Color,
-
-    pub border_focused: Color,
-    pub border_unfocused: Color,
-
-    pub progress_complete: Color,
-    pub progress_incomplete: Color,
-}
-
-impl Theme {
-    pub fn set_generic_theme() -> Theme {
-        Theme {
-            bg_focused: DARK_GRAY,
-            bg_unfocused: DARK_GRAY_FADED,
-            bg_global: DARK_GRAY_FADED,
-            text_focused: DARK_WHITE,
-            text_unfocused: MID_GRAY,
-            text_secondary: GOOD_RED,
-            text_secondary_u: GOOD_RED_DARK,
-            text_highlighted: GOLD,
-            text_highlighted_u: GOLD_FADED,
-
-            border_focused: GOLD,
-            border_unfocused: Color::Rgb(50, 50, 50),
-
-            progress_complete: GOOD_RED,
-            progress_incomplete: MID_GRAY,
-        }
-    }
-}
-
 impl UiState {
     pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
-        let border_display = Borders::ALL;
-        let border_type = BorderType::Thick;
+        let border_display = self.theme.border_display;
+        let border_type = self.theme.border_type;
 
         match pane == self.get_pane() {
             true => DisplayTheme {
-                // bg_panel: Color::default(),
+                bg: self.theme.bg_global,
+
                 bg_panel: self.theme.bg_focused,
-                bg_global: self.theme.bg_global,
                 border: self.theme.border_focused,
                 text_focused: self.theme.text_focused,
                 text_secondary: self.theme.text_secondary,
@@ -94,9 +59,9 @@ impl UiState {
             },
 
             false => DisplayTheme {
-                // bg_panel: Color::default(),
+                bg: self.theme.bg_global,
+
                 bg_panel: self.theme.bg_unfocused,
-                bg_global: self.theme.bg_global,
                 border: self.theme.border_unfocused,
                 text_focused: self.theme.text_unfocused,
                 text_secondary: self.theme.text_secondary_u,
