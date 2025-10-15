@@ -1,0 +1,23 @@
+name = "Catppuccin Latte"
+
+[colors]
+bg_global = "#eff1f5"
+bg_focused = "#e6e9ef"
+bg_unfocused = "#dce0e8"
+
+text_focused = "#4c4f69"
+text_unfocused = "#6c6f85"
+text_secondary = "#d20f39"
+text_secondary_u = "#e64553"
+text_highlighted = "#df8e1d"
+text_highlighted_u = "#fe640b"
+
+border_focused = "#1e66f5"
+border_unfocused = "#9ca0b0"
+
+progress_complete = "#d20f39"
+progress_incomplete = "#ccd0da"
+
+[borders]
+border_display = "all"
+border_type = "rounded"

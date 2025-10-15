@@ -44,9 +44,9 @@ impl StatefulWidget for SideBarAlbum {
                     let header_style = match is_selected_artist {
                         true => Style::default()
                             .fg(theme.text_highlighted)
-                            .italic()
+                            // .italic()
                             .underlined(),
-                        false => Style::default().fg(GOLD_FADED),
+                        false => Style::default().fg(theme.text_faded),
                     };
 
                     list_items.push(ListItem::new(Span::from(artist_str).style(header_style)));

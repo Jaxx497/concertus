@@ -3,13 +3,11 @@ use crate::{
     tui::widgets::WAVEFORM_WIDGET_HEIGHT,
     ui_state::{Pane, UiState},
 };
-use canvas::Context;
 use ratatui::{
     style::{Color, Stylize},
     widgets::{
-        StatefulWidget,
-        canvas::{Canvas, Line, Rectangle},
-        *,
+        Block, Padding, StatefulWidget, Widget,
+        canvas::{Canvas, Context, Line, Rectangle},
     },
 };
 
@@ -100,23 +98,23 @@ fn draw_waveform_rect(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
     ctx.draw(&Rectangle {
         x: idx,
         y: hgt * -1.0,
-        width: 0.5,        // This value makes the waveform cleaner on resize
+        width: 0.5,        // This makes the waveform cleaner on resize
         height: hgt * 2.0, // Rectangles are drawn from the bottom
         color,
     });
 }
 
 fn get_vibrant_color(position: f32, time: f32) -> Color {
-    let hue = (position * 360.0 + time * 300.0) % 360.0;
-    let saturation = 1.0;
-    let value = 0.9;
+    let h = (position * 360.0 + time * 300.0) % 360.0;
+    let s = 1.0;
+    let v = 0.9;
 
-    super::hsv_to_rgb(hue, saturation, value)
+    super::hsv_to_rgb(h, s, v)
 }
 
 fn get_unplayed_color(position: f32, amplitude: f32) -> Color {
-    let hue = (position * 360.0) % 360.0;
-    let saturation = 0.4;
-    let value = 0.3 + (amplitude * 0.15);
-    super::hsv_to_rgb(hue, saturation, value)
+    let h = (position * 360.0) % 360.0;
+    let s = 0.4;
+    let v = 0.3 + (amplitude * 0.15);
+    super::hsv_to_rgb(h, s, v)
 }

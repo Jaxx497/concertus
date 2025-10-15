@@ -1,0 +1,30 @@
+name = "Concertus Classic"
+
+[colors]
+# Background colors
+bg_global = "#0A0A0A"
+bg_focused = "#191919"
+bg_unfocused = "#0A0A0A"
+
+# Text colors
+text_focused = "#D2D2D2"
+text_unfocused = "#646464"
+text_secondary = "#FF4646"
+text_secondary_u = "#B41E1E"
+text_highlighted = "#DCDC64"
+text_highlighted_u = "#82823C"
+
+# Border colors
+border_focused = "#DCDC64"
+border_unfocused = "#323232"
+
+# Progress bar colors
+progress_complete = "#FF4646"
+progress_incomplete = "#646464"
+
+[borders]
+# Options: all, none
+border_display = "all"
+
+# Options: plain, rounded, double, thick
+border_type = "thick"

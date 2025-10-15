@@ -12,6 +12,7 @@ use ratatui::{
     widgets::{BorderType, Borders},
 };
 use std::{
+    fs,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -51,22 +52,21 @@ impl ThemeConfig {
         let theme_dir =
             dirs::config_dir().map(|dir| dir.join(CONFIG_DIRECTORY).join(THEME_DIRECTORY));
 
-        if let Some(theme_path) = theme_dir {
+        if let Some(ref theme_path) = theme_dir {
+            if let Err(_) = fs::create_dir_all(theme_path) {
+                todo!()
+            }
+
             if let Ok(entries) = theme_path.read_dir() {
                 for entry in entries.flatten() {
                     let path = entry.path();
                     println!("{:?}", path.display());
 
                     if path.extension().and_then(|s| s.to_str()) == Some("toml") {
-                        match Self::load_from_file(&path) {
-                            Ok(theme) => {
-                                println!("WE HERE");
-                                return theme;
-                            }
-                            Err(e) => println!("Error: {e}"),
+                        if let Ok(theme) = Self::load_from_file(&path) {
+                            return theme;
                         }
                     }
-                    std::thread::sleep(Duration::from_secs(1));
                 }
             }
         }
@@ -91,7 +91,8 @@ impl ThemeConfig {
             text_highlighted_u: GOLD_FADED,
 
             border_focused: GOLD,
-            border_unfocused: Color::Rgb(50, 50, 50),
+            // border_unfocused: Color::Rgb(50, 50, 50),
+            border_unfocused: DARK_GRAY,
 
             border_display: Borders::ALL,
             border_type: BorderType::Thick,
