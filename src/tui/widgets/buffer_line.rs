@@ -2,7 +2,7 @@ use crate::{
     domain::SongInfo,
     truncate_at_last_space,
     tui::widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
-    ui_state::{DisplayTheme, GOLD_FADED, UiState},
+    ui_state::{DisplayTheme, UiState},
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout},
@@ -24,7 +24,9 @@ impl StatefulWidget for BufferLine {
     ) {
         let theme = state.get_theme(state.get_pane());
 
-        Block::new().bg(state.theme.bg_unfocused).render(area, buf);
+        Block::new()
+            .bg(state.theme_manager.active.bg_unfocused)
+            .render(area, buf);
 
         let [left, center, right] = Layout::default()
             .direction(Direction::Horizontal)
@@ -37,7 +39,7 @@ impl StatefulWidget for BufferLine {
 
         let selection_count = state.get_bulk_sel().len();
 
-        get_bulk_selection(selection_count).render(left, buf);
+        get_bulk_selection(selection_count, &theme).render(left, buf);
         playing_title(state, &theme, center.width as usize).render(center, buf);
         queue_display(state, &theme, right.width as usize).render(right, buf);
     }
@@ -108,11 +110,11 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
     }
 }
 
-fn get_bulk_selection(size: usize) -> Option<Line<'static>> {
+fn get_bulk_selection(size: usize, theme: &DisplayTheme) -> Option<Line<'static>> {
     let output = match size {
         0 => return None,
         x => format!("{x:>3} {} ", SELECTED)
-            .fg(GOLD_FADED)
+            .fg(theme.text_highlighted)
             .into_left_aligned_line(),
     };
 
@@ -140,8 +142,10 @@ fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
     let truncated = truncate_at_last_space(up_next_str, width - 5);
 
     let up_next_line = match alert {
-        true => Span::from(truncated).fg(GOLD_FADED).rapid_blink(),
-        false => Span::from(truncated).fg(GOLD_FADED),
+        true => Span::from(truncated)
+            .fg(state.theme_manager.active.text_highlighted_u)
+            .rapid_blink(),
+        false => Span::from(truncated).fg(state.theme_manager.active.text_highlighted_u),
     };
 
     let total = state.playback.queue.len();

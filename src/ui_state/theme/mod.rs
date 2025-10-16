@@ -1,5 +1,6 @@
 mod theme_config;
 mod theme_import;
+mod theme_manager;
 mod theme_utils;
 
 use crate::ui_state::{Pane, UiState};
@@ -7,7 +8,9 @@ use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
 };
+
 pub use theme_config::ThemeConfig;
+pub use theme_manager::ThemeManager;
 
 const DARK_WHITE: Color = Color::Rgb(210, 210, 210);
 const MID_GRAY: Color = Color::Rgb(100, 100, 100);
@@ -37,42 +40,42 @@ pub struct DisplayTheme {
 
 impl UiState {
     pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
-        let border_display = self.theme.border_display;
-        let border_type = self.theme.border_type;
+        let border_display = self.theme_manager.active.border_display;
+        let border_type = self.theme_manager.active.border_type;
 
         match pane == self.get_pane() {
             true => DisplayTheme {
-                bg: self.theme.bg_global,
+                bg: self.theme_manager.active.bg_global,
 
-                bg_panel: self.theme.bg_focused,
-                border: self.theme.border_focused,
-                text_focused: self.theme.text_focused,
-                text_secondary: self.theme.text_secondary,
-                text_faded: self.theme.text_unfocused,
-                text_highlighted: self.theme.text_highlighted,
+                bg_panel: self.theme_manager.active.bg_focused,
+                border: self.theme_manager.active.border_focused,
+                text_focused: self.theme_manager.active.text_focused,
+                text_secondary: self.theme_manager.active.text_secondary,
+                text_faded: self.theme_manager.active.text_unfocused,
+                text_highlighted: self.theme_manager.active.text_highlighted,
 
                 border_display,
                 border_type,
 
-                progress_complete: self.theme.progress_complete,
-                progress_incomplete: self.theme.progress_incomplete,
+                progress_complete: self.theme_manager.active.progress_complete,
+                progress_incomplete: self.theme_manager.active.progress_incomplete,
             },
 
             false => DisplayTheme {
-                bg: self.theme.bg_global,
+                bg: self.theme_manager.active.bg_global,
 
-                bg_panel: self.theme.bg_unfocused,
-                border: self.theme.border_unfocused,
-                text_focused: self.theme.text_unfocused,
-                text_secondary: self.theme.text_secondary_u,
-                text_faded: self.theme.text_unfocused,
-                text_highlighted: self.theme.text_highlighted_u,
+                bg_panel: self.theme_manager.active.bg_unfocused,
+                border: self.theme_manager.active.border_unfocused,
+                text_focused: self.theme_manager.active.text_unfocused,
+                text_secondary: self.theme_manager.active.text_secondary_u,
+                text_faded: self.theme_manager.active.text_unfocused,
+                text_highlighted: self.theme_manager.active.text_highlighted_u,
 
                 border_display,
                 border_type,
 
-                progress_complete: self.theme.progress_complete,
-                progress_incomplete: self.theme.progress_incomplete,
+                progress_complete: self.theme_manager.active.progress_complete,
+                progress_incomplete: self.theme_manager.active.progress_incomplete,
             },
         }
     }

@@ -1,10 +1,10 @@
 use super::{
     AppLayout, ErrorMsg, Progress, SearchBar, SideBar,
-    widgets::{Settings, SongTable},
+    widgets::{RootManager, SongTable},
 };
 use crate::{
     UiState,
-    tui::widgets::{BufferLine, PlaylistPopup},
+    tui::widgets::{BufferLine, PlaylistPopup, ThemeManager},
     ui_state::{Mode, PopupType},
 };
 use ratatui::{
@@ -27,7 +27,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     let layout = AppLayout::new(f.area(), state);
 
     Block::new()
-        .bg(state.theme.bg_global)
+        .bg(state.theme_manager.active.bg_global)
         .render(f.area(), f.buffer_mut());
 
     SearchBar.render(layout.search_bar, f.buffer_mut(), state);
@@ -40,6 +40,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
         let popup_rect = match &state.popup.current {
             PopupType::Playlist(_) => centered_rect(35, 40, f.area()),
             PopupType::Settings(_) => centered_rect(35, 35, f.area()),
+            PopupType::ThemeManager => centered_rect(35, 35, f.area()),
             PopupType::Error(_) => centered_rect(40, 30, f.area()),
             _ => centered_rect(30, 30, f.area()),
         };
@@ -47,7 +48,9 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
         Clear.render(popup_rect, f.buffer_mut());
         match &state.popup.current {
             PopupType::Playlist(_) => PlaylistPopup.render(popup_rect, f.buffer_mut(), state),
-            PopupType::Settings(_) => Settings.render(popup_rect, f.buffer_mut(), state),
+            PopupType::Settings(_) => RootManager.render(popup_rect, f.buffer_mut(), state),
+
+            PopupType::ThemeManager => ThemeManager.render(popup_rect, f.buffer_mut(), state),
             PopupType::Error(_) => ErrorMsg.render(popup_rect, f.buffer_mut(), state),
             _ => (),
         }

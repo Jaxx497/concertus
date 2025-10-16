@@ -2,9 +2,9 @@ use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
     domain::{Album, Playlist, SimpleSong, SongInfo},
     key_handler::{Director, MoveDirection},
-    ui_state::ProgressDisplay,
+    ui_state::{PopupType, ProgressDisplay},
 };
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
@@ -533,6 +533,59 @@ impl UiState {
         match self.display_state.pane {
             Pane::TrackList => self.display_state.table_pos.select_last(),
             _ => (),
+        }
+    }
+
+    pub(crate) fn popup_scroll_up(&mut self) {
+        let popup_type = &self.popup.current;
+
+        let list_len = match popup_type {
+            PopupType::Settings(_) => self.get_roots().len(),
+            PopupType::Playlist(_) => self.playlists.len(),
+            PopupType::ThemeManager => self.theme_manager.theme_lib.len(),
+            _ => return,
+        };
+
+        if list_len > 0 {
+            let current = self.popup.selection.selected().unwrap_or(0);
+            let new_selection = match current > 0 {
+                true => current - 1,
+                false => list_len - 1, // Wrap to bottom
+            };
+            self.popup.selection.select(Some(new_selection));
+
+            if matches!(popup_type, PopupType::ThemeManager) {
+                self.switch_theme();
+            }
+        }
+    }
+
+    pub(crate) fn popup_scroll_down(&mut self) {
+        let popup_type = &self.popup.current;
+
+        let list_len = match popup_type {
+            PopupType::Settings(_) => self.get_roots().len(),
+            PopupType::Playlist(_) => self.playlists.len(),
+            PopupType::ThemeManager => self.theme_manager.theme_lib.len(),
+            _ => return,
+        };
+
+        if list_len > 0 {
+            let current = self.popup.selection.selected().unwrap_or(0);
+            let new_selection = (current + 1) % list_len; // Wrap to top
+            self.popup.selection.select(Some(new_selection));
+        }
+
+        if matches!(popup_type, PopupType::ThemeManager) {
+            self.switch_theme();
+        }
+    }
+
+    fn switch_theme(&mut self) {
+        if let Some(idx) = self.popup.selection.selected() {
+            if let Some(theme) = self.theme_manager.theme_lib.get(idx) {
+                self.theme_manager.active = theme.clone()
+            }
         }
     }
 

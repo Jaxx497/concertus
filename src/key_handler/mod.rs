@@ -75,7 +75,10 @@ pub enum Action {
 
     ShiftPosition(MoveDirection),
 
-    // Progress Display
+    // Display
+    ThemeManager,
+    ThemeConfirm,
+
     IncrementWFSmoothness(MoveDirection),
     IncrementSidebarSize(isize),
 
@@ -84,10 +87,11 @@ pub enum Action {
     SetFullscreen(ProgressDisplay),
     RevertFullscreen,
 
-    ClosePopup,
     PopupScrollUp,
     PopupScrollDown,
     PopupInput(KeyEvent),
+
+    ClosePopup,
 
     // Errors, Convenience & Other
     ViewSettings,

@@ -1,19 +1,19 @@
 use crate::{
     strip_win_prefix,
     tui::widgets::{POPUP_PADDING, SELECTOR},
-    ui_state::{GOOD_RED, SettingsMode, UiState},
+    ui_state::{Pane, SettingsMode, UiState},
 };
 use ratatui::{
     layout::{Constraint, Layout},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::Line,
     widgets::{
         Block, BorderType, HighlightSpacing, List, Padding, Paragraph, StatefulWidget, Widget, Wrap,
     },
 };
 
-pub struct Settings;
-impl StatefulWidget for Settings {
+pub struct RootManager;
+impl StatefulWidget for RootManager {
     type State = UiState;
 
     fn render(
@@ -23,6 +23,8 @@ impl StatefulWidget for Settings {
         state: &mut Self::State,
     ) {
         let settings_mode = state.get_settings_mode();
+
+        let theme = state.get_theme(&Pane::Popup);
 
         let title = match settings_mode {
             Some(SettingsMode::ViewRoots) => " Settings - Music Library Roots ",
@@ -36,8 +38,8 @@ impl StatefulWidget for Settings {
             .title_bottom(get_help_text(settings_mode))
             .title_alignment(ratatui::layout::Alignment::Center)
             .border_type(BorderType::Double)
-            .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
-            .bg(Color::Rgb(25, 25, 25))
+            .border_style(Style::new().fg(theme.border))
+            .bg(theme.bg_panel)
             .padding(POPUP_PADDING);
 
         let inner = block.inner(area);
@@ -89,6 +91,7 @@ fn render_roots_list(
 
     let list = List::new(items)
         .highlight_symbol(SELECTOR)
+        .highlight_style(state.theme_manager.active.text_highlighted)
         .highlight_spacing(HighlightSpacing::Always);
 
     ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
@@ -131,7 +134,7 @@ fn render_add_root(
     state.popup.input.render(chunks[1], buf);
 
     let example = Paragraph::new("Example: C:\\Music or /home/user/music")
-        .fg(Color::DarkGray)
+        .fg(theme.bg_panel)
         .centered();
     example.render(chunks[2], buf);
 }
@@ -141,6 +144,7 @@ fn render_remove_root(
     buf: &mut ratatui::prelude::Buffer,
     state: &UiState,
 ) {
+    let theme = state.get_theme(&Pane::Popup);
     let roots = state.get_roots();
 
     if roots.is_empty() {
@@ -158,7 +162,7 @@ fn render_remove_root(
     ))
     .wrap(Wrap { trim: true })
     .centered()
-    .fg(GOOD_RED);
+    .fg(theme.text_secondary);
 
     warning.render(area, buf);
 }

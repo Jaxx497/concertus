@@ -37,13 +37,17 @@ impl StatefulWidget for Oscilloscope {
             .paint(|ctx| {
                 draw_vibrant_gradient(ctx, &samples, elapsed);
             })
-            .background_color(state.theme.bg_unfocused)
-            .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
-                left: 1,
-                right: 1,
-                top: v_marg,
-                bottom: v_marg,
-            }))
+            .background_color(state.theme_manager.active.bg_unfocused)
+            .block(
+                Block::new()
+                    .bg(state.theme_manager.active.bg_unfocused)
+                    .padding(Padding {
+                        left: 1,
+                        right: 1,
+                        top: v_marg,
+                        bottom: v_marg,
+                    }),
+            )
             .render(area, buf);
     }
 }

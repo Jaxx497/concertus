@@ -29,14 +29,18 @@ impl StatefulWidget for ProgressBar {
         };
 
         let guage = LineGauge::default()
-            .block(Block::new().bg(state.theme.bg_unfocused).padding(Padding {
-                left: 1,
-                right: 2,
-                top: (area.height / 2),
-                bottom: 0,
-            }))
+            .block(
+                Block::new()
+                    .bg(state.theme_manager.active.bg_unfocused)
+                    .padding(Padding {
+                        left: 1,
+                        right: 2,
+                        top: (area.height / 2),
+                        bottom: 0,
+                    }),
+            )
             .filled_style(get_vibrant_color(ratio, elapsed))
-            .unfilled_style(state.theme.progress_incomplete)
+            .unfilled_style(state.theme_manager.active.progress_incomplete)
             .line_set(line::THICK)
             .label("")
             .ratio(ratio as f64);

@@ -1,6 +1,6 @@
 use crate::{
     tui::widgets::POPUP_PADDING,
-    ui_state::{DARK_GRAY, GOLD, GOOD_RED, PlaylistAction, PopupType, UiState},
+    ui_state::{Pane, PlaylistAction, PopupType, UiState},
 };
 use ratatui::{
     layout::{Alignment, Constraint, Layout},
@@ -37,13 +37,14 @@ fn render_create_popup(
     buf: &mut ratatui::prelude::Buffer,
     state: &mut UiState,
 ) {
+    let theme = state.get_theme(&Pane::Popup);
     let block = Block::bordered()
         .title(" Create New Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
-        .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
-        .bg(Color::Rgb(25, 25, 25))
+        .border_style(Style::new().fg(theme.border))
+        .bg(theme.bg_panel)
         .padding(POPUP_PADDING);
 
     let inner = block.inner(area);
@@ -63,10 +64,13 @@ fn render_create_popup(
     state.popup.input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
-            .fg(Color::Rgb(220, 220, 100))
+            .fg(theme.border)
             .padding(Padding::horizontal(1)),
     );
-    state.popup.input.set_style(Style::new().fg(Color::White));
+    state
+        .popup
+        .input
+        .set_style(Style::new().fg(theme.text_focused));
     state.popup.input.render(chunks[2], buf);
 }
 
@@ -75,14 +79,13 @@ fn render_add_song_popup(
     buf: &mut ratatui::prelude::Buffer,
     state: &mut UiState,
 ) {
+    let theme = state.get_theme(&Pane::Popup);
     let list_items = state
         .playlists
         .iter()
         .map(|p| {
             let playlist_name = p.name.to_string();
-            Line::from(playlist_name)
-                .fg(Color::Rgb(150, 150, 150))
-                .centered()
+            Line::from(playlist_name).fg(theme.text_faded).centered()
         })
         .collect::<Vec<Line>>();
 
@@ -91,14 +94,14 @@ fn render_add_song_popup(
         .title_bottom(" [Enter] / [c]reate playlist / [Esc] ")
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
-        .border_style(Style::new().fg(GOOD_RED))
-        .bg(DARK_GRAY)
+        .border_style(Style::new().fg(theme.text_secondary))
+        .bg(theme.bg_panel)
         .padding(POPUP_PADDING);
 
     let list = List::new(list_items)
         .block(block)
         .scroll_padding(area.height as usize - 5)
-        .highlight_style(Style::new().fg(GOLD));
+        .highlight_style(Style::new().fg(theme.text_highlighted));
 
     StatefulWidget::render(list, area, buf, &mut state.popup.selection);
 }
@@ -108,13 +111,14 @@ fn render_delete_popup(
     buf: &mut ratatui::prelude::Buffer,
     state: &mut UiState,
 ) {
+    let theme = state.get_theme(&Pane::Popup);
     let block = Block::bordered()
         .title(format!(" Delete Playlist?? "))
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
-        .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
-        .bg(Color::Rgb(25, 25, 25))
+        .border_style(Style::new().fg(theme.border))
+        .bg(theme.bg_panel)
         .padding(POPUP_PADDING);
 
     if let Some(p) = state.get_selected_playlist() {
@@ -131,13 +135,14 @@ fn render_rename_popup(
     buf: &mut ratatui::prelude::Buffer,
     state: &mut UiState,
 ) {
+    let theme = state.get_theme(&Pane::Popup);
     let block = Block::bordered()
         .title(" Rename Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Double)
-        .border_style(Style::new().fg(Color::Rgb(255, 70, 70)))
-        .bg(Color::Rgb(25, 25, 25))
+        .border_style(Style::new().fg(theme.border))
+        .bg(theme.bg_panel)
         .padding(POPUP_PADDING);
 
     let inner = block.inner(area);
@@ -159,7 +164,7 @@ fn render_rename_popup(
         state.popup.input.set_block(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .fg(Color::Rgb(220, 220, 100))
+                .fg(theme.text_focused)
                 .padding(Padding::horizontal(1)),
         );
 

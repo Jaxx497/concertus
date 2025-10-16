@@ -1,22 +1,15 @@
-use crate::{
-    CONFIG_DIRECTORY, THEME_DIRECTORY,
-    ui_state::theme::{
-        self,
-        theme_import::ThemeImport,
-        theme_utils::{parse_border_type, parse_borders, parse_color},
-    },
+use crate::ui_state::theme::{
+    theme_import::ThemeImport,
+    theme_utils::{parse_border_type, parse_borders, parse_color},
 };
 use anyhow::Result;
 use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
 };
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::path::Path;
 
+#[derive(Clone)]
 pub struct ThemeConfig {
     pub name: String,
 
@@ -48,31 +41,6 @@ impl ThemeConfig {
         Self::try_from(&config)
     }
 
-    pub fn load_or_default() -> ThemeConfig {
-        let theme_dir =
-            dirs::config_dir().map(|dir| dir.join(CONFIG_DIRECTORY).join(THEME_DIRECTORY));
-
-        if let Some(ref theme_path) = theme_dir {
-            if let Err(_) = fs::create_dir_all(theme_path) {
-                todo!()
-            }
-
-            if let Ok(entries) = theme_path.read_dir() {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    println!("{:?}", path.display());
-
-                    if path.extension().and_then(|s| s.to_str()) == Some("toml") {
-                        if let Ok(theme) = Self::load_from_file(&path) {
-                            return theme;
-                        }
-                    }
-                }
-            }
-        }
-        Self::set_generic_theme()
-    }
-
     pub fn set_generic_theme() -> ThemeConfig {
         use super::*;
 
@@ -91,7 +59,6 @@ impl ThemeConfig {
             text_highlighted_u: GOLD_FADED,
 
             border_focused: GOLD,
-            // border_unfocused: Color::Rgb(50, 50, 50),
             border_unfocused: DARK_GRAY,
 
             border_display: Borders::ALL,

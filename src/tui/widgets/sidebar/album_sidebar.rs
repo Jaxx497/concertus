@@ -1,6 +1,6 @@
 use crate::{
     tui::widgets::sidebar::create_standard_list,
-    ui_state::{AlbumSort, GOLD_FADED, Pane, UiState},
+    ui_state::{AlbumSort, Pane, UiState},
 };
 use ratatui::{
     style::{Style, Stylize},

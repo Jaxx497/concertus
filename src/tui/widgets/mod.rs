@@ -1,18 +1,14 @@
 mod buffer_line;
-mod error;
-mod playlist_popup;
+mod popups;
 mod progress;
-mod root_mgmt;
 mod search;
 mod sidebar;
 mod song_window;
 mod tracklist;
 
 pub use buffer_line::BufferLine;
-pub use error::ErrorMsg;
-pub use playlist_popup::PlaylistPopup;
+pub use popups::{ErrorMsg, PlaylistPopup, RootManager, ThemeManager};
 pub use progress::Progress;
-pub use root_mgmt::Settings;
 pub use search::SearchBar;
 pub use sidebar::SideBarHandler;
 pub use song_window::SongTable;

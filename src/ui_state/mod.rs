@@ -1,26 +1,20 @@
-mod album_sort;
 mod display_state;
-mod mode;
-mod pane;
+mod domain;
 mod playback;
 mod playlist;
 mod popup;
 mod search_state;
 mod settings;
-mod table_sort;
 mod theme;
 mod ui_snapshot;
 mod ui_state;
 
-pub use album_sort::AlbumSort;
 pub use display_state::DisplayState;
-pub use mode::{LibraryView, Mode};
-pub use pane::Pane;
+pub use domain::{AlbumSort, LibraryView, Mode, Pane, TableSort};
 pub use playback::{PlaybackView, ProgressDisplay};
 pub use playlist::PlaylistAction;
 pub use popup::PopupType;
 pub use settings::SettingsMode;
-pub use table_sort::TableSort;
 pub use theme::DisplayTheme;
 pub use ui_snapshot::UiSnapshot;
 pub use ui_state::UiState;

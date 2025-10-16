@@ -6,7 +6,7 @@ use crate::{
     key_handler::InputContext,
     player::PlayerState,
     ui_state::{
-        LibraryView, Mode, Pane, PlaybackView, ThemeConfig,
+        LibraryView, Mode, Pane, PlaybackView, ThemeManager,
         popup::{PopupState, PopupType},
     },
 };
@@ -22,7 +22,7 @@ pub struct UiState {
     pub playback_view: PlaybackView,
 
     // Visual Elements
-    pub(crate) theme: ThemeConfig,
+    pub(crate) theme_manager: ThemeManager,
     pub(crate) popup: PopupState,
     pub(super) search: SearchState,
     pub(crate) display_state: DisplayState,
@@ -44,7 +44,7 @@ impl UiState {
             playback: PlaybackCoordinator::new(player_state),
             playback_view: PlaybackView::new(),
             popup: PopupState::new(),
-            theme: ThemeConfig::load_or_default(),
+            theme_manager: ThemeManager::new(),
             albums: Vec::new(),
             legal_songs: Vec::new(),
             playlists: Vec::new(),

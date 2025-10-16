@@ -1,10 +1,10 @@
 use crate::{
-    REFRESH_RATE,
     app_core::Concertus,
     key_handler::*,
     ui_state::{
         LibraryView, Mode, Pane, PlaylistAction, PopupType, ProgressDisplay, SettingsMode, UiState,
     },
+    REFRESH_RATE,
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -47,7 +47,9 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         // Works on everything except search or popup
         _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
-            (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
+            (C, Char('t')) => Some(Action::ThemeManager),
+
+            (C, Char('e')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
             (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
 
@@ -225,6 +227,7 @@ fn handle_popup(key: &KeyEvent, popup: &PopupType) -> Option<Action> {
     match popup {
         PopupType::Settings(s) => root_manager(key, s),
         PopupType::Playlist(p) => handle_playlist(key, p),
+        PopupType::ThemeManager => handle_themeing(key),
         PopupType::Error(_) => Some(Action::ClosePopup),
         _ => None,
     }
@@ -286,6 +289,14 @@ fn handle_playlist(key: &KeyEvent, variant: &PlaylistAction) -> Option<Action> {
             Enter => Some(Action::RenamePlaylistConfirm),
             _ => Some(Action::PopupInput(*key)),
         },
+    }
+}
+
+fn handle_themeing(key: &KeyEvent) -> Option<Action> {
+    match key.code {
+        Up | Char('k') => Some(Action::PopupScrollUp),
+        Down | Char('j') => Some(Action::PopupScrollDown),
+        _ => Some(Action::ClosePopup),
     }
 }
 
@@ -354,6 +365,16 @@ impl Concertus {
             Action::SetFullscreen(p)        => self.ui.set_fullscreen(p),
             Action::RevertFullscreen        => self.ui.revert_fullscreen(),
 
+            Action::ThemeManager => self.ui.open_theme_manager(),
+            // Action::ThemeConfirm => {
+            //     if let Some(idx) = self.ui.popup.selection.selected() {
+            //         let new_theme = self.ui.theme_manager.theme_lib.get(idx).unwrap();
+            //         self.ui.theme_manager.active = new_theme.clone()
+            //
+            //     }
+
+            // }
+
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),
             Action::ClosePopup      => self.ui.close_popup(),
@@ -362,8 +383,8 @@ impl Concertus {
             Action::QUIT            => self.ui.set_mode(Mode::QUIT),
 
             Action::ViewSettings    => self.activate_settings(),
-            Action::PopupScrollUp   => self.popup_scroll_up(),
-            Action::PopupScrollDown => self.popup_scroll_down(),
+            Action::PopupScrollUp   => self.ui.popup_scroll_up(),
+            Action::PopupScrollDown => self.ui.popup_scroll_down(),
             Action::RootAdd         => self.settings_add_root(),
             Action::RootRemove      => self.settings_remove_root(),
             Action::RootConfirm     => self.settings_root_confirm()?,

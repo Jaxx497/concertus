@@ -77,38 +77,6 @@ impl Concertus {
             .show_popup(PopupType::Settings(SettingsMode::ViewRoots))
     }
 
-    pub(crate) fn popup_scroll_up(&mut self) {
-        let list_len = match self.ui.popup.current {
-            PopupType::Settings(_) => self.ui.get_roots().len(),
-            PopupType::Playlist(_) => self.ui.playlists.len(),
-            _ => return,
-        };
-
-        if list_len > 0 {
-            let current = self.ui.popup.selection.selected().unwrap_or(0);
-            let new_selection = if current > 0 {
-                current - 1
-            } else {
-                list_len - 1 // Wrap to bottom
-            };
-            self.ui.popup.selection.select(Some(new_selection));
-        }
-    }
-
-    pub(crate) fn popup_scroll_down(&mut self) {
-        let list_len = match self.ui.popup.current {
-            PopupType::Settings(_) => self.ui.get_roots().len(),
-            PopupType::Playlist(_) => self.ui.playlists.len(),
-            _ => return,
-        };
-
-        if list_len > 0 {
-            let current = self.ui.popup.selection.selected().unwrap_or(0);
-            let new_selection = (current + 1) % list_len; // Wrap to top
-            self.ui.popup.selection.select(Some(new_selection));
-        }
-    }
-
     pub(crate) fn settings_add_root(&mut self) {
         self.ui
             .show_popup(PopupType::Settings(SettingsMode::AddRoot));

@@ -137,7 +137,7 @@ impl UiState {
 
     pub fn add_to_playlist_popup(&mut self) {
         self.popup.selection.select_first();
-        self.show_popup(super::PopupType::Playlist(PlaylistAction::AddSong));
+        self.show_popup(PopupType::Playlist(PlaylistAction::AddSong));
     }
 
     pub fn add_to_playlist(&mut self) -> Result<()> {

@@ -11,6 +11,8 @@ pub struct UiSnapshot {
     pub album_sort: String,
     pub sidebar_percentage: u16,
 
+    pub theme_name: String,
+
     pub song_selection: Option<usize>,
     pub album_selection: Option<usize>,
     pub playlist_selection: Option<usize>,
@@ -29,6 +31,7 @@ impl UiSnapshot {
             ("ui_mode", self.mode.clone()),
             ("ui_pane", self.pane.clone()),
             ("ui_album_sort", self.album_sort.clone()),
+            ("ui_theme", self.theme_name.clone()),
             ("ui_smooth", format!("{:.1}", self.smoothing_factor)),
             ("ui_sidebar_percent", self.sidebar_percentage.to_string()),
             ("ui_progress_display", self.progress_display.to_string()),
@@ -60,6 +63,7 @@ impl UiSnapshot {
                 "ui_mode" => snapshot.mode = value,
                 "ui_pane" => snapshot.pane = value,
                 "ui_progress_display" => snapshot.progress_display = value,
+                "ui_theme" => snapshot.theme_name = value,
                 "ui_album_sort" => snapshot.album_sort = value,
                 "ui_album_pos" => snapshot.album_selection = value.parse().ok(),
                 "ui_playlist_pos" => snapshot.playlist_selection = value.parse().ok(),
@@ -93,6 +97,8 @@ impl UiState {
             album_sort: self.display_state.album_sort.to_string(),
             sidebar_percentage: self.display_state.sidebar_percent,
 
+            theme_name: self.theme_manager.active.name.to_owned(),
+
             song_selection: self.display_state.table_pos.selected(),
             album_selection: self.display_state.album_pos.selected(),
             playlist_selection: self.display_state.playlist_pos.selected(),
@@ -118,6 +124,17 @@ impl UiState {
             self.display_state.album_sort = AlbumSort::from_str(&snapshot.album_sort);
 
             self.sort_albums();
+
+            if !snapshot.theme_name.is_empty() {
+                if let Some(theme) = self
+                    .theme_manager
+                    .theme_lib
+                    .iter()
+                    .find(|t| t.name == snapshot.theme_name)
+                {
+                    self.theme_manager.active = theme.clone()
+                }
+            }
 
             if let Some(pos) = snapshot.album_selection {
                 if pos < self.albums.len() {

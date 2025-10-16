@@ -12,6 +12,7 @@ pub enum PopupType {
     Error(String),
     Settings(SettingsMode),
     Playlist(PlaylistAction),
+    ThemeManager,
 }
 
 pub struct PopupState {
