@@ -29,7 +29,8 @@ pub struct DisplayTheme {
     pub text_focused: Color,
     pub text_secondary: Color,
     pub text_faded: Color,
-    pub text_highlighted: Color,
+    pub text_highlight: Color,
+    pub highlight: Color,
 
     pub border_display: Borders,
     pub border_type: BorderType,
@@ -52,7 +53,8 @@ impl UiState {
                 text_focused: self.theme_manager.active.text_focused,
                 text_secondary: self.theme_manager.active.text_secondary,
                 text_faded: self.theme_manager.active.text_unfocused,
-                text_highlighted: self.theme_manager.active.text_highlighted,
+                text_highlight: self.theme_manager.active.text_highlight,
+                highlight: self.theme_manager.active.highlight,
 
                 border_display,
                 border_type,
@@ -69,7 +71,8 @@ impl UiState {
                 text_focused: self.theme_manager.active.text_unfocused,
                 text_secondary: self.theme_manager.active.text_secondary_u,
                 text_faded: self.theme_manager.active.text_unfocused,
-                text_highlighted: self.theme_manager.active.text_highlighted_u,
+                text_highlight: self.theme_manager.active.text_highlight,
+                highlight: self.theme_manager.active.highlight_u,
 
                 border_display,
                 border_type,

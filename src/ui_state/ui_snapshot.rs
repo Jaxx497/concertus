@@ -126,12 +126,7 @@ impl UiState {
             self.sort_albums();
 
             if !snapshot.theme_name.is_empty() {
-                if let Some(theme) = self
-                    .theme_manager
-                    .theme_lib
-                    .iter()
-                    .find(|t| t.name == snapshot.theme_name)
-                {
+                if let Some(theme) = self.theme_manager.find_theme_by_name(&snapshot.theme_name) {
                     self.theme_manager.active = theme.clone()
                 }
             }

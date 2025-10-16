@@ -39,8 +39,9 @@ impl StatefulWidget for ThemeManager {
 
         let list = List::new(theme_names)
             .block(block)
-            .scroll_padding(area.height as usize - 5)
-            .highlight_style(Style::new().fg(theme.text_highlighted));
+            .scroll_padding(area.height as usize - 3)
+            .fg(theme.text_faded)
+            .highlight_style(Style::new().fg(theme.highlight));
 
         StatefulWidget::render(list, area, buf, &mut state.popup.selection);
     }

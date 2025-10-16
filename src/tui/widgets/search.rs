@@ -25,7 +25,7 @@ impl StatefulWidget for SearchBar {
                 .border_type(theme.border_type)
                 .border_style(theme.border)
                 .padding(SEARCH_PADDING)
-                .fg(theme.text_highlighted)
+                .fg(theme.highlight)
                 .bg(theme.bg_panel),
         );
 

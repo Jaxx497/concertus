@@ -18,8 +18,10 @@ pub struct ColorScheme {
     pub text_unfocused: String,
     pub text_secondary: String,
     pub text_secondary_u: String,
-    pub text_highlighted: String,
-    pub text_highlighted_u: String,
+    pub text_highlight: String,
+
+    pub highlight: String,
+    pub highlight_u: String,
 
     pub border_focused: String,
     pub border_unfocused: String,

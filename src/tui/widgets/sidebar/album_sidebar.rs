@@ -43,7 +43,7 @@ impl StatefulWidget for SideBarAlbum {
                     // Match header style to selected album
                     let header_style = match is_selected_artist {
                         true => Style::default()
-                            .fg(theme.text_highlighted)
+                            .fg(theme.highlight)
                             // .italic()
                             .underlined(),
                         false => Style::default().fg(theme.text_faded),

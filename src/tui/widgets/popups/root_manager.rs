@@ -91,7 +91,7 @@ fn render_roots_list(
 
     let list = List::new(items)
         .highlight_symbol(SELECTOR)
-        .highlight_style(state.theme_manager.active.text_highlighted)
+        .highlight_style(state.theme_manager.active.highlight)
         .highlight_spacing(HighlightSpacing::Always);
 
     ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
@@ -118,7 +118,7 @@ fn render_add_root(
     state.popup.input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
-            .fg(theme.text_highlighted)
+            .fg(theme.highlight)
             .padding(Padding {
                 left: 1,
                 right: 1,

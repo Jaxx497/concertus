@@ -1,6 +1,6 @@
 use crate::{
     truncate_at_last_space,
-    tui::widgets::tracklist::{CellFactory, create_empty_block, create_standard_table},
+    tui::widgets::tracklist::{create_empty_block, create_standard_table, CellFactory},
     ui_state::{Pane, UiState},
 };
 use ratatui::{
@@ -54,7 +54,7 @@ impl StatefulWidget for AlbumView {
                 .italic(),
             Span::from(year_str).fg(theme.text_faded),
             Span::from(" ✧ ").fg(theme.text_faded),
-            Span::from(album.artist.to_string()).fg(theme.text_highlighted),
+            Span::from(album.artist.to_string()).fg(theme.highlight),
             Span::from(format!(" [{} Songs] ", album.tracklist.len())).fg(theme.text_faded),
         ]);
 

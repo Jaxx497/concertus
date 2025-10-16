@@ -12,11 +12,11 @@ pub use generic_tracklist::GenericView;
 pub use search_results::StandardTable;
 
 use crate::{
-    DurationStyle,
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
     tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED, SELECTED},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
+    DurationStyle,
 };
 use ratatui::{
     layout::{Alignment, Constraint, Flex, Rect},
@@ -132,7 +132,7 @@ pub fn create_standard_table<'a>(
         .bg(theme.bg_panel);
 
     let highlight_style = match state.get_pane() {
-        Pane::TrackList => Style::new().fg(Color::Black).bg(theme.text_highlighted),
+        Pane::TrackList => Style::new().fg(theme.text_highlight).bg(theme.highlight),
         _ => Style::new(),
     };
 
@@ -141,8 +141,6 @@ pub fn create_standard_table<'a>(
         .header(header.fg(theme.text_secondary))
         .column_spacing(COLUMN_SPACING)
         .flex(Flex::Start)
-        // .highlight_symbol(selector)
-        // .highlight_spacing(HighlightSpacing::Always)
         .row_highlight_style(highlight_style)
 }
 
@@ -170,9 +168,9 @@ impl CellFactory {
         Cell::from(if is_playing {
             MUSIC_NOTE.fg(theme.text_secondary)
         } else if is_bulk_selected {
-            SELECTED.fg(theme.text_highlighted)
+            SELECTED.fg(theme.highlight)
         } else if is_queued && !matches!(state.get_mode(), Mode::Queue) {
-            QUEUED.fg(theme.text_highlighted)
+            QUEUED.fg(theme.highlight)
         } else {
             "".into()
         })
@@ -196,7 +194,7 @@ impl CellFactory {
     }
 
     pub fn index_cell(theme: &DisplayTheme, index: usize) -> Cell<'static> {
-        Cell::from(format!("{:>2}", index + 1)).fg(theme.text_highlighted)
+        Cell::from(format!("{:>2}", index + 1)).fg(theme.highlight)
     }
 
     pub fn get_track_discs(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
@@ -204,7 +202,7 @@ impl CellFactory {
             Some(t) => format!("{t:>2}"),
             None => format!("{x:>2}", x = "󰇘"),
         })
-        .fg(theme.text_highlighted);
+        .fg(theme.highlight);
 
         let disc_no = Span::from(match song.disc_no {
             Some(t) => String::from("ᴰ") + SUPERSCRIPT.get(&t).unwrap_or(&"?"),
@@ -235,7 +233,7 @@ fn get_title(state: &UiState, area: Rect) -> Line<'static> {
     let theme = state.get_theme(&Pane::TrackList);
     let (title, track_count) = match state.get_mode() {
         &Mode::Queue => (
-            Span::from("Queue").fg(theme.text_highlighted),
+            Span::from("Queue").fg(theme.highlight),
             state.playback.queue.len(),
         ),
         &Mode::Library(LibraryView::Playlists) => {

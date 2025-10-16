@@ -4,7 +4,7 @@ use crate::ui_state::theme::{
 };
 use anyhow::Result;
 use ratatui::{
-    style::Color,
+    style::{palette::material::WHITE, Color},
     widgets::{BorderType, Borders},
 };
 use std::path::Path;
@@ -21,8 +21,10 @@ pub struct ThemeConfig {
     pub text_secondary: Color,
     pub text_secondary_u: Color,
     pub text_unfocused: Color,
-    pub text_highlighted: Color,
-    pub text_highlighted_u: Color,
+    pub text_highlight: Color,
+
+    pub highlight: Color,
+    pub highlight_u: Color,
 
     pub border_focused: Color,
     pub border_unfocused: Color,
@@ -55,8 +57,10 @@ impl ThemeConfig {
             text_unfocused: MID_GRAY,
             text_secondary: GOOD_RED,
             text_secondary_u: GOOD_RED_DARK,
-            text_highlighted: GOLD,
-            text_highlighted_u: GOLD_FADED,
+            text_highlight: WHITE,
+
+            highlight: GOLD,
+            highlight_u: GOLD_FADED,
 
             border_focused: GOLD,
             border_unfocused: DARK_GRAY,
@@ -86,8 +90,10 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
             text_unfocused: parse_color(&colors.text_unfocused)?,
             text_secondary: parse_color(&colors.text_secondary)?,
             text_secondary_u: parse_color(&colors.text_secondary_u)?,
-            text_highlighted: parse_color(&colors.text_highlighted)?,
-            text_highlighted_u: parse_color(&colors.text_highlighted_u)?,
+            text_highlight: parse_color(&colors.text_highlight)?,
+
+            highlight: parse_color(&colors.highlight)?,
+            highlight_u: parse_color(&colors.highlight_u)?,
 
             border_focused: parse_color(&colors.border_focused)?,
             border_unfocused: parse_color(&colors.border_unfocused)?,

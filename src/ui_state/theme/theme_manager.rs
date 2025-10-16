@@ -29,6 +29,16 @@ impl ThemeManager {
         self.theme_lib = themes
     }
 
+    pub fn find_theme_by_name(&self, name: &str) -> Option<&ThemeConfig> {
+        self.theme_lib.iter().find(|t| t.name == name)
+    }
+
+    pub fn get_theme_index(&self) -> Option<usize> {
+        self.theme_lib
+            .iter()
+            .position(|t| t.name == self.active.name)
+    }
+
     fn collect_themes() -> Vec<ThemeConfig> {
         let mut themes = vec![];
         let theme_dir =
@@ -56,7 +66,10 @@ impl ThemeManager {
 impl UiState {
     pub fn open_theme_manager(&mut self) {
         self.theme_manager.update_themes();
-        self.popup.selection.select_first();
+
+        let idx = self.theme_manager.get_theme_index();
+        self.popup.selection.select(idx);
+
         self.show_popup(PopupType::ThemeManager);
     }
 }

@@ -366,14 +366,6 @@ impl Concertus {
             Action::RevertFullscreen        => self.ui.revert_fullscreen(),
 
             Action::ThemeManager => self.ui.open_theme_manager(),
-            // Action::ThemeConfirm => {
-            //     if let Some(idx) = self.ui.popup.selection.selected() {
-            //         let new_theme = self.ui.theme_manager.theme_lib.get(idx).unwrap();
-            //         self.ui.theme_manager.active = new_theme.clone()
-            //
-            //     }
-
-            // }
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

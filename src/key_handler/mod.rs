@@ -77,7 +77,6 @@ pub enum Action {
 
     // Display
     ThemeManager,
-    ThemeConfirm,
 
     IncrementWFSmoothness(MoveDirection),
     IncrementSidebarSize(isize),

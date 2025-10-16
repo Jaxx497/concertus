@@ -114,7 +114,7 @@ fn get_bulk_selection(size: usize, theme: &DisplayTheme) -> Option<Line<'static>
     let output = match size {
         0 => return None,
         x => format!("{x:>3} {} ", SELECTED)
-            .fg(theme.text_highlighted)
+            .fg(theme.highlight)
             .into_left_aligned_line(),
     };
 
@@ -143,9 +143,9 @@ fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
 
     let up_next_line = match alert {
         true => Span::from(truncated)
-            .fg(state.theme_manager.active.text_highlighted_u)
+            .fg(state.theme_manager.active.highlight_u)
             .rapid_blink(),
-        false => Span::from(truncated).fg(state.theme_manager.active.text_highlighted_u),
+        false => Span::from(truncated).fg(state.theme_manager.active.highlight_u),
     };
 
     let total = state.playback.queue.len();

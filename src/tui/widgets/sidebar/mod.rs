@@ -7,7 +7,7 @@ pub use handler::SideBarHandler;
 pub use playlist_sidebar::SideBarPlaylist;
 use ratatui::{
     layout::Rect,
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::Line,
     widgets::{Block, HighlightSpacing, List, ListItem, Padding},
 };
@@ -60,8 +60,8 @@ pub fn create_standard_list<'a>(
         .block(block)
         .highlight_style(
             Style::new()
-                .fg(Color::Black)
-                .bg(theme.text_highlighted)
+                .fg(theme.text_highlight)
+                .bg(theme.highlight)
                 .italic(),
         )
         .scroll_padding((area.height as f32 * 0.15) as usize)
