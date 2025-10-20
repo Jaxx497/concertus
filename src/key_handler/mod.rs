@@ -76,6 +76,7 @@ pub enum Action {
     ShiftPosition(MoveDirection),
 
     // Display
+    CycleTheme(MoveDirection),
     ThemeManager,
 
     IncrementWFSmoothness(MoveDirection),

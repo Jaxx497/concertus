@@ -44,6 +44,9 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (C, Char('n')) => Some(Action::PlayNext),
         (C, Char('p')) => Some(Action::PlayPrev),
 
+        (S, Char('>')) => Some(Action::CycleTheme(MoveDirection::Up)),
+        (S, Char('<')) => Some(Action::CycleTheme(MoveDirection::Down)),
+
         // Works on everything except search or popup
         _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
@@ -366,6 +369,7 @@ impl Concertus {
             Action::RevertFullscreen        => self.ui.revert_fullscreen(),
 
             Action::ThemeManager => self.ui.open_theme_manager(),
+            Action::CycleTheme(dir) => self.ui.cycle_theme(dir),
 
             // Ops
             Action::PopupInput(key) => self.ui.process_popup_input(&key),

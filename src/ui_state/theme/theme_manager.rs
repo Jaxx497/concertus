@@ -1,4 +1,5 @@
 use crate::{
+    key_handler::MoveDirection,
     ui_state::{PopupType, ThemeConfig, UiState},
     CONFIG_DIRECTORY, THEME_DIRECTORY,
 };
@@ -71,5 +72,25 @@ impl UiState {
         self.popup.selection.select(idx);
 
         self.show_popup(PopupType::ThemeManager);
+    }
+
+    pub fn cycle_theme(&mut self, dir: MoveDirection) {
+        let len = self.theme_manager.theme_lib.len();
+        if len == 0 {
+            return;
+        }
+
+        let idx = self.theme_manager.get_theme_index().unwrap_or(0);
+        let new_idx = match dir {
+            MoveDirection::Up => (idx + len - 1) % len,
+            MoveDirection::Down => (idx + 1) % len,
+        };
+
+        self.theme_manager.active = self
+            .theme_manager
+            .theme_lib
+            .get(new_idx)
+            .cloned()
+            .unwrap_or(ThemeConfig::set_generic_theme())
     }
 }
