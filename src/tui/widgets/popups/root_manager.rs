@@ -38,8 +38,8 @@ impl StatefulWidget for RootManager {
             .title_bottom(get_help_text(settings_mode))
             .title_alignment(ratatui::layout::Alignment::Center)
             .border_type(BorderType::Double)
-            .border_style(Style::new().fg(theme.border))
-            .bg(theme.bg_panel)
+            .border_style(Style::new().fg(theme.text_secondary))
+            .bg(theme.bg)
             .padding(POPUP_PADDING);
 
         let inner = block.inner(area);
@@ -72,6 +72,7 @@ fn render_roots_list(
     state: &mut UiState,
 ) {
     let roots = state.get_roots();
+    let theme = state.get_theme(&Pane::Popup);
 
     if roots.is_empty() {
         Paragraph::new("No music library configured.\nPress 'a' to add a parent directory.")
@@ -90,8 +91,9 @@ fn render_roots_list(
         .collect();
 
     let list = List::new(items)
+        .fg(state.theme_manager.active.text.0)
         .highlight_symbol(SELECTOR)
-        .highlight_style(state.theme_manager.active.highlight)
+        .highlight_style(Style::new().fg(theme.text_highlight).bg(theme.highlight))
         .highlight_spacing(HighlightSpacing::Always);
 
     ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
@@ -134,7 +136,7 @@ fn render_add_root(
     state.popup.input.render(chunks[1], buf);
 
     let example = Paragraph::new("Example: C:\\Music or /home/user/music")
-        .fg(theme.bg_panel)
+        .fg(theme.bg)
         .centered();
     example.render(chunks[2], buf);
 }

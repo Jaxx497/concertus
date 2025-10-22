@@ -10,9 +10,9 @@ pub struct ThemeImport {
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct ColorScheme {
-    pub bg_global: String,
     pub bg_focused: String,
     pub bg_unfocused: String,
+    pub bg_progress: String,
 
     pub text_focused: String,
     pub text_unfocused: String,

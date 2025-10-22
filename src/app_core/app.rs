@@ -1,21 +1,21 @@
 use crate::{
-    Library,
-    domain::{QueueSong, SongDatabase as _, SongInfo, generate_waveform},
+    domain::{generate_waveform, QueueSong, SongDatabase as _, SongInfo},
     key_handler::{self},
     overwrite_line,
     player::{PlaybackState, PlayerController},
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
+    Library,
 };
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use ratatui::crossterm::event::{Event, KeyEventKind};
 use std::{
     sync::{
-        Arc, Mutex,
         mpsc::{self, Receiver},
+        Arc, Mutex,
     },
     thread,
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 pub struct Concertus {

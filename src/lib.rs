@@ -1,14 +1,17 @@
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
+use indexmap::IndexMap;
+use nohash_hasher::BuildNoHashHasher;
 use ratatui::crossterm::{
-    ExecutableCommand,
     cursor::MoveToColumn,
     style::Print,
     terminal::{Clear, ClearType},
+    ExecutableCommand,
 };
 use std::{
     fs,
     io::Write,
     path::{Path, PathBuf},
+    sync::Arc,
     time::{Duration, UNIX_EPOCH},
 };
 use ui_state::UiState;
@@ -27,8 +30,12 @@ pub use database::Database;
 pub use library::Library;
 pub use player::Player;
 
+use crate::domain::SimpleSong;
+
+pub type SongMap = IndexMap<u64, Arc<SimpleSong>, BuildNoHashHasher<u64>>;
+
 // ~60fps
-pub const CONFIG_DIRECTORY: &'static str = "Concertus";
+pub const CONFIG_DIRECTORY: &'static str = "concertus";
 pub const THEME_DIRECTORY: &'static str = "themes";
 pub const DATABASE_FILENAME: &'static str = "concertus.db";
 pub const REFRESH_RATE: u64 = 16;

@@ -1,17 +1,17 @@
 use super::{
-    AppLayout, ErrorMsg, Progress, SearchBar, SideBar,
     widgets::{RootManager, SongTable},
+    AppLayout, ErrorMsg, Progress, SearchBar, SideBar,
 };
 use crate::{
-    UiState,
     tui::widgets::{BufferLine, PlaylistPopup, ThemeManager},
     ui_state::{Mode, PopupType},
+    UiState,
 };
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::Stylize,
     widgets::{Widget, *},
+    Frame,
 };
 
 pub fn render(f: &mut Frame, state: &mut UiState) {
@@ -27,7 +27,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     let layout = AppLayout::new(f.area(), state);
 
     Block::new()
-        .bg(state.theme_manager.active.bg_global)
+        .bg(state.theme_manager.active.bg.1)
         .render(f.area(), f.buffer_mut());
 
     SearchBar.render(layout.search_bar, f.buffer_mut(), state);

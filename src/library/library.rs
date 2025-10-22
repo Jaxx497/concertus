@@ -3,10 +3,11 @@ use crate::{
     calculate_signature,
     database::Database,
     domain::{Album, LongSong, SimpleSong, SongInfo},
-    expand_tilde,
+    expand_tilde, SongMap,
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
+use nohash_hasher::BuildNoHashHasher;
 use rayon::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
@@ -18,7 +19,7 @@ use walkdir::WalkDir;
 pub struct Library {
     db: Database,
     pub roots: HashSet<PathBuf>,
-    pub songs: IndexMap<u64, Arc<SimpleSong>>,
+    pub songs: IndexMap<u64, Arc<SimpleSong>, BuildNoHashHasher<u64>>,
     pub albums: Vec<Album>,
 }
 
@@ -28,7 +29,7 @@ impl Library {
         Library {
             db,
             roots: HashSet::new(),
-            songs: IndexMap::new(),
+            songs: SongMap::default(),
             albums: Vec::new(),
         }
     }
@@ -192,7 +193,7 @@ impl Library {
         Ok(())
     }
 
-    pub fn get_songs_map(&self) -> &IndexMap<u64, Arc<SimpleSong>> {
+    pub fn get_songs_map(&self) -> &SongMap {
         &self.songs
     }
 
@@ -271,10 +272,7 @@ impl Library {
         self.db.save_history_to_db(history)
     }
 
-    pub fn load_history(
-        &mut self,
-        songs: &IndexMap<u64, Arc<SimpleSong>>,
-    ) -> Result<VecDeque<Arc<SimpleSong>>> {
+    pub fn load_history(&mut self, songs: &SongMap) -> Result<VecDeque<Arc<SimpleSong>>> {
         self.db.import_history(songs)
     }
 }

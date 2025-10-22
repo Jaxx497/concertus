@@ -1,9 +1,9 @@
-use crate::ui_state::UiState;
+use crate::ui_state::{Pane, UiState};
 use ratatui::{
     style::Stylize,
     widgets::{
-        Block, Padding, StatefulWidget, Widget,
         canvas::{Canvas, Context, Line},
+        Block, Padding, StatefulWidget, Widget,
     },
 };
 
@@ -18,6 +18,7 @@ impl StatefulWidget for Oscilloscope {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
+        let theme = state.get_theme(&Pane::Popup);
         let samples = state.get_oscilloscope_data();
 
         if samples.is_empty() {
@@ -37,17 +38,13 @@ impl StatefulWidget for Oscilloscope {
             .paint(|ctx| {
                 draw_vibrant_gradient(ctx, &samples, elapsed);
             })
-            .background_color(state.theme_manager.active.bg_unfocused)
-            .block(
-                Block::new()
-                    .bg(state.theme_manager.active.bg_unfocused)
-                    .padding(Padding {
-                        left: 1,
-                        right: 1,
-                        top: v_marg,
-                        bottom: v_marg,
-                    }),
-            )
+            .background_color(theme.bg_p)
+            .block(Block::new().bg(theme.bg_p).padding(Padding {
+                left: 1,
+                right: 1,
+                top: v_marg,
+                bottom: v_marg,
+            }))
             .render(area, buf);
     }
 }

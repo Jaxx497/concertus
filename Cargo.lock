@@ -175,6 +175,7 @@ dependencies = [
  "fuzzy-matcher",
  "indexmap",
  "mp4ameta",
+ "nohash-hasher",
  "rand",
  "ratatui",
  "rayon",
@@ -676,6 +677,12 @@ checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys",
 ]
+
+[[package]]
+name = "nohash-hasher"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
 
 [[package]]
 name = "num-bigint"

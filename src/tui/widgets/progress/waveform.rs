@@ -6,8 +6,8 @@ use crate::{
 use ratatui::{
     style::{Color, Stylize},
     widgets::{
-        Block, Padding, StatefulWidget, Widget,
         canvas::{Canvas, Context, Line, Rectangle},
+        Block, Padding, StatefulWidget, Widget,
     },
 };
 
@@ -74,8 +74,8 @@ impl StatefulWidget for Waveform {
                     }
                 }
             })
-            .background_color(theme.bg)
-            .block(Block::new().bg(theme.bg).padding(padding))
+            .background_color(theme.bg_p)
+            .block(Block::new().bg(theme.bg_p).padding(padding))
             .render(area, buf)
     }
 }

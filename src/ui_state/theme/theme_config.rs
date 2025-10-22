@@ -4,7 +4,7 @@ use crate::ui_state::theme::{
 };
 use anyhow::Result;
 use ratatui::{
-    style::{palette::material::WHITE, Color},
+    style::Color,
     widgets::{BorderType, Borders},
 };
 use std::path::Path;
@@ -13,24 +13,13 @@ use std::path::Path;
 pub struct ThemeConfig {
     pub name: String,
 
-    pub bg_global: Color,
-    pub bg_focused: Color,
-    pub bg_unfocused: Color,
-
-    pub text_focused: Color,
-    pub text_secondary: Color,
-    pub text_secondary_u: Color,
-    pub text_unfocused: Color,
-    pub text_highlight: Color,
-
-    pub highlight: Color,
-    pub highlight_u: Color,
-
-    pub border_focused: Color,
-    pub border_unfocused: Color,
-
-    pub progress_complete: Color,
-    pub progress_incomplete: Color,
+    pub bg: (Color, Color, Color),
+    pub text: (Color, Color),
+    pub text2: (Color, Color),
+    pub texth: Color,
+    pub highlight: (Color, Color),
+    pub border: (Color, Color),
+    pub progress: (Color, Color),
 
     pub border_display: Borders,
     pub border_type: BorderType,
@@ -49,27 +38,16 @@ impl ThemeConfig {
         ThemeConfig {
             name: String::from("Concertus_Alpha"),
 
-            bg_global: DARK_GRAY_FADED,
-            bg_focused: DARK_GRAY,
-            bg_unfocused: DARK_GRAY_FADED,
-
-            text_focused: DARK_WHITE,
-            text_unfocused: MID_GRAY,
-            text_secondary: GOOD_RED,
-            text_secondary_u: GOOD_RED_DARK,
-            text_highlight: WHITE,
-
-            highlight: GOLD,
-            highlight_u: GOLD_FADED,
-
-            border_focused: GOLD,
-            border_unfocused: DARK_GRAY,
+            bg: (DARK_GRAY, DARK_GRAY_FADED, DARK_GRAY_FADED),
+            text: (DARK_WHITE, MID_GRAY),
+            text2: (GOOD_RED, GOOD_RED_DARK),
+            texth: DARK_GRAY,
+            highlight: (GOLD, GOLD_FADED),
+            border: (GOLD, DARK_GRAY),
+            progress: (GOOD_RED, MID_GRAY),
 
             border_display: Borders::ALL,
             border_type: BorderType::Thick,
-
-            progress_complete: GOOD_RED,
-            progress_incomplete: MID_GRAY,
         }
     }
 }
@@ -79,27 +57,39 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
 
     fn try_from(config: &ThemeImport) -> anyhow::Result<Self> {
         let colors = &config.colors;
+
+        let bg_focused = parse_color(&colors.bg_focused)?;
+        let bg_unfocused = parse_color(&colors.bg_unfocused)?;
+        let bg_global = parse_color(&colors.bg_progress)?;
+
+        let text_focused = parse_color(&colors.text_focused)?;
+        let text_unfocused = parse_color(&colors.text_unfocused)?;
+
+        let text_secondary = parse_color(&colors.text_secondary)?;
+        let text_secondary_u = parse_color(&colors.text_secondary_u)?;
+        let text_highlight = parse_color(&colors.text_highlight)?;
+
+        let highlight = parse_color(&colors.highlight)?;
+        let highlight_u = parse_color(&colors.highlight_u)?;
+
+        let border_focused = parse_color(&colors.border_focused)?;
+        let border_unfocused = parse_color(&colors.border_unfocused)?;
+
+        let progress_complete = parse_color(&colors.progress_complete)?;
+        let progress_incomplete = parse_color(&colors.progress_incomplete)?;
+
         Ok(ThemeConfig {
             name: config.name.clone(),
 
-            bg_global: parse_color(&colors.bg_global)?,
-            bg_focused: parse_color(&colors.bg_focused)?,
-            bg_unfocused: parse_color(&colors.bg_unfocused)?,
+            bg: (bg_focused, bg_unfocused, bg_global),
+            text: (text_focused, text_unfocused),
+            text2: (text_secondary, text_secondary_u),
+            texth: text_highlight,
 
-            text_focused: parse_color(&colors.text_focused)?,
-            text_unfocused: parse_color(&colors.text_unfocused)?,
-            text_secondary: parse_color(&colors.text_secondary)?,
-            text_secondary_u: parse_color(&colors.text_secondary_u)?,
-            text_highlight: parse_color(&colors.text_highlight)?,
+            highlight: (highlight, highlight_u),
+            border: (border_focused, border_unfocused),
 
-            highlight: parse_color(&colors.highlight)?,
-            highlight_u: parse_color(&colors.highlight_u)?,
-
-            border_focused: parse_color(&colors.border_focused)?,
-            border_unfocused: parse_color(&colors.border_unfocused)?,
-
-            progress_complete: parse_color(&colors.progress_complete)?,
-            progress_incomplete: parse_color(&colors.progress_incomplete)?,
+            progress: (progress_complete, progress_incomplete),
 
             border_display: parse_borders(&config.borders.border_display),
             border_type: parse_border_type(&config.borders.border_type),

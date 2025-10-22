@@ -24,9 +24,7 @@ impl StatefulWidget for BufferLine {
     ) {
         let theme = state.get_theme(state.get_pane());
 
-        Block::new()
-            .bg(state.theme_manager.active.bg_unfocused)
-            .render(area, buf);
+        Block::new().bg(theme.bg_p).render(area, buf);
 
         let [left, center, right] = Layout::default()
             .direction(Direction::Horizontal)
@@ -143,9 +141,9 @@ fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
 
     let up_next_line = match alert {
         true => Span::from(truncated)
-            .fg(state.theme_manager.active.highlight_u)
+            .fg(state.theme_manager.active.highlight.1)
             .rapid_blink(),
-        false => Span::from(truncated).fg(state.theme_manager.active.highlight_u),
+        false => Span::from(truncated).fg(state.theme_manager.active.highlight.1),
     };
 
     let total = state.playback.queue.len();

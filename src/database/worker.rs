@@ -1,9 +1,9 @@
-use crate::{database::Database, domain::SimpleSong, ui_state::UiSnapshot};
-use anyhow::{Result, anyhow};
+use crate::{database::Database, domain::SimpleSong, ui_state::UiSnapshot, SongMap};
+use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
 use std::{
     collections::{HashSet, VecDeque},
-    sync::{Arc, mpsc},
+    sync::{mpsc, Arc},
     thread,
 };
 
@@ -139,14 +139,11 @@ impl DbWorker {
         self.execute_sync(move |db| db.load_ui_snapshot())
     }
 
-    pub fn get_all_songs(&self) -> Result<IndexMap<u64, Arc<SimpleSong>>> {
+    pub fn get_all_songs(&self) -> Result<SongMap> {
         self.execute_sync(move |db| db.get_all_songs())
     }
 
-    pub fn import_history(
-        &self,
-        song_map: IndexMap<u64, Arc<SimpleSong>>,
-    ) -> Result<VecDeque<Arc<SimpleSong>>> {
+    pub fn import_history(&self, song_map: SongMap) -> Result<VecDeque<Arc<SimpleSong>>> {
         self.execute_sync(move |db| db.import_history(&song_map))
     }
 

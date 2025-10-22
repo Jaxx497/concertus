@@ -1,11 +1,10 @@
 use crate::{
-    CONFIG_DIRECTORY, DATABASE_FILENAME,
     domain::{LongSong, SimpleSong, SongInfo},
+    SongMap, CONFIG_DIRECTORY, DATABASE_FILENAME,
 };
 use anyhow::Result;
-use indexmap::IndexMap;
 use queries::*;
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
@@ -111,7 +110,7 @@ impl Database {
         Ok(())
     }
 
-    pub(crate) fn get_all_songs(&mut self) -> Result<IndexMap<u64, Arc<SimpleSong>>> {
+    pub(crate) fn get_all_songs(&mut self) -> Result<SongMap> {
         self.set_album_map()?;
         self.set_artist_map()?;
 
@@ -356,10 +355,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn import_history(
-        &mut self,
-        song_map: &IndexMap<u64, Arc<SimpleSong>>,
-    ) -> Result<VecDeque<Arc<SimpleSong>>> {
+    pub fn import_history(&mut self, song_map: &SongMap) -> Result<VecDeque<Arc<SimpleSong>>> {
         let mut history = VecDeque::new();
 
         let mut stmt = self.conn.prepare(LOAD_HISTORY)?;

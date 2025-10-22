@@ -34,7 +34,7 @@ impl StatefulWidget for ThemeManager {
             .title_alignment(Alignment::Center)
             .border_type(BorderType::Double)
             .border_style(Style::new().fg(theme.text_secondary))
-            .bg(theme.bg_panel)
+            .bg(theme.bg)
             .padding(POPUP_PADDING);
 
         let list = List::new(theme_names)

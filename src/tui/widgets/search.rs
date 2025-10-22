@@ -26,7 +26,7 @@ impl StatefulWidget for SearchBar {
                 .border_style(theme.border)
                 .padding(SEARCH_PADDING)
                 .fg(theme.highlight)
-                .bg(theme.bg_panel),
+                .bg(theme.bg),
         );
 
         search.render(area, buf);

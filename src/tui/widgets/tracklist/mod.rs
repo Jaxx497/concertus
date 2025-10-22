@@ -30,7 +30,7 @@ const COLUMN_SPACING: u16 = 2;
 const PADDING: Padding = Padding {
     left: 4,
     right: 4,
-    top: 1,
+    top: 2,
     bottom: 1,
 };
 
@@ -114,7 +114,7 @@ pub fn create_standard_table<'a>(
     let mode = state.get_mode();
     let theme = state.get_theme(&Pane::TrackList);
 
-    let header = get_header(state, &TableSort::Title);
+    // let header = get_header(state, &TableSort::Title);
     let widths = get_widths(mode);
     let keymaps = match state.get_pane() {
         Pane::TrackList => get_keymaps(mode),
@@ -129,7 +129,7 @@ pub fn create_standard_table<'a>(
         .title_bottom(Line::from(keymaps.fg(theme.text_faded)))
         .title_alignment(Alignment::Center)
         .padding(PADDING)
-        .bg(theme.bg_panel);
+        .bg(theme.bg);
 
     let highlight_style = match state.get_pane() {
         Pane::TrackList => Style::new().fg(theme.text_highlight).bg(theme.highlight),
@@ -138,7 +138,7 @@ pub fn create_standard_table<'a>(
 
     Table::new(rows, widths)
         .block(block)
-        .header(header.fg(theme.text_secondary))
+        // .header(header.fg(theme.text_secondary))
         .column_spacing(COLUMN_SPACING)
         .flex(Flex::Start)
         .row_highlight_style(highlight_style)
@@ -152,7 +152,7 @@ pub fn create_empty_block(theme: &DisplayTheme, title: &str) -> Block<'static> {
         .border_type(theme.border_type)
         .border_style(theme.border)
         .padding(PADDING)
-        .bg(theme.bg_panel)
+        .bg(theme.bg)
 }
 
 pub struct CellFactory;
@@ -185,7 +185,7 @@ impl CellFactory {
     }
 
     pub fn filetype_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
-        Cell::from(Line::from(format!("{}", song.filetype)).centered()).fg(theme.text_secondary)
+        Cell::from(Line::from(format!("{}", song.filetype)).centered()).fg(theme.text_focused)
     }
 
     pub fn duration_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {

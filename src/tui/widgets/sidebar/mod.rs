@@ -50,7 +50,7 @@ pub fn create_standard_list<'a>(
         .borders(theme.border_display)
         .border_type(theme.border_type)
         .border_style(theme.border)
-        .bg(theme.bg_panel)
+        .bg(theme.bg)
         .title_top(titles.0)
         .title_top(titles.1)
         .title_bottom(Line::from(keymaps).centered().fg(theme.text_faded))

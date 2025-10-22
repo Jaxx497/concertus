@@ -11,8 +11,9 @@ dirs = "*"
 fuzzy-matcher = "*"
 indexmap = "*"
 mp4ameta = "*"
-ratatui = "*"
+nohash-hasher = "0.2.0"
 rand = "*"
+ratatui = "*"
 rayon = "*"
 rodio = { git = "https://github.com/RustAudio/rodio", branch = "feat/comprehensive-seeking-and-bit-depth", features = ["symphonia-all"]}
 rusqlite = { version = "0.37.0", features = ["bundled"] }
@@ -22,4 +23,3 @@ toml = "*"
 tui-textarea = "0.7.0"
 walkdir = "*"
 xxhash-rust = { version = "0.8.15", features = ["xxh3"] }
-

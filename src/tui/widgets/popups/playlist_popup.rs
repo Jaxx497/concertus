@@ -44,7 +44,7 @@ fn render_create_popup(
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(theme.border))
-        .bg(theme.bg_panel)
+        .bg(theme.bg)
         .padding(POPUP_PADDING);
 
     let inner = block.inner(area);
@@ -95,7 +95,7 @@ fn render_add_song_popup(
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(theme.text_secondary))
-        .bg(theme.bg_panel)
+        .bg(theme.bg)
         .padding(POPUP_PADDING);
 
     let list = List::new(list_items)
@@ -118,7 +118,7 @@ fn render_delete_popup(
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(theme.border))
-        .bg(theme.bg_panel)
+        .bg(theme.bg)
         .padding(POPUP_PADDING);
 
     if let Some(p) = state.get_selected_playlist() {
@@ -142,7 +142,7 @@ fn render_rename_popup(
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(theme.border))
-        .bg(theme.bg_panel)
+        .bg(theme.bg)
         .padding(POPUP_PADDING);
 
     let inner = block.inner(area);
