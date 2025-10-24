@@ -8,7 +8,10 @@ use crate::{
     Library,
 };
 use anyhow::{anyhow, bail, Result};
-use ratatui::crossterm::event::{Event, KeyEventKind};
+use ratatui::crossterm::{
+    event::{DisableBracketedPaste, EnableBracketedPaste, Event, KeyEventKind},
+    ExecutableCommand,
+};
 use std::{
     sync::{
         mpsc::{self, Receiver},
@@ -46,7 +49,10 @@ impl Concertus {
 
     pub fn run(&mut self) -> anyhow::Result<()> {
         let mut terminal = ratatui::init();
+
+        // let mut terminal = init_terminal()?;
         terminal.clear()?;
+        std::io::stdout().execute(EnableBracketedPaste)?;
 
         self.preload_lib();
         self.initialize_ui();
@@ -100,6 +106,7 @@ impl Concertus {
                 break;
             }
         }
+        std::io::stdout().execute(DisableBracketedPaste)?;
         ratatui::restore();
         overwrite_line("Shutting down... do not close terminal!");
         overwrite_line("Thank you for using concertus!\n\n");

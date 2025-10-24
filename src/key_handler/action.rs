@@ -14,6 +14,7 @@ use KeyCode::*;
 
 #[rustfmt::skip]
 pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> {
+
     if let Some(action) = global_commands(&key_event, &state) {
         return Some(action);
     }

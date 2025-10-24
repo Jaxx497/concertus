@@ -4,8 +4,8 @@ use crate::{
 };
 use ratatui::{
     layout::{Alignment, Constraint, Layout},
-    style::{Color, Style, Stylize},
-    text::Line,
+    style::{Style, Stylize},
+    text::{Line, Text},
     widgets::{Block, BorderType, List, Padding, Paragraph, StatefulWidget, Widget, Wrap},
 };
 
@@ -38,40 +38,44 @@ fn render_create_popup(
     state: &mut UiState,
 ) {
     let theme = state.get_theme(&Pane::Popup);
+    let padding_h = (area.height as f32 * 0.3) as u16;
+    let padding_w = (area.width as f32 * 0.2) as u16;
+
     let block = Block::bordered()
         .title(" Create New Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(theme.border))
+        .fg(theme.text_focused)
         .bg(theme.bg)
-        .padding(POPUP_PADDING);
+        .padding(Padding {
+            left: padding_w,
+            right: padding_w,
+            top: padding_h,
+            bottom: 0,
+        });
 
     let inner = block.inner(area);
     block.render(area, buf);
 
-    let chunks = Layout::vertical([
-        Constraint::Max(2),
-        Constraint::Max(2),
-        Constraint::Length(3),
-    ])
-    .split(inner);
+    let chunks = Layout::vertical([Constraint::Max(2), Constraint::Length(3)]).split(inner);
 
-    Paragraph::new("Enter a name for your new playlist:")
+    Paragraph::new("Enter playlist title: ")
         .centered()
-        .render(chunks[1], buf);
+        .render(chunks[0], buf);
 
     state.popup.input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
             .fg(theme.border)
-            .padding(Padding::horizontal(1)),
+            .padding(Padding::horizontal(2)),
     );
     state
         .popup
         .input
         .set_style(Style::new().fg(theme.text_focused));
-    state.popup.input.render(chunks[2], buf);
+    state.popup.input.render(chunks[1], buf);
 }
 
 fn render_add_song_popup(
@@ -118,14 +122,24 @@ fn render_delete_popup(
         .title_alignment(ratatui::layout::Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(theme.border))
+        .fg(theme.text_focused)
         .bg(theme.bg)
-        .padding(POPUP_PADDING);
+        .padding(Padding {
+            left: 5,
+            right: 5,
+            top: (area.height as f32 * 0.35) as u16,
+            bottom: 0,
+        });
 
     if let Some(p) = state.get_selected_playlist() {
-        let warning = Paragraph::new(format!("Are you sure you want to delete\n[{}]?", p.name))
-            .block(block)
-            .wrap(Wrap { trim: true })
-            .centered();
+        let p_name = Line::from_iter([p.name.as_str().fg(theme.border), "?".into()]);
+        let warning = Paragraph::new(Text::from_iter([
+            format!("Are you sure you want to delete\n").into(),
+            p_name,
+        ]))
+        .block(block)
+        .wrap(Wrap { trim: true })
+        .centered();
         warning.render(area, buf);
     };
 }
@@ -136,39 +150,49 @@ fn render_rename_popup(
     state: &mut UiState,
 ) {
     let theme = state.get_theme(&Pane::Popup);
+    let padding_h = (area.height as f32 * 0.25) as u16;
+    let padding_w = (area.width as f32 * 0.2) as u16;
+
     let block = Block::bordered()
         .title(" Rename Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Double)
         .border_style(Style::new().fg(theme.border))
+        .fg(theme.text_focused)
         .bg(theme.bg)
-        .padding(POPUP_PADDING);
+        .padding(Padding {
+            left: padding_w,
+            right: padding_w,
+            top: padding_h,
+            bottom: 0,
+        });
 
     let inner = block.inner(area);
     block.render(area, buf);
 
-    let chunks = Layout::vertical([
-        Constraint::Percentage(10),
-        Constraint::Max(3),
-        Constraint::Length(3),
-        Constraint::Fill(1),
-    ])
-    .split(inner);
+    let chunks = Layout::vertical([Constraint::Max(3), Constraint::Length(3)]).split(inner);
 
     if let Some(playlist) = state.get_selected_playlist() {
-        Paragraph::new(format!("Enter a new name for\n `[{}]`: ", playlist.name))
-            .centered()
-            .render(chunks[1], buf);
+        let p_name = playlist.name.as_str().fg(theme.border);
+        Paragraph::new(Text::from_iter([
+            format!("Enter a new name for\n").into(),
+            p_name,
+        ]))
+        .centered()
+        .render(chunks[0], buf);
 
         state.popup.input.set_block(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .fg(theme.text_focused)
-                .padding(Padding::horizontal(1)),
+                .fg(theme.border)
+                .padding(Padding::horizontal(2)),
         );
 
-        state.popup.input.set_style(Style::new().fg(Color::White));
-        state.popup.input.render(chunks[2], buf);
+        state
+            .popup
+            .input
+            .set_style(Style::new().fg(theme.text_focused));
+        state.popup.input.render(chunks[1], buf);
     }
 }
