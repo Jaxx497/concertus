@@ -1,14 +1,14 @@
-use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState};
+use super::{playback::PlaybackCoordinator, search_state::SearchState, DisplayState};
 use crate::{
-    Library,
     database::DbWorker,
     domain::{Album, Playlist, SimpleSong},
     key_handler::InputContext,
     player::PlayerState,
     ui_state::{
-        LibraryView, Mode, Pane, PlaybackView, ThemeManager,
         popup::{PopupState, PopupType},
+        LibraryView, Mode, Pane, PlaybackView, PlaylistAction, SettingsMode, ThemeManager,
     },
+    Library,
 };
 use anyhow::{Error, Result};
 use indexmap::IndexSet;
@@ -129,5 +129,19 @@ impl UiState {
             (Mode::QUIT, _) => unreachable!(),
             _ => InputContext::TrackList(self.get_mode().clone()),
         }
+    }
+
+    pub fn is_text_input_active(&self) -> bool {
+        matches!(
+            (self.get_pane(), &self.popup.current),
+            (Pane::Search, _)
+                | (Pane::Popup, PopupType::Settings(SettingsMode::AddRoot))
+                | (Pane::Popup, PopupType::Playlist(PlaylistAction::Create))
+                | (
+                    Pane::Popup,
+                    PopupType::Playlist(PlaylistAction::CreateWithSongs)
+                )
+                | (Pane::Popup, PopupType::Playlist(PlaylistAction::Rename))
+        )
     }
 }

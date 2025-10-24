@@ -14,7 +14,6 @@ use KeyCode::*;
 
 #[rustfmt::skip]
 pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> {
-
     if let Some(action) = global_commands(&key_event, &state) {
         return Some(action);
     }
@@ -45,19 +44,16 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (C, Char('n')) => Some(Action::PlayNext),
         (C, Char('p')) => Some(Action::PlayPrev),
 
-        (S, Char('>')) => Some(Action::CycleTheme(MoveDirection::Up)),
-        (S, Char('<')) => Some(Action::CycleTheme(MoveDirection::Down)),
-
         // Works on everything except search or popup
         _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
+            (X, Esc) => Some(Action::SoftReset),
+
             (C, Char('t')) => Some(Action::ThemeManager),
 
             (C, Char('e')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
             (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
-
-            (X, Esc) => Some(Action::SoftReset),
 
             (X, Char('`')) => Some(Action::ViewSettings),
             (X, Char(' ')) => Some(Action::TogglePause),
@@ -92,6 +88,9 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
             (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
             (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
+
+            (S, Char('>')) => Some(Action::CycleTheme(MoveDirection::Up)),
+            (S, Char('<')) => Some(Action::CycleTheme(MoveDirection::Down)),
 
             (_, Char('f') | Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
             (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),

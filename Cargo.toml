@@ -4,24 +4,24 @@ version = "0.0.8"
 edition = "2021"
 
 [dependencies]
-rustfft = "*"
 
-anyhow = "*"
-bincode = "*"
-byteorder = "*"
-dirs = "*"
-fuzzy-matcher = "*"
-indexmap = "*"
-mp4ameta = "*"
+anyhow = "1.0.100"
+bincode = "2.0.1"
+byteorder = "1.5"
+dirs = "6.0.0"
+fuzzy-matcher = "0.3.7"
+indexmap = "2.12.0"
+mp4ameta = "0.13"
 nohash-hasher = "0.2.0"
-rand = "*"
+rand = "0.9.2"
 ratatui = "*"
-rayon = "*"
+rayon = "1.11.0"
 rodio = { git = "https://github.com/RustAudio/rodio", branch = "feat/comprehensive-seeking-and-bit-depth", features = ["symphonia-all"]}
 rusqlite = { version = "0.37.0", features = ["bundled"] }
-serde = { version = "*", features = ["derive"]}
+rustfft = "6.4.1"
+serde = { version = "1.0.228", features = ["derive"]}
 symphonia = { version = "0.5.5", features = ["all"] }
-toml = "*"
+toml = "0.9.8"
 tui-textarea = "0.7.0"
-walkdir = "*"
+walkdir = "2.5.0"
 xxhash-rust = { version = "0.8.15", features = ["xxh3"] }
