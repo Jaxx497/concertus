@@ -1,7 +1,7 @@
 use ratatui::{
     layout::Alignment,
     style::{Style, Stylize},
-    widgets::{Block, BorderType, List, StatefulWidget},
+    widgets::{Block, List, StatefulWidget},
 };
 
 use crate::{
@@ -32,8 +32,8 @@ impl StatefulWidget for ThemeManager {
             .title(" Select Theme ")
             .title_bottom(" [Enter] / [Esc] ")
             .title_alignment(Alignment::Center)
-            .border_type(BorderType::Double)
-            .border_style(Style::new().fg(theme.text_secondary))
+            .border_type(theme.border_type)
+            .border_style(Style::new().fg(theme.border))
             .bg(theme.bg)
             .padding(POPUP_PADDING);
 

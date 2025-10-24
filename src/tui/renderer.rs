@@ -1,16 +1,15 @@
-use super::{
-    widgets::{RootManager, SongTable},
-    AppLayout, ErrorMsg, Progress, SearchBar, SideBar,
-};
+use super::{widgets::SongTable, AppLayout, Progress, SearchBar, SideBar};
 use crate::{
-    tui::widgets::{BufferLine, PlaylistPopup, ThemeManager},
-    ui_state::{Mode, PopupType},
+    tui::{
+        render_bg,
+        widgets::{BufferLine, PopupManager},
+    },
+    ui_state::Mode,
     UiState,
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    style::Stylize,
-    widgets::{Widget, *},
+    widgets::StatefulWidget,
     Frame,
 };
 
@@ -25,10 +24,7 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     }
 
     let layout = AppLayout::new(f.area(), state);
-
-    Block::new()
-        .bg(state.theme_manager.active.bg.1)
-        .render(f.area(), f.buffer_mut());
+    render_bg(state, f);
 
     SearchBar.render(layout.search_bar, f.buffer_mut(), state);
     SideBar.render(layout.sidebar, f.buffer_mut(), state);
@@ -37,40 +33,8 @@ pub fn render(f: &mut Frame, state: &mut UiState) {
     BufferLine.render(layout.buffer_line, f.buffer_mut(), state);
 
     if state.popup.is_open() {
-        let popup_rect = match &state.popup.current {
-            PopupType::Playlist(_) => centered_rect(35, 40, f.area()),
-            PopupType::Settings(_) => centered_rect(35, 35, f.area()),
-            PopupType::ThemeManager => centered_rect(35, 35, f.area()),
-            PopupType::Error(_) => centered_rect(40, 30, f.area()),
-            _ => centered_rect(30, 30, f.area()),
-        };
-
-        Clear.render(popup_rect, f.buffer_mut());
-        match &state.popup.current {
-            PopupType::Playlist(_) => PlaylistPopup.render(popup_rect, f.buffer_mut(), state),
-            PopupType::Settings(_) => RootManager.render(popup_rect, f.buffer_mut(), state),
-
-            PopupType::ThemeManager => ThemeManager.render(popup_rect, f.buffer_mut(), state),
-            PopupType::Error(_) => ErrorMsg.render(popup_rect, f.buffer_mut(), state),
-            _ => (),
-        }
+        PopupManager.render(f.area(), f.buffer_mut(), state);
     }
-}
-
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::vertical([
-        Constraint::Percentage((100 - percent_y) / 2),
-        Constraint::Percentage(percent_y),
-        Constraint::Percentage((100 - percent_y) / 2),
-    ])
-    .split(r);
-
-    Layout::horizontal([
-        Constraint::Percentage((100 - percent_x) / 2),
-        Constraint::Percentage(percent_x),
-        Constraint::Percentage((100 - percent_x) / 2),
-    ])
-    .split(popup_layout[1])[1]
 }
 
 fn get_fullscreen_layout(area: Rect) -> [Rect; 2] {

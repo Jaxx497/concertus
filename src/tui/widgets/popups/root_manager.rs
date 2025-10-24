@@ -1,12 +1,12 @@
 use crate::{
     strip_win_prefix,
-    tui::widgets::{POPUP_PADDING, SELECTOR},
+    tui::widgets::SELECTOR,
     ui_state::{Pane, SettingsMode, UiState},
 };
 use ratatui::{
     layout::{Constraint, Layout},
     style::{Style, Stylize},
-    text::Line,
+    text::{Line, Text},
     widgets::{
         Block, BorderType, HighlightSpacing, List, Padding, Paragraph, StatefulWidget, Widget, Wrap,
     },
@@ -25,6 +25,8 @@ impl StatefulWidget for RootManager {
         let settings_mode = state.get_settings_mode();
 
         let theme = state.get_theme(&Pane::Popup);
+        let padding_h = (area.height as f32 * 0.2) as u16;
+        let padding_w = (area.width as f32 * 0.2) as u16;
 
         let title = match settings_mode {
             Some(SettingsMode::ViewRoots) => " Settings - Music Library Roots ",
@@ -35,12 +37,17 @@ impl StatefulWidget for RootManager {
 
         let block = Block::bordered()
             .title(title)
-            .title_bottom(get_help_text(settings_mode))
+            .title_bottom(get_keymaps(settings_mode))
             .title_alignment(ratatui::layout::Alignment::Center)
-            .border_type(BorderType::Double)
-            .border_style(Style::new().fg(theme.text_secondary))
+            .border_type(theme.border_type)
+            .border_style(theme.border)
             .bg(theme.bg)
-            .padding(POPUP_PADDING);
+            .padding(Padding {
+                left: padding_w,
+                right: padding_w,
+                top: padding_h,
+                bottom: 0,
+            });
 
         let inner = block.inner(area);
         block.render(area, buf);
@@ -54,7 +61,7 @@ impl StatefulWidget for RootManager {
     }
 }
 
-fn get_help_text(mode: Option<&SettingsMode>) -> &'static str {
+fn get_keymaps(mode: Option<&SettingsMode>) -> &'static str {
     if let Some(m) = mode {
         match m {
             SettingsMode::ViewRoots => " [a]dd / [d]elete / [Esc] close ",
@@ -112,7 +119,7 @@ fn render_add_root(
     .split(area);
 
     Paragraph::new("Enter the path to a directory containing music files:")
-        .wrap(Wrap { trim: false })
+        .wrap(Wrap { trim: true })
         .render(chunks[0], buf);
 
     let theme = state.get_theme(state.get_pane());
@@ -135,8 +142,8 @@ fn render_add_root(
 
     state.popup.input.render(chunks[1], buf);
 
-    let example = Paragraph::new("Example: C:\\Music or /home/user/music")
-        .fg(theme.bg)
+    let example = Paragraph::new("Ex: C:\\Music or ~/music/albums")
+        .fg(theme.text_faded)
         .centered();
     example.render(chunks[2], buf);
 }
@@ -158,13 +165,20 @@ fn render_remove_root(
     let selected_root = &roots[state.popup.selection.selected().unwrap()];
     let selected_root = strip_win_prefix(&selected_root);
 
-    let warning = Paragraph::new(format!(
-        "Are you sure you want to remove this root?\n\n{}\n\nThis will remove all songs from this directory from your library.",
-        selected_root
-    ))
-    .wrap(Wrap { trim: true })
-    .centered()
-    .fg(theme.text_secondary);
+    let text = Text::from_iter([
+        Line::from("Are you sure you want to delete:"),
+        Line::default(),
+        selected_root.fg(theme.highlight).into(),
+        Line::default(),
+        "This will remove all songs from this directory from your library."
+            .fg(theme.text_faded)
+            .into(),
+    ]);
+
+    let warning = Paragraph::new(text)
+        .wrap(Wrap { trim: true })
+        .centered()
+        .fg(theme.text_secondary);
 
     warning.render(area, buf);
 }

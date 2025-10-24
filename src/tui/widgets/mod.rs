@@ -1,4 +1,5 @@
 mod buffer_line;
+mod popup;
 mod popups;
 mod progress;
 mod search;
@@ -7,6 +8,7 @@ mod song_window;
 mod tracklist;
 
 pub use buffer_line::BufferLine;
+pub use popup::PopupManager;
 pub use popups::{ErrorMsg, PlaylistPopup, RootManager, ThemeManager};
 pub use progress::Progress;
 pub use search::SearchBar;

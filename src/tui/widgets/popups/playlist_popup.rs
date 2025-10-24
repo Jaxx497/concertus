@@ -45,7 +45,7 @@ fn render_create_popup(
         .title(" Create New Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
-        .border_type(BorderType::Double)
+        .border_type(theme.border_type)
         .border_style(Style::new().fg(theme.border))
         .fg(theme.text_focused)
         .bg(theme.bg)
@@ -94,10 +94,10 @@ fn render_add_song_popup(
         .collect::<Vec<Line>>();
 
     let block = Block::bordered()
-        .title(" Select Playlist ")
+        .title(" Add To Playlist ")
         .title_bottom(" [Enter] / [c]reate playlist / [Esc] ")
         .title_alignment(ratatui::layout::Alignment::Center)
-        .border_type(BorderType::Double)
+        .border_type(theme.border_type)
         .border_style(Style::new().fg(theme.text_secondary))
         .bg(theme.bg)
         .padding(POPUP_PADDING);
@@ -117,10 +117,10 @@ fn render_delete_popup(
 ) {
     let theme = state.get_theme(&Pane::Popup);
     let block = Block::bordered()
-        .title(format!(" Delete Playlist?? "))
+        .title(format!(" Delete Playlist "))
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
-        .border_type(BorderType::Double)
+        .border_type(theme.border_type)
         .border_style(Style::new().fg(theme.border))
         .fg(theme.text_focused)
         .bg(theme.bg)
@@ -132,7 +132,7 @@ fn render_delete_popup(
         });
 
     if let Some(p) = state.get_selected_playlist() {
-        let p_name = Line::from_iter([p.name.as_str().fg(theme.border), "?".into()]);
+        let p_name = Line::from_iter([p.name.as_str().fg(theme.border), " ?".into()]);
         let warning = Paragraph::new(Text::from_iter([
             format!("Are you sure you want to delete\n").into(),
             p_name,
@@ -157,7 +157,7 @@ fn render_rename_popup(
         .title(" Rename Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(Alignment::Center)
-        .border_type(BorderType::Double)
+        .border_type(theme.border_type)
         .border_style(Style::new().fg(theme.border))
         .fg(theme.text_focused)
         .bg(theme.bg)

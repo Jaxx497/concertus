@@ -1,10 +1,14 @@
-use crate::{
-    tui::SEARCH_PADDING,
-    ui_state::{Pane, UiState},
-};
+use crate::ui_state::{Pane, UiState};
 use ratatui::{
     style::Stylize,
     widgets::{Block, StatefulWidget, Widget},
+};
+
+const SEARCH_PADDING: ratatui::widgets::Padding = ratatui::widgets::Padding {
+    left: 2,
+    right: 2,
+    top: 1,
+    bottom: 0,
 };
 
 pub struct SearchBar;
