@@ -519,6 +519,7 @@ impl UiState {
         };
 
         state.select(Some(new_pos));
+        *self.display_state.table_pos.offset_mut() = 0;
         self.set_legal_songs();
     }
 

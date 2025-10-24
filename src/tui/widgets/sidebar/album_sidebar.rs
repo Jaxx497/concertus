@@ -94,7 +94,7 @@ impl StatefulWidget for SideBarAlbum {
             }
         }
 
-        let title = Line::from(format!(" ⟪ {} Albums ⟫ ", albums.len()));
+        let title = Line::from(format!(" ⟪ {} Albums ⟫ ", albums.len())).fg(theme.highlight);
         let sorting = Line::from(pane_sort)
             .right_aligned()
             .fg(theme.text_secondary);

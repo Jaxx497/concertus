@@ -4,6 +4,8 @@ version = "0.0.8"
 edition = "2021"
 
 [dependencies]
+rustfft = "*"
+
 anyhow = "*"
 bincode = "*"
 byteorder = "*"

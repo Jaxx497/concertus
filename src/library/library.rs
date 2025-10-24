@@ -65,10 +65,8 @@ impl Library {
 
     pub fn delete_root(&mut self, root: &str) -> Result<()> {
         let bad_root = PathBuf::from(root);
-        match self.roots.remove(&bad_root) {
-            true => self.db.delete_root(&bad_root),
-            false => Err(anyhow!("Error deleting root")),
-        }
+        self.roots.remove(&bad_root);
+        self.db.delete_root(&bad_root)
     }
 
     /// Build the library based on the current state of the database.

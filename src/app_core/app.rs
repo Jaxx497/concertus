@@ -15,7 +15,7 @@ use std::{
         Arc, Mutex,
     },
     thread,
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 pub struct Concertus {
