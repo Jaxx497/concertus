@@ -21,7 +21,7 @@ impl StatefulWidget for GenericView {
             .enumerate()
             .map(|(idx, song)| {
                 let index = CellFactory::index_cell(&theme, idx);
-                let icon = CellFactory::status_cell(song, state);
+                let icon = CellFactory::status_cell(song, state, idx);
                 let title = CellFactory::title_cell(&theme, song);
                 let artist = CellFactory::artist_cell(&theme, song);
                 let filetype = CellFactory::filetype_cell(&theme, song);

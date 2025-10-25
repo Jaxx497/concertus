@@ -2,7 +2,7 @@ use crate::{
     domain::{Playlist, PlaylistSong},
     ui_state::{LibraryView, PopupType, UiState},
 };
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 
 #[derive(PartialEq, Clone)]
 pub enum PlaylistAction {
@@ -144,17 +144,21 @@ impl UiState {
         match self.popup.selection.selected() {
             Some(playlist_idx) => {
                 let playlist_id = self.playlists.get(playlist_idx).unwrap().id;
-                match self.get_bulk_sel().is_empty() {
+                match self.bulk_select_empty() {
                     true => {
                         let song_id = self.get_selected_song()?.id;
 
                         self.db_worker.add_to_playlist(song_id, playlist_id)?;
                     }
                     false => {
-                        let song_ids = self.get_bulk_sel().iter().map(|s| s.id).collect::<Vec<_>>();
+                        let song_ids = self
+                            .get_bulk_select_songs()
+                            .iter()
+                            .map(|s| s.id)
+                            .collect::<Vec<_>>();
 
                         self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
-                        self.clear_bulk_sel();
+                        self.clear_bulk_select();
                     }
                 }
                 self.close_popup()
@@ -163,6 +167,7 @@ impl UiState {
         };
 
         self.get_playlists()?;
+        self.set_legal_songs();
 
         Ok(())
     }
@@ -193,9 +198,13 @@ impl UiState {
             let playlist_id = new_playlist.id;
 
             if !self.bulk_select_empty() {
-                let song_ids = self.get_bulk_sel().iter().map(|s| s.id).collect::<Vec<_>>();
+                let song_ids = self
+                    .get_bulk_select_songs()
+                    .iter()
+                    .map(|s| s.id)
+                    .collect::<Vec<_>>();
                 self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
-                self.clear_bulk_sel();
+                self.clear_bulk_select();
             } else if let Ok(song) = self.get_selected_song() {
                 self.db_worker.add_to_playlist(song.id, playlist_id)?;
             }
@@ -206,6 +215,8 @@ impl UiState {
         if self.display_state.playlist_pos.selected().is_none() {
             self.display_state.playlist_pos.select_first();
         }
+
+        self.set_legal_songs();
 
         self.close_popup();
         Ok(())

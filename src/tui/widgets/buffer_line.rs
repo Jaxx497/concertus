@@ -35,7 +35,7 @@ impl StatefulWidget for BufferLine {
             ])
             .areas(area);
 
-        let selection_count = state.get_bulk_sel().len();
+        let selection_count = state.get_bulk_select().len();
 
         get_bulk_selection(selection_count, &theme).render(left, buf);
         playing_title(state, &theme, center.width as usize).render(center, buf);

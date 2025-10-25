@@ -33,8 +33,9 @@ impl StatefulWidget for StandardTable {
 
         let rows = songs
             .iter()
-            .map(|song| {
-                let symbol = CellFactory::status_cell(song, state);
+            .enumerate()
+            .map(|(idx, song)| {
+                let symbol = CellFactory::status_cell(song, state, idx);
                 let mut title_col = Cell::from(song.get_title()).fg(theme.text_faded);
                 let mut artist_col = Cell::from(song.get_artist()).fg(theme.text_faded);
                 let mut album_col = Cell::from(song.get_album()).fg(theme.text_faded);

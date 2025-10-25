@@ -31,9 +31,10 @@ impl StatefulWidget for AlbumView {
         let rows = album
             .tracklist
             .iter()
-            .map(|song| {
+            .enumerate()
+            .map(|(idx, song)| {
                 let track_no = CellFactory::get_track_discs(theme, song);
-                let icon = CellFactory::status_cell(song, state);
+                let icon = CellFactory::status_cell(song, state, idx);
                 let title = CellFactory::title_cell(theme, song);
                 let artist = CellFactory::artist_cell(theme, song);
                 let format = CellFactory::filetype_cell(theme, song);

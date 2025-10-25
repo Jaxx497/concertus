@@ -25,7 +25,7 @@ pub struct DisplayState {
     pub table_pos: TableState,
     table_pos_cached: usize,
 
-    pub bulk_select: IndexSet<Arc<SimpleSong>>,
+    pub bulk_select: IndexSet<usize>,
 }
 
 impl DisplayState {
@@ -157,6 +157,13 @@ impl UiState {
         }
     }
 
+    pub fn get_selected_idx(&self) -> Result<usize> {
+        self.display_state
+            .table_pos
+            .selected()
+            .ok_or_else(|| anyhow!("No song selected"))
+    }
+
     pub fn get_selected_song(&mut self) -> Result<Arc<SimpleSong>> {
         if self.legal_songs.is_empty() {
             self.display_state.table_pos.select(None);
@@ -165,11 +172,7 @@ impl UiState {
 
         match self.display_state.mode {
             Mode::Power | Mode::Library(_) | Mode::Search | Mode::Queue => {
-                let idx = self
-                    .display_state
-                    .table_pos
-                    .selected()
-                    .ok_or_else(|| anyhow!("No song selected!"))?;
+                let idx = self.get_selected_idx()?;
                 Ok(Arc::clone(&self.legal_songs[idx]))
             }
             _ => Err(anyhow!("Should not be reachable")),
@@ -177,11 +180,11 @@ impl UiState {
     }
 
     pub fn add_to_bulk_select(&mut self) -> Result<()> {
-        let song = self.get_selected_song()?;
+        let song_idx = self.get_selected_idx()?;
 
-        match self.display_state.bulk_select.contains(&song) {
-            true => self.display_state.bulk_select.swap_remove(&song),
-            false => self.display_state.bulk_select.insert(song),
+        match self.display_state.bulk_select.contains(&song_idx) {
+            true => self.display_state.bulk_select.swap_remove(&song_idx),
+            false => self.display_state.bulk_select.insert(song_idx),
         };
 
         Ok(())
@@ -189,21 +192,13 @@ impl UiState {
 
     pub fn bulk_select_all(&mut self) -> Result<()> {
         if let Mode::Queue | Mode::Library(_) = self.get_mode() {
-            let songs = &self.legal_songs;
+            let all_selected =
+                (0..self.legal_songs.len()).all(|i| self.display_state.bulk_select.contains(&i));
 
-            match songs
-                .iter()
-                .all(|s| self.display_state.bulk_select.contains(s))
-            {
-                true => {
-                    songs.iter().for_each(|s| {
-                        self.display_state.bulk_select.swap_remove(s);
-                    });
-                }
+            match all_selected {
+                true => self.clear_bulk_select(),
                 false => {
-                    songs.iter().for_each(|s| {
-                        self.display_state.bulk_select.insert(Arc::clone(&s));
-                    });
+                    self.display_state.bulk_select = (0..self.legal_songs.len()).collect();
                 }
             }
         }
@@ -406,6 +401,7 @@ impl UiState {
     }
 
     pub(crate) fn set_legal_songs(&mut self) {
+        self.clear_bulk_select();
         match &self.display_state.mode {
             Mode::Power => {
                 self.legal_songs = self.library.get_all_songs().to_vec();

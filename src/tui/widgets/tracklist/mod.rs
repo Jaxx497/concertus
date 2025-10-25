@@ -158,12 +158,12 @@ pub fn create_empty_block(theme: &DisplayTheme, title: &str) -> Block<'static> {
 pub struct CellFactory;
 
 impl CellFactory {
-    pub fn status_cell(song: &Arc<SimpleSong>, state: &UiState) -> Cell<'static> {
+    pub fn status_cell(song: &Arc<SimpleSong>, state: &UiState, idx: usize) -> Cell<'static> {
         let theme = state.get_theme(&Pane::TrackList);
 
         let is_playing = state.get_now_playing().map(|s| s.id) == Some(song.id);
         let is_queued = state.playback.queue_ids.contains(&song.id);
-        let is_bulk_selected = state.get_bulk_sel().contains(song);
+        let is_bulk_selected = state.get_bulk_select().contains(&idx);
 
         Cell::from(if is_playing {
             MUSIC_NOTE.fg(theme.text_secondary)

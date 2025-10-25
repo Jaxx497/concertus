@@ -90,7 +90,7 @@ impl UiState {
             self.set_mode(Mode::Library(LibraryView::Albums));
         }
 
-        self.clear_bulk_sel();
+        self.clear_bulk_select();
         self.search.input.select_all();
         self.search.input.cut();
         self.set_legal_songs();
@@ -103,15 +103,24 @@ impl UiState {
         }
     }
 
-    pub fn get_bulk_sel(&self) -> &IndexSet<Arc<SimpleSong>> {
+    pub fn get_bulk_select(&self) -> &IndexSet<usize> {
         &self.display_state.bulk_select
+    }
+
+    pub fn get_bulk_select_songs(&self) -> Vec<Arc<SimpleSong>> {
+        self.display_state
+            .bulk_select
+            .iter()
+            .filter_map(|&idx| self.legal_songs.get(idx))
+            .map(Arc::clone)
+            .collect()
     }
 
     pub fn bulk_select_empty(&self) -> bool {
         self.display_state.bulk_select.is_empty()
     }
 
-    pub fn clear_bulk_sel(&mut self) {
+    pub fn clear_bulk_select(&mut self) {
         self.display_state.bulk_select.clear();
     }
 

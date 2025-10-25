@@ -358,7 +358,7 @@ impl Concertus {
 
             Action::BulkSelect      => self.ui.add_to_bulk_select()?,
             Action::BulkSelectALL   => self.ui.bulk_select_all()?,
-            Action::ClearBulkSelect => self.ui.clear_bulk_sel(),
+            Action::ClearBulkSelect => self.ui.clear_bulk_select(),
 
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
             Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),

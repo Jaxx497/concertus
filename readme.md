@@ -46,7 +46,6 @@ new backend options.
 > **Current Objective:** Provide custom themeing options and a theme management system
 
 - Provide visual progress when scanning in songs
-- Fix Bulk Select bugs
 - Improved testing for various formats
 - Re-work sort-by-column approach
 - Implement a secondary player backend (gstreamer?)

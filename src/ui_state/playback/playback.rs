@@ -4,7 +4,7 @@ use crate::{
     strip_win_prefix,
     ui_state::{LibraryView, Mode, UiState},
 };
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use std::{
     collections::{HashSet, VecDeque},
     sync::{Arc, Mutex},
@@ -28,13 +28,6 @@ impl PlaybackCoordinator {
             history: VecDeque::new(),
             player_state,
         }
-    }
-
-    pub fn rebuild_queue_ids(&mut self) {
-        self.queue_ids.clear();
-        self.queue.iter().for_each(|song| {
-            self.queue_ids.insert(song.get_id());
-        });
     }
 
     pub fn queue_push_back(&mut self, song: Arc<QueueSong>) {
@@ -102,18 +95,10 @@ impl UiState {
     }
 
     pub fn add_to_queue_bulk(&mut self) -> Result<()> {
-        let songs;
-
-        if !self.get_bulk_sel().is_empty() {
-            songs = self
-                .display_state
-                .bulk_select
-                .clone()
-                .into_iter()
-                .collect::<Vec<Arc<SimpleSong>>>();
-            self.clear_bulk_sel();
+        let songs = if !self.bulk_select_empty() {
+            self.get_bulk_select_songs()
         } else {
-            songs = match self.get_mode() {
+            match self.get_mode() {
                 Mode::Library(LibraryView::Albums) => {
                     let album_idx = self
                         .display_state
@@ -133,12 +118,13 @@ impl UiState {
                     self.playlists[playlist_idx].get_tracks()
                 }
                 _ => return Ok(()),
-            };
-        }
+            }
+        };
 
         for song in songs {
             self.add_to_queue_single(Some(song))?;
         }
+        self.clear_bulk_select();
         Ok(())
     }
 
@@ -172,9 +158,8 @@ impl UiState {
     }
 
     pub fn remove_song(&mut self) -> Result<()> {
-        let selected_song = self.get_selected_song()?;
-
-        let current_is_selected = self.get_bulk_sel().contains(&selected_song);
+        let selected_idx = self.get_selected_idx()?;
+        let current_is_selected = self.get_bulk_select().contains(&selected_idx);
 
         match (self.bulk_select_empty(), current_is_selected) {
             (false, true) => self.remove_song_bulk()?,
@@ -234,55 +219,54 @@ impl UiState {
                     .ok_or_else(|| anyhow!("No song selected"))?
                     .id;
 
-                let removal_ids = self
-                    .get_bulk_sel()
-                    .iter()
-                    .map(|s| s.id)
-                    .collect::<HashSet<_>>();
-
                 let ps_ids_to_remove = {
                     let playlist = self
                         .playlists
-                        .iter_mut()
+                        .iter()
                         .find(|p| p.id == playlist_id)
                         .ok_or_else(|| anyhow!("Playlist not found"))?;
 
-                    playlist
-                        .tracklist
+                    self.get_bulk_select()
                         .iter()
-                        .filter(|ps| removal_ids.contains(&ps.song.id))
-                        .map(|ps| ps.id)
-                        .collect::<Vec<_>>()
+                        .filter_map(|&idx| playlist.tracklist.get(idx).map(|ps| ps.id))
+                        .collect()
                 };
 
                 self.db_worker.remove_from_playlist(ps_ids_to_remove)?;
 
+                // Create a sorted list of indicies
+                let mut indicies = self.get_bulk_select().clone();
+                indicies.sort_unstable();
+
+                // Declare after indicies declaration to avoid fighting with borrow checker
                 let playlist = self
                     .playlists
                     .iter_mut()
                     .find(|p| p.id == playlist_id)
                     .ok_or_else(|| anyhow!("Playlist not found"))?;
 
-                playlist
-                    .tracklist
-                    .retain(|playlist_song| !removal_ids.contains(&playlist_song.song.id));
+                // Remove indicies in reverse order
+                for &idx in indicies.iter().rev() {
+                    if idx < playlist.tracklist.len() {
+                        playlist.tracklist.remove(idx);
+                    }
+                }
             }
             Mode::Queue => {
-                let removal_ids = self
-                    .get_bulk_sel()
-                    .iter()
-                    .map(|s| s.id)
-                    .collect::<HashSet<_>>();
+                let mut indicies = self.get_bulk_select().clone();
+                indicies.sort_unstable();
 
-                self.playback
-                    .queue
-                    .retain(|qs| !removal_ids.contains(&qs.meta.id));
-                self.playback.rebuild_queue_ids();
+                // Remove indicies in reverse order
+                for &idx in indicies.iter().rev() {
+                    if idx < self.playback.queue.len() {
+                        self.playback.remove_from_queue(idx);
+                    }
+                }
             }
             _ => (),
         }
 
-        self.clear_bulk_sel();
+        self.clear_bulk_select();
         Ok(())
     }
 }
