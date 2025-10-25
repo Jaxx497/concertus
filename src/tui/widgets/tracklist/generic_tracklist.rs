@@ -2,7 +2,10 @@ use crate::{
     tui::widgets::tracklist::{create_standard_table, get_title, CellFactory},
     ui_state::{Pane, UiState},
 };
-use ratatui::widgets::{Row, StatefulWidget};
+use ratatui::{
+    style::Stylize,
+    widgets::{Row, StatefulWidget},
+};
 
 pub struct GenericView;
 impl StatefulWidget for GenericView {
@@ -20,6 +23,8 @@ impl StatefulWidget for GenericView {
             .iter()
             .enumerate()
             .map(|(idx, song)| {
+                let is_bulk_selected = state.get_bulk_select_indicies().contains(&idx);
+
                 let index = CellFactory::index_cell(&theme, idx);
                 let icon = CellFactory::status_cell(song, state, idx);
                 let title = CellFactory::title_cell(&theme, song);
@@ -27,7 +32,12 @@ impl StatefulWidget for GenericView {
                 let filetype = CellFactory::filetype_cell(&theme, song);
                 let duration = CellFactory::duration_cell(&theme, song);
 
-                Row::new([index, icon, title, artist, filetype, duration])
+                match is_bulk_selected {
+                    true => Row::new([index, icon, title, artist, filetype, duration])
+                        .fg(theme.text_highlight)
+                        .bg(state.theme_manager.active.highlight.1),
+                    false => Row::new([index, icon, title, artist, filetype, duration]),
+                }
             })
             .collect::<Vec<Row>>();
 

@@ -163,7 +163,7 @@ impl CellFactory {
 
         let is_playing = state.get_now_playing().map(|s| s.id) == Some(song.id);
         let is_queued = state.playback.queue_ids.contains(&song.id);
-        let is_bulk_selected = state.get_bulk_select().contains(&idx);
+        let is_bulk_selected = state.get_bulk_select_indicies().contains(&idx);
 
         Cell::from(if is_playing {
             MUSIC_NOTE.fg(theme.text_secondary)

@@ -11,7 +11,6 @@ use crate::{
     Library,
 };
 use anyhow::{Error, Result};
-use indexmap::IndexSet;
 use std::sync::{Arc, Mutex};
 
 pub struct UiState {
@@ -101,27 +100,6 @@ impl UiState {
             PopupType::Error(e) => Some(e.as_str()),
             _ => None,
         }
-    }
-
-    pub fn get_bulk_select(&self) -> &IndexSet<usize> {
-        &self.display_state.bulk_select
-    }
-
-    pub fn get_bulk_select_songs(&self) -> Vec<Arc<SimpleSong>> {
-        self.display_state
-            .bulk_select
-            .iter()
-            .filter_map(|&idx| self.legal_songs.get(idx))
-            .map(Arc::clone)
-            .collect()
-    }
-
-    pub fn bulk_select_empty(&self) -> bool {
-        self.display_state.bulk_select.is_empty()
-    }
-
-    pub fn clear_bulk_select(&mut self) {
-        self.display_state.bulk_select.clear();
     }
 
     pub fn get_input_context(&self) -> InputContext {

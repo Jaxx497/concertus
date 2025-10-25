@@ -356,7 +356,7 @@ impl Concertus {
             Action::AddToPlaylist   => self.ui.add_to_playlist_popup(),
             Action::AddToPlaylistConfirm => self.ui.add_to_playlist()?,
 
-            Action::BulkSelect      => self.ui.add_to_bulk_select()?,
+            Action::BulkSelect      => self.ui.toggle_bulk_selection()?,
             Action::BulkSelectALL   => self.ui.bulk_select_all()?,
             Action::ClearBulkSelect => self.ui.clear_bulk_select(),
 

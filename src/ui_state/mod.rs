@@ -1,3 +1,4 @@
+mod bulk_select;
 mod display_state;
 mod domain;
 mod playback;

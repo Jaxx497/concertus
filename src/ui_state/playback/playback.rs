@@ -94,40 +94,6 @@ impl UiState {
         Ok(())
     }
 
-    pub fn add_to_queue_bulk(&mut self) -> Result<()> {
-        let songs = if !self.bulk_select_empty() {
-            self.get_bulk_select_songs()
-        } else {
-            match self.get_mode() {
-                Mode::Library(LibraryView::Albums) => {
-                    let album_idx = self
-                        .display_state
-                        .album_pos
-                        .selected()
-                        .ok_or_else(|| anyhow!("Illegal album selection!"))?;
-
-                    self.albums[album_idx].tracklist.clone()
-                }
-                Mode::Library(LibraryView::Playlists) => {
-                    let playlist_idx = self
-                        .display_state
-                        .playlist_pos
-                        .selected()
-                        .ok_or_else(|| anyhow!("Illegal playlist selection!"))?;
-
-                    self.playlists[playlist_idx].get_tracks()
-                }
-                _ => return Ok(()),
-            }
-        };
-
-        for song in songs {
-            self.add_to_queue_single(Some(song))?;
-        }
-        self.clear_bulk_select();
-        Ok(())
-    }
-
     pub(crate) fn add_to_history(&mut self, song: Arc<SimpleSong>) {
         if let Some(last) = self.playback.history.front() {
             if last.id == song.id {
@@ -159,7 +125,7 @@ impl UiState {
 
     pub fn remove_song(&mut self) -> Result<()> {
         let selected_idx = self.get_selected_idx()?;
-        let current_is_selected = self.get_bulk_select().contains(&selected_idx);
+        let current_is_selected = self.get_bulk_select_indicies().contains(&selected_idx);
 
         match (self.bulk_select_empty(), current_is_selected) {
             (false, true) => self.remove_song_bulk()?,
@@ -208,65 +174,6 @@ impl UiState {
             }
             _ => (),
         };
-        Ok(())
-    }
-
-    pub fn remove_song_bulk(&mut self) -> Result<()> {
-        match *self.get_mode() {
-            Mode::Library(LibraryView::Playlists) => {
-                let playlist_id = self
-                    .get_selected_playlist()
-                    .ok_or_else(|| anyhow!("No song selected"))?
-                    .id;
-
-                let ps_ids_to_remove = {
-                    let playlist = self
-                        .playlists
-                        .iter()
-                        .find(|p| p.id == playlist_id)
-                        .ok_or_else(|| anyhow!("Playlist not found"))?;
-
-                    self.get_bulk_select()
-                        .iter()
-                        .filter_map(|&idx| playlist.tracklist.get(idx).map(|ps| ps.id))
-                        .collect()
-                };
-
-                self.db_worker.remove_from_playlist(ps_ids_to_remove)?;
-
-                // Create a sorted list of indicies
-                let mut indicies = self.get_bulk_select().clone();
-                indicies.sort_unstable();
-
-                // Declare after indicies declaration to avoid fighting with borrow checker
-                let playlist = self
-                    .playlists
-                    .iter_mut()
-                    .find(|p| p.id == playlist_id)
-                    .ok_or_else(|| anyhow!("Playlist not found"))?;
-
-                // Remove indicies in reverse order
-                for &idx in indicies.iter().rev() {
-                    if idx < playlist.tracklist.len() {
-                        playlist.tracklist.remove(idx);
-                    }
-                }
-            }
-            Mode::Queue => {
-                let mut indicies = self.get_bulk_select().clone();
-                indicies.sort_unstable();
-
-                // Remove indicies in reverse order
-                for &idx in indicies.iter().rev() {
-                    if idx < self.playback.queue.len() {
-                        self.playback.remove_from_queue(idx);
-                    }
-                }
-            }
-            _ => (),
-        }
-
-        self.clear_bulk_select();
         Ok(())
     }
 }
