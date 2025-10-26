@@ -14,7 +14,7 @@ pub use search_results::StandardTable;
 use crate::{
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
-    tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED, SELECTED},
+    tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
     DurationStyle,
 };
@@ -158,46 +158,54 @@ pub fn create_empty_block(theme: &DisplayTheme, title: &str) -> Block<'static> {
 pub struct CellFactory;
 
 impl CellFactory {
-    pub fn status_cell(song: &Arc<SimpleSong>, state: &UiState, idx: usize) -> Cell<'static> {
+    pub fn status_cell(song: &Arc<SimpleSong>, state: &UiState, ms: bool) -> Cell<'static> {
         let theme = state.get_theme(&Pane::TrackList);
 
         let is_playing = state.get_now_playing().map(|s| s.id) == Some(song.id);
         let is_queued = state.playback.queue_ids.contains(&song.id);
-        let is_bulk_selected = state.get_bulk_select_indicies().contains(&idx);
 
         Cell::from(if is_playing {
-            MUSIC_NOTE.fg(theme.text_secondary)
-        } else if is_bulk_selected {
-            SELECTED.fg(theme.highlight)
+            MUSIC_NOTE.fg(match ms {
+                true => theme.text_highlight,
+                false => theme.text_secondary,
+            })
         } else if is_queued && !matches!(state.get_mode(), Mode::Queue) {
-            QUEUED.fg(theme.highlight)
+            QUEUED.fg(match ms {
+                true => theme.text_highlight,
+                false => theme.text_secondary,
+            })
         } else {
             "".into()
         })
     }
 
-    pub fn title_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
-        Cell::from(song.get_title().to_string().fg(theme.text_focused))
+    pub fn title_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
+        Cell::from(song.get_title().to_string()).fg(set_color_selection(ms, theme))
     }
 
-    pub fn artist_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
-        Cell::from(Line::from(song.get_artist().to_string())).fg(theme.text_focused)
+    pub fn artist_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
+        Cell::from(Line::from(song.get_artist().to_string())).fg(set_color_selection(ms, theme))
     }
 
-    pub fn filetype_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
-        Cell::from(Line::from(format!("{}", song.filetype)).centered()).fg(theme.text_focused)
+    pub fn filetype_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
+        Cell::from(Line::from(format!("{}", song.filetype)).centered())
+            .fg(set_color_selection(ms, theme))
     }
 
-    pub fn duration_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
+    pub fn duration_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
         let duration_str = get_readable_duration(song.get_duration(), DurationStyle::Clean);
-        Cell::from(Text::from(duration_str).right_aligned()).fg(theme.text_focused)
+        Cell::from(Text::from(duration_str).right_aligned()).fg(set_color_selection(ms, theme))
     }
 
-    pub fn index_cell(theme: &DisplayTheme, index: usize) -> Cell<'static> {
-        Cell::from(format!("{:>2}", index + 1)).fg(theme.highlight)
+    pub fn index_cell(theme: &DisplayTheme, index: usize, ms: bool) -> Cell<'static> {
+        Cell::from(format!("{:>2}", index + 1)).fg(set_color_selection(ms, theme))
     }
 
-    pub fn get_track_discs(theme: &DisplayTheme, song: &Arc<SimpleSong>) -> Cell<'static> {
+    pub fn get_track_discs(
+        theme: &DisplayTheme,
+        song: &Arc<SimpleSong>,
+        ms: bool,
+    ) -> Cell<'static> {
         let track_no = Span::from(match song.track_no {
             Some(t) => format!("{t:>2}"),
             None => format!("{x:>2}", x = "󰇘"),
@@ -210,7 +218,19 @@ impl CellFactory {
         })
         .fg(theme.text_faded);
 
-        Cell::from(Line::from_iter([track_no, " ".into(), disc_no.into()]))
+        match ms {
+            true => Cell::from(Line::from_iter([track_no, " ".into(), disc_no.into()]))
+                .fg(theme.text_highlight),
+
+            false => Cell::from(Line::from_iter([track_no, " ".into(), disc_no.into()])),
+        }
+    }
+}
+
+fn set_color_selection(selected: bool, theme: &DisplayTheme) -> Color {
+    match selected {
+        true => theme.text_highlight,
+        false => theme.text_focused,
     }
 }
 

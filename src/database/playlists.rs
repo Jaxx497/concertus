@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
 
-use crate::{Database, database::queries::*, domain::Playlist};
+use crate::{database::queries::*, domain::Playlist, Database};
 use anyhow::Result;
 use rusqlite::params;
 
@@ -61,7 +61,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn add_to_playlist_bulk(&mut self, songs: Vec<u64>, playlist_id: i64) -> Result<()> {
+    pub fn add_to_playlist_multi(&mut self, songs: Vec<u64>, playlist_id: i64) -> Result<()> {
         let tx = self.conn.transaction()?;
         {
             let start_pos = tx

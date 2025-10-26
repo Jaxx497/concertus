@@ -62,9 +62,9 @@ pub enum Action {
     GoToAlbum,
     Scroll(Director),
 
-    BulkSelect,
-    BulkSelectALL,
-    ClearBulkSelect,
+    MultiSelect,
+    MultiSelectAll,
+    ClearMultiSelect,
 
     // Playlists
     CreatePlaylist,

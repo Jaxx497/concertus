@@ -103,8 +103,8 @@ impl DbWorker {
         self.execute_sync(move |db| db.add_to_playlist(song_id, playlist_id))
     }
 
-    pub fn add_to_playlist_bulk(&self, song_ids: Vec<u64>, playlist_id: i64) -> Result<()> {
-        self.execute_sync(move |db| db.add_to_playlist_bulk(song_ids, playlist_id))
+    pub fn add_to_playlist_multi(&self, song_ids: Vec<u64>, playlist_id: i64) -> Result<()> {
+        self.execute_sync(move |db| db.add_to_playlist_multi(song_ids, playlist_id))
     }
 
     pub fn rename_playlist(&self, id: i64, new_name: String) -> Result<()> {

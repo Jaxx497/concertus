@@ -1,6 +1,6 @@
-mod bulk_select;
 mod display_state;
 mod domain;
+mod multi_select;
 mod playback;
 mod playlist;
 mod popup;

@@ -33,14 +33,20 @@ impl StatefulWidget for AlbumView {
             .iter()
             .enumerate()
             .map(|(idx, song)| {
-                let track_no = CellFactory::get_track_discs(theme, song);
-                let icon = CellFactory::status_cell(song, state, idx);
-                let title = CellFactory::title_cell(theme, song);
-                let artist = CellFactory::artist_cell(theme, song);
-                let format = CellFactory::filetype_cell(theme, song);
-                let duration = CellFactory::duration_cell(theme, song);
+                let is_m_selected = state.get_multi_select_indices().contains(&idx);
 
-                Row::new([track_no, icon, title.into(), artist, format, duration])
+                let track_no = CellFactory::get_track_discs(theme, song, is_m_selected);
+                let icon = CellFactory::status_cell(song, state, is_m_selected);
+                let title = CellFactory::title_cell(theme, song, is_m_selected);
+                let artist = CellFactory::artist_cell(theme, song, is_m_selected);
+                let format = CellFactory::filetype_cell(theme, song, is_m_selected);
+                let duration = CellFactory::duration_cell(theme, song, is_m_selected);
+
+                match is_m_selected {
+                    true => Row::new([track_no, icon, title.into(), artist, format, duration])
+                        .bg(state.theme_manager.active.highlight.1),
+                    false => Row::new([track_no, icon, title.into(), artist, format, duration]),
+                }
             })
             .collect::<Vec<Row>>();
 

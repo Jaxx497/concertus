@@ -23,16 +23,16 @@ impl StatefulWidget for GenericView {
             .iter()
             .enumerate()
             .map(|(idx, song)| {
-                let is_bulk_selected = state.get_bulk_select_indicies().contains(&idx);
+                let is_multi_selected = state.get_multi_select_indices().contains(&idx);
 
-                let index = CellFactory::index_cell(&theme, idx);
-                let icon = CellFactory::status_cell(song, state, idx);
-                let title = CellFactory::title_cell(&theme, song);
-                let artist = CellFactory::artist_cell(&theme, song);
-                let filetype = CellFactory::filetype_cell(&theme, song);
-                let duration = CellFactory::duration_cell(&theme, song);
+                let index = CellFactory::index_cell(&theme, idx, is_multi_selected);
+                let icon = CellFactory::status_cell(song, state, is_multi_selected);
+                let title = CellFactory::title_cell(&theme, song, is_multi_selected);
+                let artist = CellFactory::artist_cell(&theme, song, is_multi_selected);
+                let filetype = CellFactory::filetype_cell(&theme, song, is_multi_selected);
+                let duration = CellFactory::duration_cell(&theme, song, is_multi_selected);
 
-                match is_bulk_selected {
+                match is_multi_selected {
                     true => Row::new([index, icon, title, artist, filetype, duration])
                         .fg(theme.text_highlight)
                         .bg(state.theme_manager.active.highlight.1),

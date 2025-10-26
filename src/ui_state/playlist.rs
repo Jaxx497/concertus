@@ -144,7 +144,7 @@ impl UiState {
         match self.popup.selection.selected() {
             Some(playlist_idx) => {
                 let playlist_id = self.playlists.get(playlist_idx).unwrap().id;
-                match self.bulk_select_empty() {
+                match self.multi_select_empty() {
                     true => {
                         let song_id = self.get_selected_song()?.id;
 
@@ -152,13 +152,14 @@ impl UiState {
                     }
                     false => {
                         let song_ids = self
-                            .get_bulk_select_songs()
+                            .get_multi_select_songs()
                             .iter()
                             .map(|s| s.id)
                             .collect::<Vec<_>>();
 
-                        self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
-                        self.clear_bulk_select();
+                        self.db_worker
+                            .add_to_playlist_multi(song_ids, playlist_id)?;
+                        self.clear_multi_select();
                     }
                 }
                 self.close_popup()
@@ -197,14 +198,15 @@ impl UiState {
         if let Some(new_playlist) = self.playlists.first() {
             let playlist_id = new_playlist.id;
 
-            if !self.bulk_select_empty() {
+            if !self.multi_select_empty() {
                 let song_ids = self
-                    .get_bulk_select_songs()
+                    .get_multi_select_songs()
                     .iter()
                     .map(|s| s.id)
                     .collect::<Vec<_>>();
-                self.db_worker.add_to_playlist_bulk(song_ids, playlist_id)?;
-                self.clear_bulk_select();
+                self.db_worker
+                    .add_to_playlist_multi(song_ids, playlist_id)?;
+                self.clear_multi_select();
             } else if let Ok(song) = self.get_selected_song() {
                 self.db_worker.add_to_playlist(song.id, playlist_id)?;
             }

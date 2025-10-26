@@ -6,7 +6,7 @@ use ratatui::{
 
 use crate::{
     tui::widgets::sidebar::create_standard_list,
-    ui_state::{Pane, UiState, GOLD_FADED},
+    ui_state::{Pane, UiState},
 };
 
 pub struct SideBarPlaylist;
@@ -29,7 +29,7 @@ impl StatefulWidget for SideBarPlaylist {
                     Line::from_iter([
                         Span::from(p.name.as_str()).fg(theme.text_secondary),
                         format!("{:>5} ", format!("[{}]", p.tracklist.len()))
-                            .fg(GOLD_FADED)
+                            .fg(theme.text_secondary)
                             .into(),
                     ])
                     .right_aligned(),

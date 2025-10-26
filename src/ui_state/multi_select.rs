@@ -8,57 +8,57 @@ use indexmap::IndexSet;
 use std::sync::Arc;
 
 impl UiState {
-    pub fn get_bulk_select_indicies(&self) -> &IndexSet<usize> {
-        &self.display_state.bulk_select
+    pub fn get_multi_select_indices(&self) -> &IndexSet<usize> {
+        &self.display_state.multi_select
     }
 
-    pub fn toggle_bulk_selection(&mut self) -> Result<()> {
+    pub fn toggle_multi_selection(&mut self) -> Result<()> {
         let song_idx = self.get_selected_idx()?;
 
-        match self.display_state.bulk_select.contains(&song_idx) {
-            true => self.display_state.bulk_select.swap_remove(&song_idx),
-            false => self.display_state.bulk_select.insert(song_idx),
+        match self.display_state.multi_select.contains(&song_idx) {
+            true => self.display_state.multi_select.swap_remove(&song_idx),
+            false => self.display_state.multi_select.insert(song_idx),
         };
 
         Ok(())
     }
 
-    pub fn bulk_select_all(&mut self) -> Result<()> {
+    pub fn multi_select_all(&mut self) -> Result<()> {
         if let Mode::Queue | Mode::Library(_) = self.get_mode() {
             let all_selected =
-                (0..self.legal_songs.len()).all(|i| self.display_state.bulk_select.contains(&i));
+                (0..self.legal_songs.len()).all(|i| self.display_state.multi_select.contains(&i));
 
             match all_selected {
-                true => self.clear_bulk_select(),
+                true => self.clear_multi_select(),
                 false => {
-                    self.display_state.bulk_select = (0..self.legal_songs.len()).collect();
+                    self.display_state.multi_select = (0..self.legal_songs.len()).collect();
                 }
             }
         }
         Ok(())
     }
 
-    pub fn get_bulk_select_songs(&self) -> Vec<Arc<SimpleSong>> {
+    pub fn get_multi_select_songs(&self) -> Vec<Arc<SimpleSong>> {
         self.display_state
-            .bulk_select
+            .multi_select
             .iter()
             .filter_map(|&idx| self.legal_songs.get(idx))
             .map(Arc::clone)
             .collect()
     }
 
-    pub fn bulk_select_empty(&self) -> bool {
-        self.display_state.bulk_select.is_empty()
+    pub fn multi_select_empty(&self) -> bool {
+        self.display_state.multi_select.is_empty()
     }
 
-    pub fn clear_bulk_select(&mut self) {
-        self.display_state.bulk_select.clear();
+    pub fn clear_multi_select(&mut self) {
+        self.display_state.multi_select.clear();
     }
 
     pub(crate) fn shift_position(&mut self, direction: MoveDirection) -> Result<()> {
-        match self.bulk_select_empty() {
+        match self.multi_select_empty() {
             true => self.shift_position_single(direction),
-            false => self.shift_position_bulk(direction),
+            false => self.shift_position_multi(direction),
         }
     }
 
@@ -117,9 +117,9 @@ impl UiState {
         Ok(())
     }
 
-    pub(crate) fn shift_position_bulk(&mut self, direction: MoveDirection) -> Result<()> {
+    pub(crate) fn shift_position_multi(&mut self, direction: MoveDirection) -> Result<()> {
         let mut indices = self
-            .get_bulk_select_indicies()
+            .get_multi_select_indices()
             .iter()
             .copied()
             .collect::<Vec<_>>();
@@ -181,14 +181,14 @@ impl UiState {
             _ => return Ok(()),
         }
         self.set_legal_songs();
-        self.display_state.bulk_select = indices.iter().copied().collect::<IndexSet<_>>();
+        self.display_state.multi_select = indices.iter().copied().collect::<IndexSet<_>>();
 
         Ok(())
     }
 
-    pub fn add_to_queue_bulk(&mut self) -> Result<()> {
-        let songs = if !self.bulk_select_empty() {
-            self.get_bulk_select_songs()
+    pub fn add_to_queue_multi(&mut self) -> Result<()> {
+        let songs = if !self.multi_select_empty() {
+            self.get_multi_select_songs()
         } else {
             match self.get_mode() {
                 Mode::Library(LibraryView::Albums) => {
@@ -216,11 +216,11 @@ impl UiState {
         for song in songs {
             self.add_to_queue_single(Some(song))?;
         }
-        self.clear_bulk_select();
+        self.clear_multi_select();
         Ok(())
     }
 
-    pub fn remove_song_bulk(&mut self) -> Result<()> {
+    pub fn remove_song_multi(&mut self) -> Result<()> {
         match *self.get_mode() {
             Mode::Library(LibraryView::Playlists) => {
                 // Obtain selected playlist id
@@ -229,7 +229,7 @@ impl UiState {
                     .ok_or_else(|| anyhow!("No song selected"))?
                     .id;
 
-                // Obtain playlist_song_ids that match the bulk_select ids
+                // Obtain playlist_song_ids that match the multi_select ids
                 let ps_ids_to_remove = {
                     let playlist = self
                         .playlists
@@ -237,7 +237,7 @@ impl UiState {
                         .find(|p| p.id == playlist_id)
                         .ok_or_else(|| anyhow!("Playlist not found"))?;
 
-                    self.get_bulk_select_indicies()
+                    self.get_multi_select_indices()
                         .iter()
                         .filter_map(|&idx| playlist.tracklist.get(idx).map(|ps| ps.id))
                         .collect()
@@ -246,7 +246,7 @@ impl UiState {
                 self.db_worker.remove_from_playlist(ps_ids_to_remove)?;
 
                 // Create a sorted list of indicies
-                let mut indicies = self.get_bulk_select_indicies().clone();
+                let mut indicies = self.get_multi_select_indices().clone();
                 indicies.sort_unstable();
 
                 // Declare after indicies declaration to avoid fighting with borrow checker
@@ -264,7 +264,7 @@ impl UiState {
                 }
             }
             Mode::Queue => {
-                let mut indicies = self.get_bulk_select_indicies().clone();
+                let mut indicies = self.get_multi_select_indices().clone();
                 indicies.sort_unstable();
 
                 // Remove indicies in reverse order
@@ -277,7 +277,7 @@ impl UiState {
             _ => (),
         }
 
-        self.clear_bulk_select();
+        self.clear_multi_select();
         Ok(())
     }
 }

@@ -74,9 +74,9 @@ impl UiState {
     }
 
     pub fn queue_song(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
-        match self.bulk_select_empty() {
+        match self.multi_select_empty() {
             true => self.add_to_queue_single(song),
-            false => self.add_to_queue_bulk(),
+            false => self.add_to_queue_multi(),
         }?;
 
         self.set_legal_songs();
@@ -124,11 +124,8 @@ impl UiState {
     }
 
     pub fn remove_song(&mut self) -> Result<()> {
-        let selected_idx = self.get_selected_idx()?;
-        let current_is_selected = self.get_bulk_select_indicies().contains(&selected_idx);
-
-        match (self.bulk_select_empty(), current_is_selected) {
-            (false, true) => self.remove_song_bulk()?,
+        match self.multi_select_empty() {
+            false => self.remove_song_multi()?,
             _ => self.remove_song_single()?,
         }
 

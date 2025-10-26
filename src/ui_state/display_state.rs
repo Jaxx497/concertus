@@ -25,7 +25,7 @@ pub struct DisplayState {
     pub table_pos: TableState,
     table_pos_cached: usize,
 
-    pub bulk_select: IndexSet<usize>,
+    pub multi_select: IndexSet<usize>,
 }
 
 impl DisplayState {
@@ -46,7 +46,7 @@ impl DisplayState {
             table_pos: TableState::default().with_selected(0),
             table_pos_cached: 0,
 
-            bulk_select: IndexSet::default(),
+            multi_select: IndexSet::default(),
         }
     }
 }
@@ -277,41 +277,44 @@ impl UiState {
         self.set_mode(Mode::Library(LibraryView::Albums));
         self.set_pane(Pane::TrackList);
 
-        let mut this_album = None;
         let mut album_idx = 0;
         let mut track_idx = 0;
 
-        for (idx, album) in self.albums.iter().enumerate() {
+        for (a_idx, album) in self.albums.iter().enumerate() {
+            // There may be multiple albums with the same name ...
             if album.title.as_str() == this_album_title {
-                let tracklist = &album.tracklist;
-                for track in tracklist {
-                    if track.id == this_song.id {
-                        this_album = Some(album);
-                        album_idx = idx;
-                        break;
-                    }
-                    track_idx += 1;
+                if let Some((t_idx, _)) = album
+                    .tracklist
+                    .iter()
+                    .enumerate()
+                    .find(|(_, song)| song.id == this_song.id)
+                {
+                    // ...which is why we have to assign the album_idx here
+                    album_idx = a_idx;
+                    track_idx = t_idx;
+                    break;
                 }
             }
         }
 
-        self.legal_songs = this_album
-            .ok_or_else(|| anyhow!("Failed to parse album!"))?
-            .tracklist
-            .clone();
+        let album = self
+            .albums
+            .get(album_idx)
+            .ok_or_else(|| anyhow!("Could not identify album!"))?;
 
-        // Select song and try to visually center it
+        self.legal_songs = album.tracklist.clone();
+
+        self.display_state.album_pos.select(Some(album_idx));
         self.display_state.table_pos.select(Some(track_idx));
-        *self.display_state.table_pos.offset_mut() = track_idx.checked_sub(7).unwrap_or(0);
+        *self.display_state.table_pos.offset_mut() = 0;
 
         // Select album and try to visually center it
-        self.display_state.album_pos.select(Some(album_idx));
 
         Ok(())
     }
 
     pub(crate) fn set_legal_songs(&mut self) {
-        self.clear_bulk_select();
+        self.clear_multi_select();
         match &self.display_state.mode {
             Mode::Power => {
                 self.legal_songs = self.library.get_all_songs().to_vec();

@@ -8,7 +8,6 @@ use ratatui::{
     widgets::{ListItem, ListState, StatefulWidget},
 };
 
-// album_view.rs
 pub struct SideBarAlbum;
 impl StatefulWidget for SideBarAlbum {
     type State = UiState;

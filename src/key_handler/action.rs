@@ -114,8 +114,8 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
         (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
         (X, Char('q')) => Some(Action::QueueSong),
-        (X, Char('v')) => Some(Action::BulkSelect),
-        (C, Char('v')) => Some(Action::ClearBulkSelect),
+        (X, Char('v')) => Some(Action::MultiSelect),
+        (C, Char('v')) => Some(Action::ClearMultiSelect),
 
         (X, Left) | (X, Char('h') | Tab) => Some(Action::ChangeMode(Mode::Library(
             state.display_state.sidebar_view,
@@ -133,7 +133,7 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('J')) => Some(Action::ShiftPosition(MoveDirection::Down)),
 
             (S, Char('Q')) => Some(Action::QueueEntity),
-            (S, Char('V')) => Some(Action::BulkSelectALL),
+            (S, Char('V')) => Some(Action::MultiSelectAll),
             (X, Char('x')) => Some(Action::RemoveSong),
             _ => None,
         },
@@ -351,14 +351,14 @@ impl Concertus {
 
             // Queue
             Action::QueueSong       => self.ui.queue_song(None)?,
-            Action::QueueEntity     => self.ui.add_to_queue_bulk()?,
+            Action::QueueEntity     => self.ui.add_to_queue_multi()?,
             Action::RemoveSong      => self.ui.remove_song()?,
             Action::AddToPlaylist   => self.ui.add_to_playlist_popup(),
             Action::AddToPlaylistConfirm => self.ui.add_to_playlist()?,
 
-            Action::BulkSelect      => self.ui.toggle_bulk_selection()?,
-            Action::BulkSelectALL   => self.ui.bulk_select_all()?,
-            Action::ClearBulkSelect => self.ui.clear_bulk_select(),
+            Action::MultiSelect      => self.ui.toggle_multi_selection()?,
+            Action::MultiSelectAll   => self.ui.multi_select_all()?,
+            Action::ClearMultiSelect => self.ui.clear_multi_select(),
 
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
             Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),

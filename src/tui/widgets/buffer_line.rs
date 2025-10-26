@@ -35,9 +35,9 @@ impl StatefulWidget for BufferLine {
             ])
             .areas(area);
 
-        let selection_count = state.get_bulk_select_indicies().len();
+        let selection_count = state.get_multi_select_indices().len();
 
-        get_bulk_selection(selection_count, &theme).render(left, buf);
+        get_multi_selection(selection_count, &theme).render(left, buf);
         playing_title(state, &theme, center.width as usize).render(center, buf);
         queue_display(state, &theme, right.width as usize).render(right, buf);
     }
@@ -108,7 +108,7 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
     }
 }
 
-fn get_bulk_selection(size: usize, theme: &DisplayTheme) -> Option<Line<'static>> {
+fn get_multi_selection(size: usize, theme: &DisplayTheme) -> Option<Line<'static>> {
     let output = match size {
         0 => return None,
         x => format!("{x:>3} {} ", SELECTED)

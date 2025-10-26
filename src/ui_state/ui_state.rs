@@ -89,7 +89,7 @@ impl UiState {
             self.set_mode(Mode::Library(LibraryView::Albums));
         }
 
-        self.clear_bulk_select();
+        self.clear_multi_select();
         self.search.input.select_all();
         self.search.input.cut();
         self.set_legal_songs();
