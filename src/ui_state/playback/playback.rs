@@ -5,6 +5,7 @@ use crate::{
     ui_state::{LibraryView, Mode, UiState},
 };
 use anyhow::{anyhow, Context, Result};
+use rand::seq::SliceRandom;
 use std::{
     collections::{HashSet, VecDeque},
     sync::{Arc, Mutex},
@@ -235,5 +236,13 @@ impl UiState {
             meta: Arc::clone(&song),
             path,
         }))
+    }
+
+    pub fn shuffle_queue(&mut self) {
+        self.playback
+            .queue
+            .make_contiguous()
+            .shuffle(&mut rand::rng());
+        self.set_legal_songs();
     }
 }

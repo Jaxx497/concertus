@@ -7,10 +7,9 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
-use nohash_hasher::BuildNoHashHasher;
 use rayon::prelude::*;
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashSet, VecDeque},
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -19,8 +18,8 @@ use walkdir::WalkDir;
 pub struct Library {
     db: Database,
     pub roots: HashSet<PathBuf>,
-    pub songs: IndexMap<u64, Arc<SimpleSong>, BuildNoHashHasher<u64>>,
-    pub albums: Vec<Album>,
+    pub songs: SongMap,
+    pub albums: IndexMap<i64, Album>,
 }
 
 impl Library {
@@ -30,7 +29,7 @@ impl Library {
             db,
             roots: HashSet::new(),
             songs: SongMap::default(),
-            albums: Vec::new(),
+            albums: IndexMap::new(),
         }
     }
 
@@ -201,65 +200,33 @@ impl Library {
 
     fn build_albums(&mut self) -> Result<()> {
         let aa_cache = self.db.get_album_map()?;
-        self.albums = Vec::with_capacity(aa_cache.len());
-
-        let mut album_lookup = HashMap::with_capacity(aa_cache.len());
+        self.albums = IndexMap::with_capacity(aa_cache.len());
 
         // Create album instances from album_artist/album_title combination
-        for (album_name, artist_name) in &aa_cache {
-            let album = Album::from_aa(album_name, artist_name);
-            let idx = self.albums.len();
-            self.albums.push(album);
-
-            album_lookup.insert((Arc::clone(artist_name), Arc::clone(album_name)), idx);
+        for (album_id, album_name, artist_name) in aa_cache {
+            let album = Album::from_aa(album_id, album_name, artist_name);
+            self.albums.insert(album_id, album);
         }
 
         // Assign each song to it's proper album
         for song in self.songs.values() {
-            let key = (Arc::clone(&song.album_artist), Arc::clone(&song.album));
-
-            let album_idx = match album_lookup.get(&key) {
-                Some(&idx) => idx,
-                None => {
-                    let new_album = Album {
-                        title: Arc::clone(&song.album),
-                        artist: Arc::clone(&song.album_artist),
-                        year: song.year,
-                        tracklist: Vec::new(),
-                    };
-                    let idx = self.albums.len();
-                    self.albums.push(new_album);
-                    album_lookup.insert(key, idx);
-                    idx
+            if let Some(album) = self.albums.get_mut(&song.album_id) {
+                if album.year.is_none() {
+                    album.year = song.year
                 }
-            };
-
-            let album = &mut self.albums[album_idx];
-            if album.year.is_none() {
-                album.year = song.year
+                album.tracklist.push(Arc::clone(song))
             }
-
-            album.tracklist.push(Arc::clone(song));
         }
 
-        let mut bad_idx = vec![];
-        for (idx, album) in self.albums.iter_mut().enumerate() {
+        self.albums.retain(|_id, album| {
             if album.tracklist.is_empty() {
-                bad_idx.push(idx);
+                return false;
             }
-            // Sort all tracks by disc number, then track number
             album
                 .tracklist
                 .sort_by_key(|s| (s.disc_no.unwrap_or(0), s.track_no.unwrap_or(0)));
-        }
-
-        // Because we may be removing multiple indexes, it's important to remove
-        // each index from the back to the front. Earlier indexes will not be
-        // affected by the removal of later indexes, but later indexes will be
-        // affected by the removal of earlier indexes
-        for idx in bad_idx.into_iter().rev() {
-            self.albums.remove(idx);
-        }
+            true
+        });
 
         Ok(())
     }
@@ -279,9 +246,5 @@ impl Library {
 impl Library {
     pub fn get_all_songs(&self) -> Vec<Arc<SimpleSong>> {
         self.songs.values().cloned().collect()
-    }
-
-    pub fn get_all_albums(&self) -> &[Album] {
-        &self.albums
     }
 }

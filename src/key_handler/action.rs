@@ -7,6 +7,7 @@ use crate::{
     REFRESH_RATE,
 };
 use anyhow::Result;
+use rand::seq::SliceRandom;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
 use std::time::Duration;
 
@@ -140,6 +141,9 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
         Mode::Queue => match (key.modifiers, key.code) {
             (X, Char('x')) => Some(Action::RemoveSong),
+            (X, Char('s')) => Some(Action::ShuffleElements),
+            (S, Char('V')) => Some(Action::MultiSelectAll),
+
             (S, Char('K')) => Some(Action::ShiftPosition(MoveDirection::Up)),
             (S, Char('J')) => Some(Action::ShiftPosition(MoveDirection::Down)),
             _ => None,
@@ -356,6 +360,8 @@ impl Concertus {
             Action::AddToPlaylist   => self.ui.add_to_playlist_popup(),
             Action::AddToPlaylistConfirm => self.ui.add_to_playlist()?,
 
+            Action::ShuffleElements => self.ui.shuffle_queue(),
+
             Action::MultiSelect      => self.ui.toggle_multi_selection()?,
             Action::MultiSelectAll   => self.ui.multi_select_all()?,
             Action::ClearMultiSelect => self.ui.clear_multi_select(),
@@ -363,7 +369,7 @@ impl Concertus {
             Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
             Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),
             Action::IncrementSidebarSize(x) => self.ui.adjust_sidebar_size(x),
-            // Action::ToggleProgressDisplay => self.ui.next_progress_display(),
+
             Action::SetProgressDisplay(p)   => self.ui.set_progress_display(p),
             Action::SetFullscreen(p)        => self.ui.set_fullscreen(p),
             Action::RevertFullscreen        => self.ui.revert_fullscreen(),

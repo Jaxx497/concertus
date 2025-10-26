@@ -4,7 +4,7 @@ use crate::{
     key_handler::Director,
     ui_state::{PopupType, ProgressDisplay},
 };
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
@@ -211,7 +211,13 @@ impl UiState {
     }
 
     pub(super) fn sort_albums(&mut self) {
-        self.albums = self.library.get_all_albums().to_vec();
+        // self.albums = self.library.get_all_albums().to_vec();
+        self.albums = self
+            .library
+            .albums
+            .values()
+            .cloned()
+            .collect::<Vec<Album>>();
 
         match self.display_state.album_sort {
             AlbumSort::Artist => self.albums.sort_by(|a, b| {
@@ -272,43 +278,34 @@ impl UiState {
 
     pub(crate) fn go_to_album(&mut self) -> Result<()> {
         let this_song = self.get_selected_song()?;
-        let this_album_title = this_song.get_album();
+        let album_id = this_song.album_id;
 
         self.set_mode(Mode::Library(LibraryView::Albums));
         self.set_pane(Pane::TrackList);
 
-        let mut album_idx = 0;
-        let mut track_idx = 0;
-
-        for (a_idx, album) in self.albums.iter().enumerate() {
-            // There may be multiple albums with the same name ...
-            if album.title.as_str() == this_album_title {
-                if let Some((t_idx, _)) = album
-                    .tracklist
-                    .iter()
-                    .enumerate()
-                    .find(|(_, song)| song.id == this_song.id)
-                {
-                    // ...which is why we have to assign the album_idx here
-                    album_idx = a_idx;
-                    track_idx = t_idx;
-                    break;
-                }
-            }
-        }
-
         let album = self
+            .library
             .albums
-            .get(album_idx)
+            .get(&album_id)
+            .context("Invalid album index")?;
+
+        let track_pos = album
+            .tracklist
+            .iter()
+            .position(|s| s.id == this_song.id)
+            .unwrap_or(0);
+
+        let album_pos = self
+            .albums
+            .iter()
+            .position(|a| a.id == album_id)
             .ok_or_else(|| anyhow!("Could not identify album!"))?;
 
         self.legal_songs = album.tracklist.clone();
 
-        self.display_state.album_pos.select(Some(album_idx));
-        self.display_state.table_pos.select(Some(track_idx));
+        self.display_state.album_pos.select(Some(album_pos));
+        self.display_state.table_pos.select(Some(track_pos));
         *self.display_state.table_pos.offset_mut() = 0;
-
-        // Select album and try to visually center it
 
         Ok(())
     }

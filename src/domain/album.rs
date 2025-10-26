@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 #[derive(Default, Clone)]
 pub struct Album {
+    pub id: i64,
     pub title: Arc<String>,
     pub artist: Arc<String>,
     pub year: Option<u32>,
@@ -10,10 +11,12 @@ pub struct Album {
 }
 
 impl Album {
-    pub fn from_aa(title: &Arc<String>, artist: &Arc<String>) -> Self {
+    pub fn from_aa(id: i64, title: Arc<String>, artist: Arc<String>) -> Self {
         Album {
-            title: Arc::clone(&title),
-            artist: Arc::clone(&artist),
+            id,
+
+            title,
+            artist,
             year: None,
             tracklist: Vec::new(),
         }

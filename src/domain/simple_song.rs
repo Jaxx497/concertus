@@ -10,6 +10,7 @@ pub struct SimpleSong {
     pub(crate) artist: Arc<String>,
     pub(crate) year: Option<u32>,
     pub(crate) album: Arc<String>,
+    pub(crate) album_id: i64,
     pub(crate) album_artist: Arc<String>,
     pub(crate) track_no: Option<u32>,
     pub(crate) disc_no: Option<u32>,

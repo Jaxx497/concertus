@@ -77,6 +77,7 @@ pub enum Action {
     RenamePlaylistConfirm,
 
     ShiftPosition(MoveDirection),
+    ShuffleElements,
 
     // Display
     CycleTheme(MoveDirection),
@@ -135,7 +136,7 @@ thread_local! {
     static LAST_KEY_TIME: RefCell<Option<Instant>> = RefCell::new(None);
 }
 
-const PASTE_THRESHOLD: Duration = Duration::from_millis(10);
+const PASTE_THRESHOLD: Duration = Duration::from_millis(18);
 
 pub fn is_likely_paste() -> bool {
     LAST_KEY_TIME.with(|last_time| {

@@ -146,6 +146,7 @@ impl Database {
                     title: row.get("title")?,
                     artist,
                     album,
+                    album_id,
                     album_artist,
                     year: row.get("year")?,
                     track_no: row.get("track_no")?,
@@ -235,13 +236,13 @@ impl Database {
         Ok(())
     }
 
-    pub(crate) fn get_album_map(&mut self) -> Result<Vec<(Arc<String>, Arc<String>)>> {
+    pub(crate) fn get_album_map(&mut self) -> Result<Vec<(i64, Arc<String>, Arc<String>)>> {
         let map = self
             .conn
             .prepare(ALBUM_BUILDER)?
             .query_map([], |row| {
-                let artist_id = row.get("artist_id")?;
                 let album_id = row.get("id")?;
+                let artist_id = row.get("artist_id")?;
 
                 let artist = match self.artist_map.get(&artist_id) {
                     Some(a) => Arc::clone(&a),
@@ -252,7 +253,7 @@ impl Database {
                     None => unreachable!(),
                 };
 
-                Ok((album, artist))
+                Ok((album_id, album, artist))
             })?
             .collect::<Result<Vec<_>, _>>()?;
 
