@@ -1,6 +1,6 @@
-use super::{Pane, UiState, new_textarea};
+use super::{new_textarea, Pane, UiState};
 use crate::domain::{SimpleSong, SongInfo};
-use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
+use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use ratatui::crossterm::event::KeyEvent;
 use std::sync::Arc;
 use tui_textarea::TextArea;
@@ -39,13 +39,15 @@ impl UiState {
                     .search
                     .matcher
                     .fuzzy_match(&song.get_title().to_lowercase(), &query)
-                    .unwrap_or(0);
+                    .unwrap_or(0)
+                    * 2;
 
-                let artist_score = self
+                let artist_score = (self
                     .search
                     .matcher
                     .fuzzy_match(&song.get_artist().to_lowercase(), &query)
-                    .unwrap_or(0);
+                    .unwrap_or(0) as f32
+                    * 1.5) as i64;
 
                 let album_score = self
                     .search
@@ -54,14 +56,10 @@ impl UiState {
                     .unwrap_or(0);
 
                 // Apply height weight to title.
-                let weighted_score = [(title_score * 2) + artist_score + album_score];
+                let weighted_score = [title_score + artist_score + album_score];
                 let best_score = weighted_score.iter().max().copied().unwrap_or(0);
 
-                if best_score > MATCH_THRESHOLD {
-                    Some((Arc::clone(&song), best_score))
-                } else {
-                    None
-                }
+                (best_score > MATCH_THRESHOLD).then(|| (Arc::clone(&song), best_score))
             })
             .collect();
 

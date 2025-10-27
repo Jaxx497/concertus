@@ -31,25 +31,6 @@ impl ThemeConfig {
         let config = toml::from_str::<ThemeImport>(&file_str)?;
         Self::try_from(&config)
     }
-
-    pub fn set_generic_theme() -> ThemeConfig {
-        use super::*;
-
-        ThemeConfig {
-            name: String::from("Concertus_Alpha"),
-
-            bg: (DARK_GRAY, DARK_GRAY_FADED, DARK_GRAY_FADED),
-            text: (DARK_WHITE, MID_GRAY),
-            text2: (GOOD_RED, GOOD_RED_DARK),
-            texth: DARK_GRAY,
-            highlight: (GOLD, GOLD_FADED),
-            border: (GOLD, DARK_GRAY),
-            progress: (GOOD_RED, MID_GRAY),
-
-            border_display: Borders::ALL,
-            border_type: BorderType::Thick,
-        }
-    }
 }
 
 impl TryFrom<&ThemeImport> for ThemeConfig {
@@ -94,5 +75,26 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
             border_display: parse_borders(&config.borders.border_display),
             border_type: parse_border_type(&config.borders.border_type),
         })
+    }
+}
+
+impl Default for ThemeConfig {
+    fn default() -> Self {
+        use super::*;
+
+        ThemeConfig {
+            name: String::from("Concertus_Alpha"),
+
+            bg: (DARK_GRAY, DARK_GRAY_FADED, DARK_GRAY_FADED),
+            text: (DARK_WHITE, MID_GRAY),
+            text2: (GOOD_RED, GOOD_RED_DARK),
+            texth: DARK_GRAY,
+            highlight: (GOLD, GOLD_FADED),
+            border: (GOLD, DARK_GRAY),
+            progress: (GOOD_RED, MID_GRAY),
+
+            border_display: Borders::ALL,
+            border_type: BorderType::Thick,
+        }
     }
 }

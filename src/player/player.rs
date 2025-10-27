@@ -1,7 +1,7 @@
 use super::{PlaybackState, PlayerState};
 use crate::{domain::QueueSong, get_readable_duration, player::TappedSource};
 use anyhow::Result;
-use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, decoder::builder::SeekMode};
+use rodio::{decoder::builder::SeekMode, Decoder, OutputStream, OutputStreamBuilder, Sink};
 use std::{
     collections::VecDeque,
     fs::File,
@@ -33,7 +33,6 @@ impl Player {
     }
 
     /// Play a song
-    /// Returns an error if
     pub(crate) fn play_song(&mut self, song: &Arc<QueueSong>) -> Result<()> {
         let source = decode(song)?;
 
@@ -47,6 +46,7 @@ impl Player {
             .shared_state
             .lock()
             .expect("Failed to unwrap mutex in music player");
+
         player_state.state = PlaybackState::Playing;
         player_state.now_playing = Some(Arc::clone(&song.meta));
         player_state.elapsed = Duration::default();

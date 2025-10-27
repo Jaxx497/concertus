@@ -159,7 +159,7 @@ impl Library {
     fn process_songs(paths: Vec<PathBuf>) -> Vec<LongSong> {
         paths
             .into_par_iter()
-            .filter_map(|path| LongSong::build_song_symphonia(&path).ok())
+            .filter_map(|path| LongSong::build_song_lofty(&path).ok())
             .collect::<Vec<LongSong>>()
     }
 

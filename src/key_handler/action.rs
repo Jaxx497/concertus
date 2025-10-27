@@ -7,9 +7,7 @@ use crate::{
     REFRESH_RATE,
 };
 use anyhow::Result;
-use rand::seq::SliceRandom;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
-use std::time::Duration;
 
 use KeyCode::*;
 
@@ -308,7 +306,7 @@ fn handle_themeing(key: &KeyEvent) -> Option<Action> {
 }
 
 pub fn next_event() -> Result<Option<Event>> {
-    match event::poll(Duration::from_millis(REFRESH_RATE))? {
+    match event::poll(REFRESH_RATE)? {
         true => Ok(Some(event::read()?)),
         false => Ok(None),
     }

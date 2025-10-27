@@ -15,6 +15,7 @@ use std::{
     time::{Duration, UNIX_EPOCH},
 };
 use ui_state::UiState;
+use unicode_normalization::UnicodeNormalization;
 use xxhash_rust::xxh3::xxh3_64;
 
 pub mod app_core;
@@ -38,7 +39,7 @@ pub type SongMap = IndexMap<u64, Arc<SimpleSong>, BuildNoHashHasher<u64>>;
 pub const CONFIG_DIRECTORY: &'static str = "concertus";
 pub const THEME_DIRECTORY: &'static str = "themes";
 pub const DATABASE_FILENAME: &'static str = "concertus.db";
-pub const REFRESH_RATE: u64 = 16;
+pub const REFRESH_RATE: Duration = Duration::from_millis(16);
 
 /// Create a hash based on...
 ///  - date of last modification (millis)
@@ -118,13 +119,18 @@ fn truncate_at_last_space(s: &str, limit: usize) -> String {
 }
 
 pub fn normalize_metadata_str(s: &str) -> String {
-    s.trim()
-        .replace('\0', "")
-        .replace('\u{FEFF}', "")
-        .chars()
-        .filter(|c| !c.is_control() || *c == '\n' || *c == '\t')
+    s.nfc()
+        .filter(|c| match c {
+            '\0' | '\u{200B}' | '\u{200C}' | '\u{200D}' | '\u{00AD}' | '\u{2028}' | '\u{2029}' => {
+                false
+            }
+            '\n' | '\t' => true,
+            c if c.is_control() => false,
+            _ => true,
+        })
         .collect::<String>()
-        .trim()
+        .trim() // Only once!
+        .to_string()
         .to_string()
 }
 

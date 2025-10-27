@@ -125,8 +125,6 @@ impl Concertus {
     pub fn preload_lib(&mut self) {
         let mut updated_lib = Library::init();
 
-        // TODO: MAKE THIS OPTIONAL
-        // updated_lib.update_db().unwrap();
         updated_lib.build_library().unwrap();
 
         self.library = Arc::new(updated_lib);
@@ -274,7 +272,6 @@ impl Concertus {
 
         // Do not index a value out of bounds if current selection
         // will be out of bounds after update
-
         if updated_len > 0 {
             self.ui
                 .display_state

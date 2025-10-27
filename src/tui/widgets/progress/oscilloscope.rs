@@ -49,23 +49,6 @@ impl StatefulWidget for Oscilloscope {
     }
 }
 
-// fn draw_wave(ctx: &mut Context, samples: &[f32], color: Color) {
-//     for (i, window) in samples.windows(2).enumerate() {
-//         let x1 = i as f64;
-//         let y1 = window[0] as f64;
-//         let x2 = (i + 1) as f64;
-//         let y2 = window[1] as f64;
-//
-//         ctx.draw(&Line {
-//             x1,
-//             y1,
-//             x2,
-//             y2,
-//             color,
-//         });
-//     }
-// }
-
 fn draw_vibrant_gradient(ctx: &mut Context, samples: &[f32], time: f32) {
     let intensity: f32 = samples.iter().map(|s| s.abs()).sum::<f32>() / samples.len() as f32;
     let boosted = (intensity * 3.0).min(1.0); // Aggressive boost

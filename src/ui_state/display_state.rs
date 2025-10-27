@@ -211,7 +211,6 @@ impl UiState {
     }
 
     pub(super) fn sort_albums(&mut self) {
-        // self.albums = self.library.get_all_albums().to_vec();
         self.albums = self
             .library
             .albums
