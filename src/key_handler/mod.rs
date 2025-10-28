@@ -26,7 +26,7 @@ const SEEK_SMALL: usize = 5;
 const SEEK_LARGE: usize = 30;
 const SCROLL_MID: usize = 5;
 const SCROLL_XTRA: usize = 20;
-const SIDEBAR_INCREMENT: isize = 2;
+const SIDEBAR_INCREMENT: isize = 1;
 
 #[derive(PartialEq, Eq)]
 pub enum Action {

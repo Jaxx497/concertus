@@ -4,7 +4,7 @@ use crate::{
     key_handler::Director,
     ui_state::{PopupType, ProgressDisplay},
 };
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
@@ -498,7 +498,7 @@ impl UiState {
     pub fn adjust_sidebar_size(&mut self, x: isize) {
         match x > 0 {
             true => {
-                if self.display_state.sidebar_percent < 39 {
+                if self.display_state.sidebar_percent < 44 {
                     self.display_state.sidebar_percent += x as u16;
                 }
             }

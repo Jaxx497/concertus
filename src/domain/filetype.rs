@@ -1,6 +1,6 @@
 use rusqlite::{
-    types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, Value, ValueRef},
     Result as RusqliteResult, ToSql,
+    types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, Value, ValueRef},
 };
 use std::fmt::Display;
 
@@ -20,7 +20,7 @@ impl From<&str> for FileType {
     fn from(str: &str) -> Self {
         match str {
             "mp3" => Self::MP3,
-            "m4a" => Self::M4A,
+            "aac" | "m4a" => Self::M4A,
             "ogg" => Self::OGG,
             "flac" => Self::FLAC,
             "wav" => Self::WAV,

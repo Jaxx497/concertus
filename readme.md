@@ -48,7 +48,7 @@ new backend options.
 - Provide visual progress when scanning in songs
 - Improved testing for various formats
 - Re-work sort-by-column approach
-- Implement a secondary player backend (gstreamer?)
+- Implement a secondary mpv backend
 
 ## Other
 

@@ -2,7 +2,7 @@ use super::{FileType, SongInfo};
 use crate::{
     calculate_signature, database::Database, get_readable_duration, normalize_metadata_str as nms,
 };
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use lofty::{
     file::{AudioFile, TaggedFileExt},
     read_from_path,
@@ -25,7 +25,9 @@ pub struct LongSong {
     pub(crate) track_no: Option<u32>,
     pub(crate) disc_no: Option<u32>,
     pub(crate) duration: Duration,
-    pub(crate) sample_rate: u32,
+    pub(crate) channels: Option<u8>,
+    pub(crate) bit_rate: Option<u32>,
+    pub(crate) sample_rate: Option<u32>,
     pub(crate) year: Option<u32>,
     pub(crate) filetype: FileType,
     pub(crate) path: PathBuf,
@@ -54,7 +56,9 @@ impl LongSong {
         let properties = tagged_file.properties();
 
         song_info.duration = properties.duration();
-        song_info.sample_rate = properties.sample_rate().unwrap_or(99999);
+        song_info.channels = properties.channels();
+        song_info.sample_rate = properties.sample_rate();
+        song_info.bit_rate = properties.audio_bitrate();
 
         if let Some(tag) = tagged_file.primary_tag() {
             song_info.title = tag

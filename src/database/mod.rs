@@ -1,10 +1,10 @@
 use crate::{
+    CONFIG_DIRECTORY, DATABASE_FILENAME, SongMap,
     domain::{LongSong, SimpleSong, SongInfo},
-    SongMap, CONFIG_DIRECTORY, DATABASE_FILENAME,
 };
 use anyhow::Result;
 use queries::*;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
@@ -100,6 +100,8 @@ impl Database {
                     &song.track_no,
                     &song.disc_no,
                     &song.duration.as_secs_f32(),
+                    &song.channels,
+                    &song.bit_rate,
                     &song.sample_rate,
                     &song.filetype
                 ])?;

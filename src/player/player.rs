@@ -1,7 +1,11 @@
 use super::{PlaybackState, PlayerState};
-use crate::{domain::QueueSong, get_readable_duration, player::TappedSource};
+use crate::{
+    domain::QueueSong,
+    get_readable_duration,
+    player::{OSCILLO_BUFFER_CAPACITY, TappedSource},
+};
 use anyhow::Result;
-use rodio::{decoder::builder::SeekMode, Decoder, OutputStream, OutputStreamBuilder, Sink};
+use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, decoder::builder::SeekMode};
 use std::{
     collections::VecDeque,
     fs::File,
@@ -27,7 +31,7 @@ impl Player {
         Player {
             sink,
             shared_state,
-            oscillo_buffer: Arc::new(Mutex::new(VecDeque::with_capacity(1024))),
+            oscillo_buffer: Arc::new(Mutex::new(VecDeque::with_capacity(OSCILLO_BUFFER_CAPACITY))),
             _stream,
         }
     }

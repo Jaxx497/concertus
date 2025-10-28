@@ -1,4 +1,4 @@
-use crate::domain::SimpleSong;
+use crate::{domain::SimpleSong, player::OSCILLO_BUFFER_CAPACITY};
 use anyhow::Error;
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 
@@ -21,7 +21,7 @@ impl Default for PlayerState {
             state: PlaybackState::Stopped,
             now_playing: None,
             elapsed: Duration::default(),
-            oscilloscope_buffer: VecDeque::with_capacity(1024),
+            oscilloscope_buffer: VecDeque::with_capacity(OSCILLO_BUFFER_CAPACITY),
 
             last_elapsed_secs: 0,
             elapsed_display: String::new(),

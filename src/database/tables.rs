@@ -14,6 +14,8 @@ pub const CREATE_TABLES: &str = r"
         track_no INTEGER,
         disc_no INTEGER,
         duration REAL,
+        channels INTEGER,
+        bit_rate INTEGER,
         sample_rate INTEGER,
         format INTEGER,
         FOREIGN KEY(artist_id) REFERENCES artists(id),
