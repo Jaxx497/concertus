@@ -14,6 +14,6 @@ pub use widgets::{ErrorMsg, Progress, SearchBar, SideBarHandler as SideBar, Song
 
 pub fn render_bg(state: &UiState, f: &mut ratatui::Frame) {
     Block::new()
-        .bg(state.theme_manager.active.bg.1)
+        .bg(state.theme_manager.active.surface_global)
         .render(f.area(), f.buffer_mut());
 }

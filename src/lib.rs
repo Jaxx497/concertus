@@ -1,11 +1,11 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use indexmap::IndexMap;
 use nohash_hasher::BuildNoHashHasher;
 use ratatui::crossterm::{
+    ExecutableCommand,
     cursor::MoveToColumn,
     style::Print,
     terminal::{Clear, ClearType},
-    ExecutableCommand,
 };
 use std::{
     fs,
@@ -39,7 +39,7 @@ pub type SongMap = IndexMap<u64, Arc<SimpleSong>, BuildNoHashHasher<u64>>;
 pub const CONFIG_DIRECTORY: &'static str = "concertus";
 pub const THEME_DIRECTORY: &'static str = "themes";
 pub const DATABASE_FILENAME: &'static str = "concertus.db";
-pub const REFRESH_RATE: Duration = Duration::from_millis(16);
+pub const REFRESH_RATE: Duration = Duration::from_millis(12);
 
 /// Create a hash based on...
 ///  - date of last modification (millis)

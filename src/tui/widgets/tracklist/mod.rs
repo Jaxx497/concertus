@@ -12,11 +12,11 @@ pub use generic_tracklist::GenericView;
 pub use search_results::StandardTable;
 
 use crate::{
+    DurationStyle,
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
     tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
-    DurationStyle,
 };
 use ratatui::{
     layout::{Alignment, Constraint, Flex, Rect},
@@ -114,7 +114,6 @@ pub fn create_standard_table<'a>(
     let mode = state.get_mode();
     let theme = state.get_theme(&Pane::TrackList);
 
-    // let header = get_header(state, &TableSort::Title);
     let widths = get_widths(mode);
     let keymaps = match state.get_pane() {
         Pane::TrackList => get_keymaps(mode),
@@ -126,19 +125,18 @@ pub fn create_standard_table<'a>(
         .border_type(theme.border_type)
         .border_style(theme.border)
         .title_top(Line::from(title).alignment(Alignment::Center))
-        .title_bottom(Line::from(keymaps.fg(theme.text_faded)))
+        .title_bottom(Line::from(keymaps.fg(theme.text_muted)))
         .title_alignment(Alignment::Center)
         .padding(PADDING)
         .bg(theme.bg);
 
     let highlight_style = match state.get_pane() {
-        Pane::TrackList => Style::new().fg(theme.text_highlight).bg(theme.highlight),
+        Pane::TrackList => Style::new().fg(theme.text_selected).bg(theme.selection),
         _ => Style::new(),
     };
 
     Table::new(rows, widths)
         .block(block)
-        // .header(header.fg(theme.text_secondary))
         .column_spacing(COLUMN_SPACING)
         .flex(Flex::Start)
         .row_highlight_style(highlight_style)
@@ -147,10 +145,10 @@ pub fn create_standard_table<'a>(
 pub fn create_empty_block(theme: &DisplayTheme, title: &str) -> Block<'static> {
     Block::bordered()
         .borders(theme.border_display)
-        .title_top(format!(" {} ", title))
-        .title_alignment(Alignment::Center)
         .border_type(theme.border_type)
         .border_style(theme.border)
+        .title_top(format!(" {} ", title))
+        .title_alignment(Alignment::Center)
         .padding(PADDING)
         .bg(theme.bg)
 }
@@ -166,12 +164,12 @@ impl CellFactory {
 
         Cell::from(if is_playing {
             MUSIC_NOTE.fg(match ms {
-                true => theme.text_highlight,
+                true => theme.text_selected,
                 false => theme.text_secondary,
             })
         } else if is_queued && !matches!(state.get_mode(), Mode::Queue) {
             QUEUED.fg(match ms {
-                true => theme.text_highlight,
+                true => theme.text_selected,
                 false => theme.text_secondary,
             })
         } else {
@@ -179,8 +177,11 @@ impl CellFactory {
         })
     }
 
-    pub fn title_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
-        Cell::from(song.get_title().to_string()).fg(set_color_selection(ms, theme))
+    pub fn title_cell(theme: &DisplayTheme, title: &str, ms: bool) -> Cell<'static> {
+        Cell::from(title.to_owned()).fg(match ms {
+            true => theme.text_selected,
+            false => theme.text_primary,
+        })
     }
 
     pub fn artist_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
@@ -188,13 +189,18 @@ impl CellFactory {
     }
 
     pub fn filetype_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
-        Cell::from(Line::from(format!("{}", song.filetype)).centered())
-            .fg(set_color_selection(ms, theme))
+        Cell::from(Line::from(format!("{}", song.filetype)).centered()).fg(match ms {
+            true => theme.text_selected,
+            false => theme.text_secondary,
+        })
     }
 
     pub fn duration_cell(theme: &DisplayTheme, song: &Arc<SimpleSong>, ms: bool) -> Cell<'static> {
         let duration_str = get_readable_duration(song.get_duration(), DurationStyle::Clean);
-        Cell::from(Text::from(duration_str).right_aligned()).fg(set_color_selection(ms, theme))
+        Cell::from(Text::from(duration_str).right_aligned()).fg(match ms {
+            true => theme.text_selected,
+            false => theme.text_muted,
+        })
     }
 
     pub fn index_cell(theme: &DisplayTheme, index: usize, ms: bool) -> Cell<'static> {
@@ -210,27 +216,28 @@ impl CellFactory {
             Some(t) => format!("{t:>2}"),
             None => format!("{x:>2}", x = "󰇘"),
         })
-        .fg(theme.highlight);
+        .fg(match ms {
+            true => theme.text_selected,
+            false => theme.accent,
+        });
 
         let disc_no = Span::from(match song.disc_no {
             Some(t) => String::from("ᴰ") + SUPERSCRIPT.get(&t).unwrap_or(&"?"),
             None => "".into(),
         })
-        .fg(theme.text_faded);
+        .fg(match ms {
+            true => theme.text_selected,
+            false => theme.text_muted,
+        });
 
-        match ms {
-            true => Cell::from(Line::from_iter([track_no, " ".into(), disc_no.into()]))
-                .fg(theme.text_highlight),
-
-            false => Cell::from(Line::from_iter([track_no, " ".into(), disc_no.into()])),
-        }
+        Cell::from(Line::from_iter([track_no, " ".into(), disc_no.into()]))
     }
 }
 
 fn set_color_selection(selected: bool, theme: &DisplayTheme) -> Color {
     match selected {
-        true => theme.text_highlight,
-        false => theme.text_focused,
+        true => theme.text_selected,
+        false => theme.text_primary,
     }
 }
 
@@ -253,7 +260,7 @@ fn get_title(state: &UiState, area: Rect) -> Line<'static> {
     let theme = state.get_theme(&Pane::TrackList);
     let (title, track_count) = match state.get_mode() {
         &Mode::Queue => (
-            Span::from("Queue").fg(theme.highlight),
+            Span::from("Queue").fg(theme.accent),
             state.playback.queue.len(),
         ),
         &Mode::Library(LibraryView::Playlists) => {
@@ -279,9 +286,9 @@ fn get_title(state: &UiState, area: Rect) -> Line<'static> {
     };
 
     Line::from_iter([
-        Span::from(DECORATOR).fg(theme.text_focused),
+        Span::from(DECORATOR).fg(theme.text_primary),
         title,
-        Span::from(DECORATOR).fg(theme.text_focused),
-        Span::from(format!("[{} Songs] ", track_count)).fg(theme.text_faded),
+        Span::from(DECORATOR).fg(theme.text_primary),
+        Span::from(format!("[{} Songs] ", track_count)).fg(theme.text_muted),
     ])
 }

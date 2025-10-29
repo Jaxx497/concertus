@@ -490,7 +490,7 @@ impl UiState {
     fn switch_theme(&mut self) {
         if let Some(idx) = self.popup.selection.selected() {
             if let Some(theme) = self.theme_manager.theme_lib.get(idx) {
-                self.theme_manager.active = theme.clone()
+                self.theme_manager.set_theme(theme.clone());
             }
         }
     }

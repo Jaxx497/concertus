@@ -3,31 +3,35 @@ use serde::{Deserialize, Serialize};
 #[derive(Default, Serialize, Deserialize)]
 pub struct ThemeImport {
     pub name: String,
-
     pub colors: ColorScheme,
     pub borders: BorderScheme,
 }
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct ColorScheme {
-    pub bg_focused: String,
-    pub bg_unfocused: String,
-    pub bg_progress: String,
+    pub surface_global: String,
+    pub surface_active: String,
+    pub surface_inactive: String,
+    pub surface_error: String,
 
-    pub text_focused: String,
-    pub text_unfocused: String,
+    // Text colors
+    pub text_primary: String,
     pub text_secondary: String,
-    pub text_secondary_u: String,
-    pub text_highlight: String,
+    pub text_secondary_in: String,
+    pub text_selection: String,
+    pub text_muted: String,
 
-    pub highlight: String,
-    pub highlight_u: String,
+    // Border colors
+    pub border_active: String,
+    pub border_inactive: String,
 
-    pub border_focused: String,
-    pub border_unfocused: String,
+    // Accent
+    pub accent: String,
+    pub accent_inactive: String,
 
-    pub progress_complete: String,
-    pub progress_incomplete: String,
+    // Selection colors
+    pub selection: String,
+    pub selection_inactive: String,
 }
 
 #[derive(Default, Serialize, Deserialize)]

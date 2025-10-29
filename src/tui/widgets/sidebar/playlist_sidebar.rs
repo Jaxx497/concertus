@@ -1,7 +1,8 @@
 use ratatui::{
+    layout::Alignment,
     style::Stylize,
     text::{Line, Span},
-    widgets::{ListItem, StatefulWidget},
+    widgets::{Block, Borders, ListItem, Padding, Paragraph, StatefulWidget, Widget, Wrap},
 };
 
 use crate::{
@@ -22,6 +23,23 @@ impl StatefulWidget for SideBarPlaylist {
         let theme = &state.get_theme(&Pane::SideBar);
         let playlists = &state.playlists;
 
+        if playlists.is_empty() {
+            Widget::render(
+                Paragraph::new("Create some playlists!\n\nPress [c] to get started!")
+                    .block(Block::new().borders(Borders::NONE).padding(Padding {
+                        left: 2,
+                        right: 2,
+                        top: 5,
+                        bottom: 0,
+                    }))
+                    .alignment(Alignment::Center)
+                    .wrap(Wrap { trim: true })
+                    .fg(theme.text_primary),
+                area,
+                buf,
+            );
+        }
+
         let list_items = playlists
             .iter()
             .map(|p| {
@@ -39,9 +57,10 @@ impl StatefulWidget for SideBarPlaylist {
 
         let title = Line::from(format!(" ⟪ {} Playlists ⟫ ", playlists.len()))
             .left_aligned()
-            .fg(theme.highlight);
+            .fg(theme.accent);
 
-        create_standard_list(list_items, (title, Line::default()), state, area).render(
+        StatefulWidget::render(
+            create_standard_list(list_items, (title, Line::default()), state, area),
             area,
             buf,
             &mut state.display_state.playlist_pos,

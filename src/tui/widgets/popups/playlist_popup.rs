@@ -5,7 +5,7 @@ use crate::{
 use ratatui::{
     layout::{Alignment, Constraint, Layout},
     style::{Style, Stylize},
-    text::{Line, Text},
+    text::{Line, Span, Text},
     widgets::{Block, BorderType, List, Padding, Paragraph, StatefulWidget, Widget, Wrap},
 };
 
@@ -42,19 +42,19 @@ fn render_create_popup(
     let padding_w = (area.width as f32 * 0.2) as u16;
 
     let block = Block::bordered()
+        .border_type(theme.border_type)
+        .border_style(theme.border)
         .title(" Create New Playlist ")
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
-        .border_type(theme.border_type)
-        .border_style(Style::new().fg(theme.border))
-        .fg(theme.text_focused)
-        .bg(theme.bg)
         .padding(Padding {
             left: padding_w,
             right: padding_w,
             top: padding_h,
             bottom: 0,
-        });
+        })
+        .fg(theme.accent)
+        .bg(theme.bg);
 
     let inner = block.inner(area);
     block.render(area, buf);
@@ -68,13 +68,12 @@ fn render_create_popup(
     state.popup.input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
-            .fg(theme.border)
             .padding(Padding::horizontal(2)),
     );
     state
         .popup
         .input
-        .set_style(Style::new().fg(theme.text_focused));
+        .set_style(Style::new().fg(theme.text_primary));
     state.popup.input.render(chunks[1], buf);
 }
 
@@ -89,23 +88,34 @@ fn render_add_song_popup(
         .iter()
         .map(|p| {
             let playlist_name = p.name.to_string();
-            Line::from(playlist_name).fg(theme.text_faded).centered()
+            Line::from(playlist_name).fg(theme.text_muted).centered()
         })
         .collect::<Vec<Line>>();
 
     let block = Block::bordered()
+        .border_type(theme.border_type)
+        .border_style(theme.border)
         .title(" Add To Playlist ")
         .title_bottom(" [Enter] / [c]reate playlist / [Esc] ")
         .title_alignment(ratatui::layout::Alignment::Center)
-        .border_type(theme.border_type)
-        .border_style(Style::new().fg(theme.text_secondary))
-        .bg(theme.bg)
-        .padding(POPUP_PADDING);
+        .padding(POPUP_PADDING)
+        .bg(theme.bg);
+
+    if list_items.is_empty() {
+        state.popup.selection.select(None); // Clear selection!
+
+        return Paragraph::new("\nThere are no playlists!\n\nCreate a playlist by pressing [c]")
+            .alignment(Alignment::Center)
+            .wrap(Wrap { trim: true })
+            .block(block.clone())
+            .fg(theme.accent)
+            .render(area, buf);
+    }
 
     let list = List::new(list_items)
         .block(block)
         .scroll_padding(area.height as usize - 5)
-        .highlight_style(Style::new().fg(theme.highlight));
+        .highlight_style(theme.selection);
 
     StatefulWidget::render(list, area, buf, &mut state.popup.selection);
 }
@@ -117,22 +127,23 @@ fn render_delete_popup(
 ) {
     let theme = state.get_theme(&Pane::Popup);
     let block = Block::bordered()
+        .border_type(theme.border_type)
+        .border_style(theme.border)
         .title(format!(" Delete Playlist "))
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(ratatui::layout::Alignment::Center)
-        .border_type(theme.border_type)
-        .border_style(Style::new().fg(theme.border))
-        .fg(theme.text_focused)
-        .bg(theme.bg)
         .padding(Padding {
             left: 5,
             right: 5,
             top: (area.height as f32 * 0.35) as u16,
             bottom: 0,
-        });
+        })
+        .fg(theme.text_primary)
+        .bg(theme.bg);
 
     if let Some(p) = state.get_selected_playlist() {
-        let p_name = Line::from_iter([p.name.as_str().fg(theme.border), " ?".into()]);
+        // let p_name = Line::from_iter([p.name.as_str().fg(theme.border), " ?".into()]);
+        let p_name = Line::from_iter([p.name.as_str(), " ?".into()]);
         let warning = Paragraph::new(Text::from_iter([
             format!("Are you sure you want to delete\n").into(),
             p_name,
@@ -158,8 +169,8 @@ fn render_rename_popup(
         .title_bottom(" [Enter] confirm / [Esc] cancel ")
         .title_alignment(Alignment::Center)
         .border_type(theme.border_type)
-        .border_style(Style::new().fg(theme.border))
-        .fg(theme.text_focused)
+        .border_style(theme.border)
+        .fg(theme.text_primary)
         .bg(theme.bg)
         .padding(Padding {
             left: padding_w,
@@ -174,7 +185,8 @@ fn render_rename_popup(
     let chunks = Layout::vertical([Constraint::Max(3), Constraint::Length(3)]).split(inner);
 
     if let Some(playlist) = state.get_selected_playlist() {
-        let p_name = playlist.name.as_str().fg(theme.border);
+        // let p_name = playlist.name.as_str().fg(theme.border);
+        let p_name = Span::from(playlist.name.as_str());
         Paragraph::new(Text::from_iter([
             format!("Enter a new name for\n").into(),
             p_name,
@@ -185,14 +197,13 @@ fn render_rename_popup(
         state.popup.input.set_block(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .fg(theme.border)
                 .padding(Padding::horizontal(2)),
         );
 
         state
             .popup
             .input
-            .set_style(Style::new().fg(theme.text_focused));
+            .set_style(Style::new().fg(theme.text_primary));
         state.popup.input.render(chunks[1], buf);
     }
 }

@@ -4,7 +4,7 @@ use ratatui::{
     widgets::{BorderType, Borders},
 };
 
-pub fn parse_color(s: &str) -> Result<Color> {
+pub(super) fn parse_color(s: &str) -> Result<Color> {
     match s {
         s if s.starts_with('#') => parse_hex(s),
         s if s.starts_with("rgb(") => parse_rgb(s),
@@ -12,7 +12,7 @@ pub fn parse_color(s: &str) -> Result<Color> {
     }
 }
 
-pub fn parse_hex(s: &str) -> Result<Color> {
+pub(super) fn parse_hex(s: &str) -> Result<Color> {
     let hex = s.trim_start_matches('#');
     if hex.len() != 6 {
         bail!("Invalid hex input: {s}\nExpected format\"#FF20D5\"");
@@ -25,7 +25,7 @@ pub fn parse_hex(s: &str) -> Result<Color> {
     Ok(Color::Rgb(r, g, b))
 }
 
-pub fn parse_rgb(s: &str) -> Result<Color> {
+pub(super) fn parse_rgb(s: &str) -> Result<Color> {
     if s.ends_with(')') {
         let inner = &s[4..s.len() - 1];
         let parts = inner.split(',').collect::<Vec<&str>>();
@@ -41,7 +41,7 @@ pub fn parse_rgb(s: &str) -> Result<Color> {
     ))
 }
 
-pub fn try_from_str(s: &str) -> Result<Color> {
+pub(super) fn try_from_str(s: &str) -> Result<Color> {
     match s.to_lowercase().as_str() {
         "" | "none" => Ok(Color::default()),
         "black" => Ok(Color::Black),
@@ -64,7 +64,7 @@ pub fn try_from_str(s: &str) -> Result<Color> {
     }
 }
 
-pub fn parse_border_type(s: &str) -> BorderType {
+pub(super) fn parse_border_type(s: &str) -> BorderType {
     match s.trim().to_lowercase().as_str() {
         "plain" => BorderType::Plain,
         "double" => BorderType::Double,
@@ -73,9 +73,20 @@ pub fn parse_border_type(s: &str) -> BorderType {
     }
 }
 
-pub fn parse_borders(s: &str) -> Borders {
+pub(super) fn parse_borders(s: &str) -> Borders {
     match s.to_lowercase().trim() {
         "" | "none" => Borders::NONE,
         _ => Borders::ALL,
+    }
+}
+
+pub(super) fn dim_color(color: Color, factor: f32) -> Color {
+    match color {
+        Color::Rgb(r, g, b) => Color::Rgb(
+            (r as f32 * factor) as u8,
+            (g as f32 * factor) as u8,
+            (b as f32 * factor) as u8,
+        ),
+        other => other,
     }
 }

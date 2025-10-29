@@ -1,5 +1,6 @@
 use crate::{
-    tui::widgets::tracklist::{create_standard_table, get_title, CellFactory},
+    domain::SongInfo,
+    tui::widgets::tracklist::{CellFactory, create_standard_table, get_title},
     ui_state::{Pane, UiState},
 };
 use ratatui::{
@@ -27,15 +28,15 @@ impl StatefulWidget for GenericView {
 
                 let index = CellFactory::index_cell(&theme, idx, is_multi_selected);
                 let icon = CellFactory::status_cell(song, state, is_multi_selected);
-                let title = CellFactory::title_cell(&theme, song, is_multi_selected);
+                let title = CellFactory::title_cell(&theme, song.get_title(), is_multi_selected);
                 let artist = CellFactory::artist_cell(&theme, song, is_multi_selected);
                 let filetype = CellFactory::filetype_cell(&theme, song, is_multi_selected);
                 let duration = CellFactory::duration_cell(&theme, song, is_multi_selected);
 
                 match is_multi_selected {
                     true => Row::new([index, icon, title, artist, filetype, duration])
-                        .fg(theme.text_highlight)
-                        .bg(state.theme_manager.active.highlight.1),
+                        .fg(theme.text_selected)
+                        .bg(state.theme_manager.active.selection_inactive),
                     false => Row::new([index, icon, title, artist, filetype, duration]),
                 }
             })

@@ -36,18 +36,18 @@ impl StatefulWidget for RootManager {
         };
 
         let block = Block::bordered()
+            .border_type(theme.border_type)
+            .border_style(theme.border)
             .title(title)
             .title_bottom(get_keymaps(settings_mode))
             .title_alignment(ratatui::layout::Alignment::Center)
-            .border_type(theme.border_type)
-            .border_style(theme.border)
-            .bg(theme.bg)
             .padding(Padding {
                 left: padding_w,
                 right: padding_w,
                 top: padding_h,
                 bottom: 0,
-            });
+            })
+            .bg(theme.bg);
 
         let inner = block.inner(area);
         block.render(area, buf);
@@ -98,9 +98,9 @@ fn render_roots_list(
         .collect();
 
     let list = List::new(items)
-        .fg(state.theme_manager.active.text.0)
+        .fg(state.theme_manager.active.text_primary)
         .highlight_symbol(SELECTOR)
-        .highlight_style(Style::new().fg(theme.text_highlight).bg(theme.highlight))
+        .highlight_style(Style::new().fg(theme.text_selected).bg(theme.selection))
         .highlight_spacing(HighlightSpacing::Always);
 
     ratatui::prelude::StatefulWidget::render(list, area, buf, &mut state.popup.selection);
@@ -119,6 +119,7 @@ fn render_add_root(
     .split(area);
 
     Paragraph::new("Enter the path to a directory containing music files:")
+        .fg(state.theme_manager.active.accent)
         .wrap(Wrap { trim: true })
         .render(chunks[0], buf);
 
@@ -127,7 +128,7 @@ fn render_add_root(
     state.popup.input.set_block(
         Block::bordered()
             .border_type(BorderType::Rounded)
-            .fg(theme.highlight)
+            .fg(theme.accent)
             .padding(Padding {
                 left: 1,
                 right: 1,
@@ -135,15 +136,16 @@ fn render_add_root(
                 bottom: 0,
             }),
     );
+
     state
         .popup
         .input
-        .set_style(Style::new().fg(theme.text_focused));
+        .set_style(Style::new().fg(theme.text_primary));
 
     state.popup.input.render(chunks[1], buf);
 
     let example = Paragraph::new("Ex: C:\\Music or ~/music/albums")
-        .fg(theme.text_faded)
+        .fg(theme.text_muted)
         .centered();
     example.render(chunks[2], buf);
 }
@@ -168,10 +170,10 @@ fn render_remove_root(
     let text = Text::from_iter([
         Line::from("Are you sure you want to delete:"),
         Line::default(),
-        selected_root.fg(theme.highlight).into(),
+        selected_root.fg(theme.accent).into(),
         Line::default(),
         "This will remove all songs from this directory from your library."
-            .fg(theme.text_faded)
+            .fg(theme.text_muted)
             .into(),
     ]);
 

@@ -1,4 +1,5 @@
 use crate::ui_state::theme::{
+    GOOD_RED_DARK,
     theme_import::ThemeImport,
     theme_utils::{parse_border_type, parse_borders, parse_color},
 };
@@ -13,14 +14,32 @@ use std::path::Path;
 pub struct ThemeConfig {
     pub name: String,
 
-    pub bg: (Color, Color, Color),
-    pub text: (Color, Color),
-    pub text2: (Color, Color),
-    pub texth: Color,
-    pub highlight: (Color, Color),
-    pub border: (Color, Color),
-    pub progress: (Color, Color),
+    // Surface Colors
+    pub surface_global: Color,   // Global bg
+    pub surface_active: Color,   // Focused pane
+    pub surface_inactive: Color, // Inactive pane
+    pub surface_error: Color,    // Error popup bg
 
+    // Text colors
+    pub text_primary: Color,      // Focused text
+    pub text_secondary: Color,    // Accented text
+    pub text_secondary_in: Color, // Accented text
+    pub text_muted: Color,        // Inactive/quiet text
+    pub text_selection: Color,    // Text inside of selection bar
+
+    // Border colors
+    pub border_active: Color,   // Border highlight
+    pub border_inactive: Color, // Border Inactive
+
+    // Selection colors
+    pub selection: Color,          // Selection Bar color
+    pub selection_inactive: Color, // Selection inactive
+
+    // Accent
+    pub accent: Color,
+    pub accent_inactive: Color,
+
+    // Border configuration
     pub border_display: Borders,
     pub border_type: BorderType,
 }
@@ -29,7 +48,16 @@ impl ThemeConfig {
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file_str = std::fs::read_to_string(&path.as_ref())?;
         let config = toml::from_str::<ThemeImport>(&file_str)?;
-        Self::try_from(&config)
+        let mut theme = Self::try_from(&config)?;
+
+        theme.name = path
+            .as_ref()
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&theme.name)
+            .to_string();
+
+        Ok(theme)
     }
 }
 
@@ -39,38 +67,48 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
     fn try_from(config: &ThemeImport) -> anyhow::Result<Self> {
         let colors = &config.colors;
 
-        let bg_focused = parse_color(&colors.bg_focused)?;
-        let bg_unfocused = parse_color(&colors.bg_unfocused)?;
-        let bg_global = parse_color(&colors.bg_progress)?;
+        let surface_global = parse_color(&colors.surface_global)?;
+        let surface_active = parse_color(&colors.surface_active).unwrap_or(surface_global); // Fallback to surface_global
+        let surface_inactive = parse_color(&colors.surface_inactive).unwrap_or(surface_global); // Fallback to surface_global
+        let surface_error = parse_color(&colors.surface_error).unwrap_or(GOOD_RED_DARK);
 
-        let text_focused = parse_color(&colors.text_focused)?;
-        let text_unfocused = parse_color(&colors.text_unfocused)?;
-
+        let text_primary = parse_color(&colors.text_primary)?;
         let text_secondary = parse_color(&colors.text_secondary)?;
-        let text_secondary_u = parse_color(&colors.text_secondary_u)?;
-        let text_highlight = parse_color(&colors.text_highlight)?;
+        let text_secondary_in = parse_color(&colors.text_secondary_in)?;
+        let text_selection = parse_color(&colors.text_selection).unwrap_or(surface_global);
+        let text_muted = parse_color(&colors.text_muted)?;
 
-        let highlight = parse_color(&colors.highlight)?;
-        let highlight_u = parse_color(&colors.highlight_u)?;
+        let border_active = parse_color(&colors.border_active)?;
+        let border_inactive = parse_color(&colors.border_inactive).unwrap_or(border_active);
 
-        let border_focused = parse_color(&colors.border_focused)?;
-        let border_unfocused = parse_color(&colors.border_unfocused)?;
+        let accent = parse_color(&colors.accent)?;
+        let accent_inactive = parse_color(&colors.accent_inactive).unwrap_or(accent);
 
-        let progress_complete = parse_color(&colors.progress_complete)?;
-        let progress_incomplete = parse_color(&colors.progress_incomplete)?;
+        let selection = parse_color(&colors.selection).unwrap_or(border_active);
+        let selection_inactive = parse_color(&colors.selection_inactive).unwrap_or(selection);
 
         Ok(ThemeConfig {
             name: config.name.clone(),
 
-            bg: (bg_focused, bg_unfocused, bg_global),
-            text: (text_focused, text_unfocused),
-            text2: (text_secondary, text_secondary_u),
-            texth: text_highlight,
+            surface_global,
+            surface_active,
+            surface_inactive,
+            surface_error,
 
-            highlight: (highlight, highlight_u),
-            border: (border_focused, border_unfocused),
+            text_primary,
+            text_secondary,
+            text_secondary_in,
+            text_muted,
+            text_selection,
 
-            progress: (progress_complete, progress_incomplete),
+            border_active,
+            border_inactive,
+
+            selection,
+            selection_inactive,
+
+            accent,
+            accent_inactive,
 
             border_display: parse_borders(&config.borders.border_display),
             border_type: parse_border_type(&config.borders.border_type),
@@ -85,16 +123,28 @@ impl Default for ThemeConfig {
         ThemeConfig {
             name: String::from("Concertus_Alpha"),
 
-            bg: (DARK_GRAY, DARK_GRAY_FADED, DARK_GRAY_FADED),
-            text: (DARK_WHITE, MID_GRAY),
-            text2: (GOOD_RED, GOOD_RED_DARK),
-            texth: DARK_GRAY,
-            highlight: (GOLD, GOLD_FADED),
-            border: (GOLD, DARK_GRAY),
-            progress: (GOOD_RED, MID_GRAY),
+            surface_global: DARK_GRAY_FADED,
+            surface_active: DARK_GRAY,
+            surface_inactive: DARK_GRAY_FADED,
+            surface_error: GOOD_RED_DARK,
+
+            text_primary: DARK_WHITE,
+            text_muted: MID_GRAY,
+            text_selection: DARK_GRAY,
+            text_secondary: GOOD_RED,
+            text_secondary_in: GOOD_RED_DARK,
+
+            border_active: GOLD,
+            border_inactive: DARK_GRAY_FADED,
+
+            selection: GOLD,
+            selection_inactive: GOLD_FADED,
+
+            accent: GOLD,
+            accent_inactive: GOLD_FADED,
 
             border_display: Borders::ALL,
-            border_type: BorderType::Thick,
+            border_type: BorderType::Rounded,
         }
     }
 }

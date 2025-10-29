@@ -31,7 +31,7 @@ impl StatefulWidget for ProgressBar {
         let guage = LineGauge::default()
             .block(
                 Block::new()
-                    .bg(state.theme_manager.active.bg.2)
+                    .bg(state.theme_manager.active.surface_global)
                     .padding(Padding {
                         left: 1,
                         right: 2,
@@ -40,7 +40,7 @@ impl StatefulWidget for ProgressBar {
                     }),
             )
             .filled_style(get_vibrant_color(ratio, elapsed))
-            .unfilled_style(state.theme_manager.active.progress.1)
+            .unfilled_style(state.theme_manager.active.text_muted)
             .line_set(line::THICK)
             .label("")
             .ratio(ratio as f64);

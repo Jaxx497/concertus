@@ -19,6 +19,7 @@ use std::{
 pub struct LongSong {
     pub(crate) id: u64,
     pub(crate) title: String,
+    pub(crate) year: Option<u32>,
     pub(crate) artist: Arc<String>,
     pub(crate) album_artist: Arc<String>,
     pub(crate) album: Arc<String>,
@@ -28,7 +29,6 @@ pub struct LongSong {
     pub(crate) channels: Option<u8>,
     pub(crate) bit_rate: Option<u32>,
     pub(crate) sample_rate: Option<u32>,
-    pub(crate) year: Option<u32>,
     pub(crate) filetype: FileType,
     pub(crate) path: PathBuf,
 }
@@ -84,7 +84,18 @@ impl LongSong {
             song_info.artist = Arc::new(artist);
             song_info.album_artist = Arc::new(album_artist);
 
-            song_info.year = tag.year();
+            //
+            song_info.year = tag.year().or_else(|| {
+                tag.get_string(&ItemKey::Year)
+                    .and_then(|s| {
+                        nms(&s)
+                            .split_once('-')
+                            .map(|(y, _)| y.to_string())
+                            .or_else(|| Some(s.to_string()))
+                    })
+                    .and_then(|s| s.parse::<u32>().ok())
+            });
+
             song_info.track_no = tag.track();
             song_info.disc_no = tag.disk();
         }

@@ -1,6 +1,6 @@
 use ratatui::{
     layout::Alignment,
-    style::{Style, Stylize},
+    style::Stylize,
     widgets::{Block, List, StatefulWidget},
 };
 
@@ -29,19 +29,19 @@ impl StatefulWidget for ThemeManager {
             .collect::<Vec<String>>();
 
         let block = Block::bordered()
+            .border_type(theme.border_type)
+            .border_style(theme.border)
             .title(" Select Theme ")
             .title_bottom(" [Enter] / [Esc] ")
             .title_alignment(Alignment::Center)
-            .border_type(theme.border_type)
-            .border_style(Style::new().fg(theme.border))
-            .bg(theme.bg)
-            .padding(POPUP_PADDING);
+            .padding(POPUP_PADDING)
+            .bg(theme.bg);
 
         let list = List::new(theme_names)
             .block(block)
             .scroll_padding(area.height as usize - 3)
-            .fg(theme.text_faded)
-            .highlight_style(Style::new().fg(theme.highlight));
+            .fg(theme.text_muted)
+            .highlight_style(theme.accent);
 
         StatefulWidget::render(list, area, buf, &mut state.popup.selection);
     }

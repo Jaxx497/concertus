@@ -24,7 +24,7 @@ impl StatefulWidget for BufferLine {
     ) {
         let theme = state.get_theme(state.get_pane());
 
-        Block::new().bg(theme.bg_p).render(area, buf);
+        Block::new().bg(theme.bg_global).render(area, buf);
 
         let [left, center, right] = Layout::default()
             .direction(Direction::Horizontal)
@@ -52,9 +52,9 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
 
     let separator = match state.is_paused() {
         true => Span::from(format!(" {PAUSE_ICON} "))
-            .fg(theme.text_focused)
+            .fg(theme.text_primary)
             .rapid_blink(),
-        false => Span::from(" ✧ ").fg(theme.text_faded),
+        false => Span::from(" ✧ ").fg(theme.text_muted),
     };
 
     let title = song.get_title().to_string();
@@ -67,8 +67,8 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
         Some(
             Line::from_iter([
                 Span::from(title).fg(theme.text_secondary),
-                Span::from(separator).fg(theme.text_focused),
-                Span::from(artist).fg(theme.text_faded),
+                Span::from(separator).fg(theme.text_primary),
+                Span::from(artist).fg(theme.text_muted),
             ])
             .centered(),
         )
@@ -84,7 +84,7 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
             Line::from_iter([
                 Span::from(truncated_title).fg(theme.text_secondary),
                 separator,
-                Span::from(truncated_artist).fg(theme.text_faded),
+                Span::from(truncated_artist).fg(theme.text_muted),
             ])
             .centered(),
         )
@@ -112,7 +112,7 @@ fn get_multi_selection(size: usize, theme: &DisplayTheme) -> Option<Line<'static
     let output = match size {
         0 => return None,
         x => format!("{x:>3} {} ", SELECTED)
-            .fg(theme.highlight)
+            .fg(theme.accent)
             .into_left_aligned_line(),
     };
 
@@ -121,43 +121,25 @@ fn get_multi_selection(size: usize, theme: &DisplayTheme) -> Option<Line<'static
 
 const BAD_WIDTH: usize = 22;
 fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
-    let up_next = state.peek_queue()?;
-
-    let alert = state
-        .get_now_playing()
-        .map(|np| {
-            let duration = np.duration.as_secs_f32();
-            let elapsed = state.get_playback_elapsed().as_secs_f32();
-
-            // Flash when less than 3 seconds left on now_playing
-            (duration - elapsed) < 3.0
-        })
-        .unwrap_or(false);
-
-    let up_next_str = up_next.get_title();
+    let up_next_str = state.peek_queue()?.get_title();
 
     // [width - 5] should produce enough room to avoid overlapping with other displays
     let truncated = truncate_at_last_space(up_next_str, width - 5);
 
-    let up_next_line = match alert {
-        true => Span::from(truncated)
-            .fg(state.theme_manager.active.highlight.1)
-            .rapid_blink(),
-        false => Span::from(truncated).fg(state.theme_manager.active.highlight.1),
-    };
+    let up_next_line = Span::from(truncated).fg(state.theme_manager.active.selection_inactive);
 
     let total = state.playback.queue.len();
-    let queue_total = format!(" [{total}] ").fg(theme.text_faded);
+    let queue_total = format!(" [{total}] ").fg(theme.text_muted);
 
     match width < BAD_WIDTH {
         true => Some(
-            Line::from_iter([Span::from(QUEUE_ICON).fg(theme.text_faded), queue_total])
+            Line::from_iter([Span::from(QUEUE_ICON).fg(theme.text_muted), queue_total])
                 .right_aligned(),
         ),
 
         false => Some(
             Line::from_iter([
-                Span::from(QUEUE_ICON).fg(theme.text_faded),
+                Span::from(QUEUE_ICON).fg(theme.text_muted),
                 " ".into(),
                 up_next_line,
                 queue_total,

@@ -127,7 +127,7 @@ impl UiState {
 
             if !snapshot.theme_name.is_empty() {
                 if let Some(theme) = self.theme_manager.find_theme_by_name(&snapshot.theme_name) {
-                    self.theme_manager.active = theme.clone()
+                    self.theme_manager.set_theme(theme.clone());
                 }
             }
 

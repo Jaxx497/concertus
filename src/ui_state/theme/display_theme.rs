@@ -1,4 +1,4 @@
-use crate::ui_state::{Pane, UiState};
+use crate::ui_state::{Pane, UiState, theme::theme_utils::dim_color};
 use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
@@ -6,15 +6,18 @@ use ratatui::{
 
 pub struct DisplayTheme {
     pub bg: Color,
-    pub bg_p: Color,
-    pub border: Color,
+    pub bg_global: Color,
+    pub bg_error: Color,
 
-    pub text_focused: Color,
+    pub text_primary: Color,
     pub text_secondary: Color,
-    pub text_faded: Color,
-    pub text_highlight: Color,
-    pub highlight: Color,
+    pub text_muted: Color,
+    pub text_selected: Color,
 
+    pub accent: Color,
+    pub selection: Color,
+
+    pub border: Color,
     pub border_display: Borders,
     pub border_type: BorderType,
 
@@ -24,42 +27,50 @@ pub struct DisplayTheme {
 
 impl UiState {
     pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
-        let border_display = self.theme_manager.active.border_display;
-        let border_type = self.theme_manager.active.border_type;
+        let theme = &self.theme_manager.active;
 
         match pane == self.get_pane() {
             true => DisplayTheme {
-                bg: self.theme_manager.active.bg.0,
-                bg_p: self.theme_manager.active.bg.2,
-                border: self.theme_manager.active.border.0,
-                text_focused: self.theme_manager.active.text.0,
-                text_secondary: self.theme_manager.active.text2.0,
-                text_faded: self.theme_manager.active.text.1,
-                text_highlight: self.theme_manager.active.texth,
-                highlight: self.theme_manager.active.highlight.0,
+                bg: theme.surface_active,
+                bg_global: theme.surface_global,
+                bg_error: theme.surface_error,
 
-                border_display,
-                border_type,
+                text_primary: theme.text_primary,
+                text_secondary: theme.text_secondary,
+                text_muted: theme.text_muted,
+                text_selected: theme.text_selection,
 
-                progress_complete: self.theme_manager.active.progress.0,
-                progress_incomplete: self.theme_manager.active.progress.1,
+                selection: theme.selection,
+
+                accent: theme.accent,
+
+                border: theme.border_active,
+                border_display: theme.border_display,
+                border_type: theme.border_type,
+
+                progress_complete: theme.accent,
+                progress_incomplete: theme.text_muted,
             },
 
             false => DisplayTheme {
-                bg: self.theme_manager.active.bg.1,
-                bg_p: self.theme_manager.active.bg.2,
-                border: self.theme_manager.active.border.1,
-                text_focused: self.theme_manager.active.text.1,
-                text_secondary: self.theme_manager.active.text2.1,
-                text_faded: self.theme_manager.active.text.1,
-                text_highlight: self.theme_manager.active.texth,
-                highlight: self.theme_manager.active.highlight.1,
+                bg: theme.surface_inactive,
+                bg_global: theme.surface_global,
+                bg_error: theme.surface_error,
 
-                border_display,
-                border_type,
+                text_primary: theme.text_muted,
+                text_secondary: theme.text_secondary_in,
+                text_muted: dim_color(theme.text_muted, 0.6),
+                text_selected: theme.text_selection,
 
-                progress_complete: self.theme_manager.active.progress.1,
-                progress_incomplete: self.theme_manager.active.progress.1,
+                selection: theme.selection_inactive,
+                accent: theme.accent_inactive,
+
+                border: theme.border_inactive,
+                border_display: theme.border_display,
+                border_type: theme.border_type,
+
+                progress_complete: theme.accent,
+                progress_incomplete: theme.text_muted,
             },
         }
     }

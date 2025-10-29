@@ -33,12 +33,12 @@ pub fn create_standard_list<'a>(
         match state.display_state.sidebar_view {
             LibraryView::Albums => Line::from(" [q] Queue Album ")
                 .centered()
-                .fg(theme.text_faded),
+                .fg(theme.text_muted),
             LibraryView::Playlists => {
                 let playlist_keymaps = " [c]reate 󰲸 | [C-D]elete 󰐓 ";
                 match area.width as usize + 2 < playlist_keymaps.len() {
                     true => Line::default(),
-                    false => Line::from(playlist_keymaps).centered().fg(theme.text_faded),
+                    false => Line::from(playlist_keymaps).centered().fg(theme.text_muted),
                 }
             }
         }
@@ -53,17 +53,12 @@ pub fn create_standard_list<'a>(
         .bg(theme.bg)
         .title_top(titles.0)
         .title_top(titles.1)
-        .title_bottom(Line::from(keymaps).centered().fg(theme.text_faded))
+        .title_bottom(Line::from(keymaps).centered().fg(theme.text_muted))
         .padding(PADDING);
 
     List::new(list_items)
         .block(block)
-        .highlight_style(
-            Style::new()
-                .fg(theme.text_highlight)
-                .bg(theme.highlight)
-                .italic(),
-        )
+        .highlight_style(Style::new().fg(theme.text_selected).bg(theme.selection))
         .scroll_padding((area.height as f32 * 0.15) as usize)
         .highlight_spacing(HighlightSpacing::Always)
 }

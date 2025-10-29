@@ -25,7 +25,7 @@ impl StatefulWidget for Timer {
             _ => area.y + area.height.saturating_sub(1),
         };
 
-        let text_color = state.theme_manager.active.text.1;
+        let text_color = state.theme_manager.active.text_muted;
         let player_state = state.playback.player_state.lock().unwrap();
         {
             let elapsed_str = player_state.elapsed_display.as_str();

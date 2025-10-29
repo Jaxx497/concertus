@@ -43,9 +43,11 @@ new backend options.
 
 ## TODO 
 
-> **Current Objective:** Provide custom themeing options and a theme management system
+> **Current Objective:** Implement a more comprehensive themeing system
 
 - Provide visual progress when scanning in songs
+- Add more shuffle functionality
+- Display more song info in window (user controlled)
 - Improved testing for various formats
 - Re-work sort-by-column approach
 - Implement a secondary mpv backend

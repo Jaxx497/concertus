@@ -2,7 +2,7 @@
 
 > **Disclaimer:** Themeing in Concertus is currently in an experimental stage. This document will reflect the most recent changes to the themeing engine, as well as the latest specification.
 
-Current specification: 0.1b
+Current specification: 0.2 
 
 ### Hot keys
 
@@ -21,49 +21,37 @@ theme fail to follow the specification (i.e. has missing fields, contains
 typos, fail to comply with the TOML parser, etc.) the theme will not be
 accessible to the user in the program.
 
-Themes must contain a name. They may share the same names but this may
-potentially lead to inconsistent behavior and difficulty differentiating themes
-from within the theme menu. It is strongly recommended that users not duplicate
-names.
-
 Here is an example of a transparent theme:
 
 ```Toml 
-# Theme version 0.1b
-name = "Transparent Example"
+# Theme version 0.2
+``name = "Transparent 1"
 
 [colors]
-# Background colors
-bg_focused = ""
-bg_unfocused = ""
-bg_progress = ""
+surface_global      = "" # Background of application
+surface_active      = "" # Background of selected pane
+surface_inactive    = "" # Background of unselected areas
+surface_error       = "" # Color of error popup
 
-# Text colors
-text_focused = "#D2D2D2"
-text_unfocused = "#646464"
-text_secondary = "#FF4646"
-text_secondary_u = "#B41E1E"
-text_highlight = "#000000"
+text_primary        = "#d2d2d7"
+text_secondary      = "#ff4646"
+text_secondary_in   = "#a62e2e" # Secondary text in unfocused panes
+text_selection      = "#0a0a0d"
+text_muted          = "#646468"
 
-# Selection color
-highlight = "#DCDC64"
-highlight_u = "#82823C"
+border_active       = "#dcdc64"
+border_inactive     = "#343438"
 
-# Border colors
-border_focused = "#DCDC64"
-border_unfocused = "#646464"
+selection           = "#dcdc64" # Selected item
+selection_inactive  = "#82823C" # Multi-selected & unfocused selections
 
-# Progress bar colors
-progress_complete = "#FF4646"
-progress_incomplete = "#646464"
+accent              = "#dcdc64" 
+accent_inactive     = "#82823C"
 
 [borders]
-# Options: all, none
-border_display = "all"
-
-# Options: plain, rounded, double, thick
-border_type = "rounded"
-```
+border_display      = "all"
+border_type         = "rounded"
+`
 
 ### Acceptable Color Formats
 
@@ -75,10 +63,10 @@ terminal may also play a role in what can/cannot be transparent.)
 
 ```TOML
 # Valid Colors
-text_focused = "#FF4646"
+surface_global = ""
+text_primary = "#FF4646"
 text_secondary =  "rgb(132, 132, 55)"
-border_unfocused = "grey"
-bg_global = ""
+border_inactive = "grey"
 
 # Invalid Colors
 text_focused = "FF4646"

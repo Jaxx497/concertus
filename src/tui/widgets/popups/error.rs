@@ -1,8 +1,8 @@
-use crate::ui_state::UiState;
+use crate::ui_state::{Pane, UiState};
 use ratatui::{
     layout::{Alignment, Constraint, Layout},
     style::Stylize,
-    widgets::{Block, BorderType, Padding, Paragraph, StatefulWidget, Widget, Wrap},
+    widgets::{Block, Padding, Paragraph, StatefulWidget, Widget, Wrap},
 };
 
 static SIDE_PADDING: u16 = 5;
@@ -24,12 +24,14 @@ impl StatefulWidget for ErrorMsg {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
+        let theme = state.get_theme(&Pane::Popup);
+
         let block = Block::bordered()
-            .border_type(BorderType::Double)
+            .border_type(theme.border_type)
             .title_bottom(" Press <Esc> to clear ")
             .title_alignment(Alignment::Center)
             .padding(PADDING)
-            .bg(ratatui::style::Color::LightRed);
+            .bg(theme.bg_error);
 
         let inner = block.inner(area);
         block.render(area, buf);

@@ -1,7 +1,7 @@
 use crate::{
+    CONFIG_DIRECTORY, THEME_DIRECTORY,
     key_handler::MoveDirection,
     ui_state::{PopupType, ThemeConfig, UiState},
-    CONFIG_DIRECTORY, THEME_DIRECTORY,
 };
 
 pub struct ThemeManager {
@@ -88,7 +88,7 @@ impl UiState {
 
     pub fn cycle_theme(&mut self, dir: MoveDirection) {
         let len = self.theme_manager.theme_lib.len();
-        if len == 0 {
+        if len < 2 {
             return;
         }
 

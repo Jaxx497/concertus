@@ -23,6 +23,7 @@ impl StatefulWidget for SideBarAlbum {
         let albums = &state.albums;
         let pane_sort = state.get_album_sort_string();
         let pane_sort = format!(" 󰒿 {pane_sort:5} ");
+        let album_sort = state.get_album_sort();
 
         let selected_album_idx = state.display_state.album_pos.selected();
         let selected_artist = state.get_selected_album().map(|a| a.artist.as_str());
@@ -34,15 +35,15 @@ impl StatefulWidget for SideBarAlbum {
 
         for (idx, album) in albums.iter().enumerate() {
             // Add header if artist changed (only for Artist sort)
-            if state.get_album_sort() == AlbumSort::Artist {
+
+            if album_sort == AlbumSort::Artist {
                 if current_artist.as_ref() != Some(&album.artist.as_str()) {
                     let artist_str = album.artist.as_str();
                     let is_selected_artist = selected_artist == Some(artist_str);
 
-                    // Match header style to selected album
                     let header_style = match is_selected_artist {
-                        true => Style::default().fg(theme.highlight).underlined(),
-                        false => Style::default().fg(theme.text_faded),
+                        true => Style::default().fg(theme.text_secondary).underlined(),
+                        false => Style::default().fg(theme.text_secondary),
                     };
 
                     list_items.push(ListItem::new(Span::from(artist_str).style(header_style)));
@@ -52,8 +53,11 @@ impl StatefulWidget for SideBarAlbum {
                 }
             }
 
-            // Build album item
             let year = album.year.map_or("----".to_string(), |y| format!("{y}"));
+            let year_color = match album_sort {
+                AlbumSort::Artist => theme.text_muted,
+                _ => theme.text_secondary,
+            };
 
             let indent = match state.get_album_sort() == AlbumSort::Artist {
                 true => "  ",
@@ -65,11 +69,10 @@ impl StatefulWidget for SideBarAlbum {
                 selected_display_idx = Some(current_display_idx);
             }
 
-            // Don't apply selection styling here - let the List widget handle it
             list_items.push(ListItem::new(Line::from_iter([
-                Span::from(format!("{}{: >4} ", indent, year)).fg(theme.text_secondary),
-                Span::from("✧ ").fg(theme.text_faded),
-                Span::from(album.title.as_str()).fg(theme.text_focused),
+                Span::from(format!("{}{: >4} ", indent, year)).fg(year_color),
+                Span::from("✧ ").fg(theme.text_muted),
+                Span::from(album.title.as_str()).fg(theme.text_primary),
             ])));
 
             current_display_idx += 1;
@@ -93,7 +96,7 @@ impl StatefulWidget for SideBarAlbum {
             }
         }
 
-        let title = Line::from(format!(" ⟪ {} Albums ⟫ ", albums.len())).fg(theme.highlight);
+        let title = Line::from(format!(" ⟪ {} Albums ⟫ ", albums.len())).fg(theme.accent);
         let sorting = Line::from(pane_sort)
             .right_aligned()
             .fg(theme.text_secondary);
