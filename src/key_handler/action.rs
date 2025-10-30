@@ -1,10 +1,10 @@
 use crate::{
+    REFRESH_RATE,
     app_core::Concertus,
     key_handler::*,
     ui_state::{
         LibraryView, Mode, Pane, PlaylistAction, PopupType, ProgressDisplay, SettingsMode, UiState,
     },
-    REFRESH_RATE,
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -42,6 +42,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
         (C, Char('n')) => Some(Action::PlayNext),
         (C, Char('p')) => Some(Action::PlayPrev),
+
+        (X, Media(event::MediaKeyCode::PlayPause)) => Some(Action::TogglePause),
 
         // Works on everything except search or popup
         _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
@@ -89,8 +91,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
             (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
 
-            (S, Char('>')) => Some(Action::CycleTheme(MoveDirection::Up)),
-            (S, Char('<')) => Some(Action::CycleTheme(MoveDirection::Down)),
+            (S, Char('<')) => Some(Action::CycleTheme(MoveDirection::Up)),
+            (S, Char('>')) => Some(Action::CycleTheme(MoveDirection::Down)),
 
             (_, Char('f') | Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
             (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),

@@ -120,14 +120,19 @@ impl UiState {
 
     pub fn delete_playlist(&mut self) -> Result<()> {
         let current_playlist = self.display_state.playlist_pos.selected();
+        let playlist_len = self.playlists.len();
 
         if let Some(idx) = current_playlist {
             let playlist_id = self.playlists[idx].id;
-
             self.db_worker.delete_playlist(playlist_id)?;
 
             self.get_playlists()?;
             self.set_legal_songs();
+        }
+
+        if matches!(playlist_len, 1) {
+            self.display_state.playlist_pos.select(None);
+            self.legal_songs.clear();
         }
 
         self.close_popup();
@@ -136,6 +141,9 @@ impl UiState {
     }
 
     pub fn add_to_playlist_popup(&mut self) {
+        if self.legal_songs.len() == 0 {
+            return;
+        }
         self.popup.selection.select_first();
         self.show_popup(PopupType::Playlist(PlaylistAction::AddSong));
     }

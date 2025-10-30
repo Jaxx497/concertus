@@ -1,21 +1,24 @@
 use crate::{
-    domain::{generate_waveform, QueueSong, SongDatabase as _, SongInfo},
+    Library,
+    domain::{QueueSong, SongDatabase as _, SongInfo, generate_waveform},
     key_handler::{self},
     overwrite_line,
     player::{PlaybackState, PlayerController},
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
-    Library,
 };
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use ratatui::crossterm::{
-    event::{DisableBracketedPaste, EnableBracketedPaste, Event, KeyEventKind},
     ExecutableCommand,
+    event::{
+        DisableBracketedPaste, EnableBracketedPaste, Event, KeyEventKind, KeyboardEnhancementFlags,
+        PushKeyboardEnhancementFlags,
+    },
 };
 use std::{
     sync::{
-        mpsc::{self, Receiver},
         Arc, Mutex,
+        mpsc::{self, Receiver},
     },
     thread,
     time::Instant,
@@ -50,9 +53,13 @@ impl Concertus {
     pub fn run(&mut self) -> anyhow::Result<()> {
         let mut terminal = ratatui::init();
 
-        // let mut terminal = init_terminal()?;
         terminal.clear()?;
         std::io::stdout().execute(EnableBracketedPaste)?;
+        if cfg!(not(windows)) {
+            std::io::stdout().execute(PushKeyboardEnhancementFlags(
+                KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES,
+            ))?;
+        }
 
         self.preload_lib();
         self.initialize_ui();
@@ -69,9 +76,9 @@ impl Concertus {
             // Check for user input
             match key_handler::next_event()? {
                 Some(Event::Key(key)) if key.kind == KeyEventKind::Press => {
-                    if !self.ui.is_text_input_active() && key_handler::is_likely_paste() {
-                        continue;
-                    }
+                    // if !self.ui.is_text_input_active() && key_handler::is_likely_paste() {
+                    //     continue;
+                    // }
                     if let Some(action) = key_handler::handle_key_event(key, &self.ui) {
                         if let Err(e) = self.handle_action(action) {
                             self.ui.set_error(e);

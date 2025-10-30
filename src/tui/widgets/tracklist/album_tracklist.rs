@@ -5,10 +5,9 @@ use crate::{
     ui_state::{Pane, UiState},
 };
 use ratatui::{
-    crossterm::style::Color,
-    style::{Style, Stylize},
+    style::Stylize,
     text::{Line, Span},
-    widgets::{Row, StatefulWidget, Widget},
+    widgets::{Paragraph, Row, StatefulWidget, Widget, Wrap},
 };
 
 pub struct AlbumView;
