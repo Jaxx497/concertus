@@ -2,7 +2,7 @@
 
 > **Disclaimer:** Themeing in Concertus is currently in an experimental stage. This document will reflect the most recent changes to the themeing engine, as well as the latest specification.
 
-Current specification: 0.2 
+Current specification: 0.3 
 
 ### Hot keys
 
