@@ -11,7 +11,8 @@ use crate::{
 };
 use ratatui::{style::Color, widgets::StatefulWidget};
 
-pub(crate) const SHARP_FACTOR: f32 = 0.5;
+pub(crate) const SCROLL_FACTOR: f32 = 0.8;
+pub(crate) const SHARP_FACTOR: f32 = 1.7;
 
 pub struct Progress;
 impl StatefulWidget for Progress {
@@ -57,7 +58,7 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> Color {
     )
 }
 
-fn get_gradient_color(gradient: &ProgressGradient, position: f32, time: f32) -> Color {
+fn get_gradient_color(gradient: &ProgressGradient, position: f32, time: f32, scroll: f32) -> Color {
     match gradient {
         ProgressGradient::Static(color) => *color,
         ProgressGradient::Gradient(colors) => {
@@ -68,7 +69,7 @@ fn get_gradient_color(gradient: &ProgressGradient, position: f32, time: f32) -> 
                 return colors[0];
             }
 
-            let t = ((position + time * 0.2) % 1.0).abs();
+            let t = ((position + time * scroll) % 1.0).abs();
 
             let segment_count = colors.len();
             let segment_f = t * segment_count as f32;

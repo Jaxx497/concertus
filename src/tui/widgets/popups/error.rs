@@ -1,5 +1,6 @@
 use crate::ui_state::{Pane, UiState};
 use ratatui::{
+    crossterm::style::Color,
     layout::{Alignment, Constraint, Layout},
     style::Stylize,
     widgets::{Block, Padding, Paragraph, StatefulWidget, Widget, Wrap},
@@ -31,6 +32,7 @@ impl StatefulWidget for ErrorMsg {
             .title_bottom(" Press <Esc> to clear ")
             .title_alignment(Alignment::Center)
             .padding(PADDING)
+            .fg(Color::White)
             .bg(theme.bg_error);
 
         let inner = block.inner(area);

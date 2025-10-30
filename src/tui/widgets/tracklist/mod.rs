@@ -16,7 +16,7 @@ use crate::{
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
     tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED},
-    ui_state::{DisplayTheme, LibraryView, Mode, Pane, TableSort, UiState},
+    ui_state::{DisplayTheme, LibraryView, Mode, Pane, UiState},
 };
 use ratatui::{
     layout::{Alignment, Constraint, Flex, Rect},
@@ -57,47 +57,6 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
         }
         _ => Vec::new(),
     }
-}
-
-pub(super) fn get_header<'a>(state: &UiState, active: &TableSort) -> Row<'a> {
-    let row = match state.get_mode() {
-        Mode::Power | Mode::Search => [
-            String::new(),
-            TableSort::Title.to_string(),
-            TableSort::Artist.to_string(),
-            TableSort::Album.to_string(),
-            TableSort::Duration.to_string(),
-        ]
-        .iter()
-        .map(
-            |s| match (*s == active.to_string(), s.eq(&String::from("Duration"))) {
-                (true, true) => Text::from(s.to_string())
-                    .fg(Color::Red)
-                    .underlined()
-                    .italic()
-                    .right_aligned(),
-                (false, true) => Text::from(s.to_string()).right_aligned(),
-                (true, false) => Text::from(Span::from(
-                    s.to_string().fg(Color::Red).underlined().italic(),
-                )),
-                _ => s.to_string().into(),
-            },
-        )
-        .collect(),
-        Mode::Library(_) | Mode::Queue => {
-            vec![
-                Text::default(),
-                Text::default(),
-                Text::from("𝕋𝕚𝕥𝕝𝕖").bold(),
-                Text::from("𝔸𝕣𝕥𝕚𝕤𝕥"),
-                Text::from("").centered(),
-                Text::from("").centered(),
-            ]
-        }
-        _ => Vec::new(),
-    };
-
-    Row::new(row).bottom_margin(1).bold()
 }
 
 pub fn get_keymaps(mode: &Mode) -> &'static str {

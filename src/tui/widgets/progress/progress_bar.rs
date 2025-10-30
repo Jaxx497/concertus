@@ -1,4 +1,8 @@
-use crate::{domain::SongInfo, tui::widgets::progress::get_gradient_color, ui_state::UiState};
+use crate::{
+    domain::SongInfo,
+    tui::widgets::progress::{SCROLL_FACTOR, get_gradient_color},
+    ui_state::UiState,
+};
 use ratatui::{
     style::Stylize,
     symbols::line,
@@ -43,6 +47,7 @@ impl StatefulWidget for ProgressBar {
                 &state.theme_manager.active.progress,
                 ratio,
                 elapsed,
+                SCROLL_FACTOR,
             ))
             .unfilled_style(state.theme_manager.active.text_muted)
             .line_set(line::THICK)

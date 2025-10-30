@@ -1,6 +1,9 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::{WAVEFORM_WIDGET_HEIGHT, progress::get_gradient_color},
+    tui::widgets::{
+        WAVEFORM_WIDGET_HEIGHT,
+        progress::{SCROLL_FACTOR, get_gradient_color},
+    },
     ui_state::{Pane, UiState},
 };
 use ratatui::{
@@ -63,7 +66,12 @@ impl StatefulWidget for Waveform {
                     let position = idx as f32 / wf_len as f32;
 
                     let color = if position < progress {
-                        get_gradient_color(&theme.progress_complete, position, elapsed_secs)
+                        get_gradient_color(
+                            &theme.progress_complete,
+                            position,
+                            elapsed_secs,
+                            SCROLL_FACTOR,
+                        )
                     } else {
                         get_unplayed_color(position, *amp)
                     };

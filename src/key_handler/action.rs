@@ -50,7 +50,6 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             // PLAYBACK COMMANDS
             (X, Esc) => Some(Action::SoftReset),
 
-            (C, Char('e')) => Some(Action::ThemeManager),
             (S, Char('C')) => Some(Action::ThemeManager),
 
             (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),

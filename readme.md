@@ -44,6 +44,9 @@ new backend options.
 ## TODO 
 
 > **Current Objective:** Implement a more comprehensive themeing system
+> - Figure out proper unplayed color schemeing
+> - Set scroll speed & sharpening as user controlled variables
+> - Set field to tell if theme is dark or light for dimming purposes
 
 - Provide visual progress when scanning in songs
 - Add more shuffle functionality

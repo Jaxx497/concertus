@@ -1,5 +1,5 @@
 use crate::{
-    tui::widgets::progress::get_gradient_color,
+    tui::widgets::progress::{SCROLL_FACTOR, get_gradient_color},
     ui_state::{Pane, ProgressGradient, UiState},
 };
 use ratatui::{
@@ -74,7 +74,7 @@ fn draw_vibrant_gradient(
 
         let progress = i as f32 / samples.len() as f32;
 
-        let color = get_gradient_color(gradient, progress, time);
+        let color = get_gradient_color(gradient, progress, time, SCROLL_FACTOR / 2.0);
 
         ctx.draw(&Line {
             x1,
