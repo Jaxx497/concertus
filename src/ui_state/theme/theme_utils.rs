@@ -1,8 +1,10 @@
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Ok, Result, anyhow, bail};
 use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
 };
+
+use crate::ui_state::theme::{theme_config::ProgressGradient, theme_import::ProgressGradientRaw};
 
 pub(super) fn parse_color(s: &str) -> Result<Color> {
     match s {
@@ -39,6 +41,21 @@ pub(super) fn parse_rgb(s: &str) -> Result<Color> {
     Err(anyhow!(
         "Invalid rgb input: {s}\nExpected ex: \"rgb(255, 50, 120)\""
     ))
+}
+
+pub(super) fn parse_progress(raw: &ProgressGradientRaw) -> Result<ProgressGradient> {
+    match raw {
+        ProgressGradientRaw::Static(c) => Ok(ProgressGradient::Static(parse_color(&c)?)),
+
+        ProgressGradientRaw::Gradient(colors) => {
+            let gradient = colors
+                .iter()
+                .map(|c| parse_color(&c))
+                .collect::<Result<Vec<Color>>>()?;
+
+            Ok(ProgressGradient::Gradient(gradient))
+        }
+    }
 }
 
 pub(super) fn try_from_str(s: &str) -> Result<Color> {

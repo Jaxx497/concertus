@@ -5,6 +5,7 @@ mod theme_manager;
 mod theme_utils;
 
 pub use display_theme::DisplayTheme;
+pub use theme_config::ProgressGradient;
 pub use theme_config::ThemeConfig;
 pub use theme_manager::ThemeManager;
 

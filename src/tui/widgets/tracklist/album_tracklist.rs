@@ -7,7 +7,7 @@ use crate::{
 use ratatui::{
     style::Stylize,
     text::{Line, Span},
-    widgets::{Paragraph, Row, StatefulWidget, Widget, Wrap},
+    widgets::{Row, StatefulWidget, Widget},
 };
 
 pub struct AlbumView;

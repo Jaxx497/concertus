@@ -1,4 +1,7 @@
-use crate::ui_state::{Pane, UiState};
+use crate::{
+    tui::widgets::progress::get_gradient_color,
+    ui_state::{Pane, ProgressGradient, UiState},
+};
 use ratatui::{
     style::Stylize,
     widgets::{
@@ -36,7 +39,7 @@ impl StatefulWidget for Oscilloscope {
             .x_bounds([0.0, samples.len() as f64])
             .y_bounds([-1.0, 1.0])
             .paint(|ctx| {
-                draw_vibrant_gradient(ctx, &samples, elapsed);
+                draw_vibrant_gradient(ctx, &samples, elapsed, &theme.progress_complete);
             })
             .background_color(theme.bg_global)
             .block(Block::new().bg(theme.bg_global).padding(Padding {
@@ -49,7 +52,12 @@ impl StatefulWidget for Oscilloscope {
     }
 }
 
-fn draw_vibrant_gradient(ctx: &mut Context, samples: &[f32], time: f32) {
+fn draw_vibrant_gradient(
+    ctx: &mut Context,
+    samples: &[f32],
+    time: f32,
+    gradient: &ProgressGradient,
+) {
     let peak = samples
         .iter()
         .map(|s| s.abs())
@@ -57,9 +65,6 @@ fn draw_vibrant_gradient(ctx: &mut Context, samples: &[f32], time: f32) {
         .unwrap_or(1.0);
 
     let scale = if peak > 1.0 { 1.0 / peak } else { 1.0 };
-
-    let intensity: f32 = samples.iter().map(|s| s.abs()).sum::<f32>() / samples.len() as f32;
-    let boosted = (intensity * 3.0).min(1.0); // Aggressive boost
 
     for (i, window) in samples.windows(2).enumerate() {
         let x1 = i as f64;
@@ -69,12 +74,7 @@ fn draw_vibrant_gradient(ctx: &mut Context, samples: &[f32], time: f32) {
 
         let progress = i as f32 / samples.len() as f32;
 
-        // Always maximum saturation, only brightness varies
-        let hue = (progress * 360.0 + time * 30.0) % 360.0;
-        let saturation = 1.0; // Always max saturation
-        let value = 0.7 + (boosted * 0.3); // 0.7 to 1.0
-
-        let color = super::hsv_to_rgb(hue, saturation, value);
+        let color = get_gradient_color(gradient, progress, time);
 
         ctx.draw(&Line {
             x1,

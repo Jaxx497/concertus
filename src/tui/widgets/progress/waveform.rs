@@ -1,6 +1,6 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::WAVEFORM_WIDGET_HEIGHT,
+    tui::widgets::{WAVEFORM_WIDGET_HEIGHT, progress::get_gradient_color},
     ui_state::{Pane, UiState},
 };
 use ratatui::{
@@ -63,7 +63,7 @@ impl StatefulWidget for Waveform {
                     let position = idx as f32 / wf_len as f32;
 
                     let color = if position < progress {
-                        get_vibrant_color(position, elapsed_secs)
+                        get_gradient_color(&theme.progress_complete, position, elapsed_secs)
                     } else {
                         get_unplayed_color(position, *amp)
                     };
@@ -102,14 +102,6 @@ fn draw_waveform_rect(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
         height: hgt * 2.0, // Rectangles are drawn from the bottom
         color,
     });
-}
-
-fn get_vibrant_color(position: f32, time: f32) -> Color {
-    let h = (position * 360.0 + time * 300.0) % 360.0;
-    let s = 1.0;
-    let v = 0.9;
-
-    super::hsv_to_rgb(h, s, v)
 }
 
 fn get_unplayed_color(position: f32, amplitude: f32) -> Color {

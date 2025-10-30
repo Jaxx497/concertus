@@ -1,4 +1,7 @@
-use crate::ui_state::{Pane, UiState, theme::theme_utils::dim_color};
+use crate::ui_state::{
+    Pane, UiState,
+    theme::{theme_config::ProgressGradient, theme_utils::dim_color},
+};
 use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
@@ -21,7 +24,7 @@ pub struct DisplayTheme {
     pub border_display: Borders,
     pub border_type: BorderType,
 
-    pub progress_complete: Color,
+    pub progress_complete: ProgressGradient,
     pub progress_incomplete: Color,
 }
 
@@ -48,7 +51,7 @@ impl UiState {
                 border_display: theme.border_display,
                 border_type: theme.border_type,
 
-                progress_complete: theme.accent,
+                progress_complete: theme.progress.clone(),
                 progress_incomplete: theme.text_muted,
             },
 
@@ -69,7 +72,7 @@ impl UiState {
                 border_display: theme.border_display,
                 border_type: theme.border_type,
 
-                progress_complete: theme.accent,
+                progress_complete: theme.progress.clone(),
                 progress_incomplete: theme.text_muted,
             },
         }

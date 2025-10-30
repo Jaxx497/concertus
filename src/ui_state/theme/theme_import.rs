@@ -1,13 +1,13 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct ThemeImport {
     pub name: String,
     pub colors: ColorScheme,
     pub borders: BorderScheme,
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct ColorScheme {
     pub surface_global: String,
     pub surface_active: String,
@@ -32,10 +32,19 @@ pub struct ColorScheme {
     // Selection colors
     pub selection: String,
     pub selection_inactive: String,
+
+    pub progress: ProgressGradientRaw,
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct BorderScheme {
     pub border_display: String,
     pub border_type: String,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum ProgressGradientRaw {
+    Static(String),
+    Gradient(Vec<String>),
 }

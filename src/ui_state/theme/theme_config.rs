@@ -1,11 +1,11 @@
 use crate::ui_state::theme::{
     GOOD_RED_DARK,
     theme_import::ThemeImport,
-    theme_utils::{parse_border_type, parse_borders, parse_color},
+    theme_utils::{parse_border_type, parse_borders, parse_color, parse_progress},
 };
 use anyhow::Result;
 use ratatui::{
-    style::Color,
+    style::{Color, palette::material::WHITE},
     widgets::{BorderType, Borders},
 };
 use std::path::Path;
@@ -42,6 +42,8 @@ pub struct ThemeConfig {
     // Border configuration
     pub border_display: Borders,
     pub border_type: BorderType,
+
+    pub progress: ProgressGradient,
 }
 
 impl ThemeConfig {
@@ -87,6 +89,8 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
         let selection = parse_color(&colors.selection).unwrap_or(border_active);
         let selection_inactive = parse_color(&colors.selection_inactive).unwrap_or(selection);
 
+        let progress = parse_progress(&colors.progress)?;
+
         Ok(ThemeConfig {
             name: config.name.clone(),
 
@@ -112,6 +116,8 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
 
             border_display: parse_borders(&config.borders.border_display),
             border_type: parse_border_type(&config.borders.border_type),
+
+            progress,
         })
     }
 }
@@ -145,6 +151,19 @@ impl Default for ThemeConfig {
 
             border_display: Borders::ALL,
             border_type: BorderType::Rounded,
+
+            progress: ProgressGradient::Gradient(Vec::from([
+                GOOD_RED,
+                WHITE,
+                Color::Rgb(30, 30, 255),
+                Color::Rgb(220, 20, 220),
+            ])), // progress: ProgressGradient::Gradient(Vec::from([DARK_WHITE, DARK_GRAY])),
         }
     }
+}
+
+#[derive(Clone)]
+pub enum ProgressGradient {
+    Static(Color),
+    Gradient(Vec<Color>),
 }

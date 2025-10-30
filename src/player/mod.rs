@@ -11,7 +11,7 @@ pub use tapped_source::TappedSource;
 use crate::domain::QueueSong;
 use std::sync::Arc;
 
-pub const OSCILLO_BUFFER_CAPACITY: usize = 4096;
+pub const OSCILLO_BUFFER_CAPACITY: usize = 2048;
 
 pub enum PlayerCommand {
     Play(Arc<QueueSong>),

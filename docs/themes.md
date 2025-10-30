@@ -24,14 +24,14 @@ accessible to the user in the program.
 Here is an example of a transparent theme:
 
 ```Toml 
-# Theme version 0.2
+# Theme version 0.3
 ``name = "Transparent 1"
 
 [colors]
 surface_global      = "" # Background of application
 surface_active      = "" # Background of selected pane
 surface_inactive    = "" # Background of unselected areas
-surface_error       = "" # Color of error popup
+surface_error       = "#ff4646" # Color of error popup
 
 text_primary        = "#d2d2d7"
 text_secondary      = "#ff4646"
@@ -48,30 +48,37 @@ selection_inactive  = "#82823C" # Multi-selected & unfocused selections
 accent              = "#dcdc64" 
 accent_inactive     = "#82823C"
 
+progress            = ["#ff0000", "#ffffff", "#0000ff"] 
+                    # Or "ff0000"
+
 [borders]
 border_display      = "all"
 border_type         = "rounded"
-`
+```
 
 ### Acceptable Color Formats
 
-Colors can be formatted in rgb, hex, or as generic color names. E.g. "red",
-"light-blue". All inputs are case insensitive. For those who wish to utilize
-transparency, simply leave the quotes empty or write "none" with the quotation
-marks. (Certain elements may not be able to be rendered as transparent. Your
-terminal may also play a role in what can/cannot be transparent.)
+Colors can be formatted in rgb `"rgb(###, ###,###)"`, `"#XXXXXX"`, or as
+generic color names. E.g. "red", "light-blue".* All inputs are case insensitive.
+For those who wish to utilize transparency, simply leave the quotes empty or
+write "none" with the quotation marks. (Certain elements may not be able to be
+rendered as transparent. Your terminal may also play a role in what can/cannot
+be transparent.)
 
 ```TOML
 # Valid Colors
 surface_global = ""
-text_primary = "#FF4646"
-text_secondary =  "rgb(132, 132, 55)"
+text_primary = "#Ff4646" # Lowercase and uppercase allowed
+text_secondary =  "rgb(142, 32, 200)"
 border_inactive = "grey"
 
 # Invalid Colors
-text_focused = "FF4646"
-text_secondary = "(132, 132, 55)"
+text_focused = "FF4646" # Missing the `#` character
+text_secondary = "(132, 132, 55)" # Missing rgb qualifier
 ```
+
+> \* Using generic color strings will fallback on ANSI terminal color
+> codes. These will not interpolate properly with gradients. 
 
 Users can create a borderless experience by setting the colors of the borders
 to the same values as the respective background panel colors. This will **not**

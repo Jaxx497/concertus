@@ -1,6 +1,6 @@
-use crate::{domain::SongInfo, ui_state::UiState};
+use crate::{domain::SongInfo, tui::widgets::progress::get_gradient_color, ui_state::UiState};
 use ratatui::{
-    style::{Color, Stylize},
+    style::Stylize,
     symbols::line,
     widgets::{Block, LineGauge, Padding, StatefulWidget, Widget},
 };
@@ -39,7 +39,11 @@ impl StatefulWidget for ProgressBar {
                         bottom: 0,
                     }),
             )
-            .filled_style(get_vibrant_color(ratio, elapsed))
+            .filled_style(get_gradient_color(
+                &state.theme_manager.active.progress,
+                ratio,
+                elapsed,
+            ))
             .unfilled_style(state.theme_manager.active.text_muted)
             .line_set(line::THICK)
             .label("")
@@ -47,12 +51,4 @@ impl StatefulWidget for ProgressBar {
 
         guage.render(area, buf);
     }
-}
-
-fn get_vibrant_color(position: f32, time: f32) -> Color {
-    let hue = (position * 360.0 + time * 30.0) % 360.0;
-    let saturation = 1.0;
-    let value = 0.9;
-
-    super::hsv_to_rgb(hue, saturation, value)
 }
