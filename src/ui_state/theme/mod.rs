@@ -1,11 +1,14 @@
+mod color_utils;
 mod display_theme;
+mod gradients;
 mod theme_config;
 mod theme_import;
 mod theme_manager;
 mod theme_utils;
 
+pub use color_utils::{SCROLL_FACTOR, SHARP_FACTOR, dim_color, get_gradient_color};
 pub use display_theme::DisplayTheme;
-pub use theme_config::ProgressGradient;
+pub use gradients::{InactiveGradient, ProgressGradient};
 pub use theme_config::ThemeConfig;
 pub use theme_manager::ThemeManager;
 

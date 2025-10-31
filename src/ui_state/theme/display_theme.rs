@@ -1,6 +1,6 @@
 use crate::ui_state::{
-    Pane, UiState,
-    theme::{theme_config::ProgressGradient, theme_utils::dim_color},
+    Pane, ProgressGradient, UiState, dim_color,
+    theme::{color_utils::get_gradient_color, gradients::InactiveGradient},
 };
 use ratatui::{
     style::Color,
@@ -25,7 +25,8 @@ pub struct DisplayTheme {
     pub border_type: BorderType,
 
     pub progress_complete: ProgressGradient,
-    pub progress_incomplete: Color,
+    pub progress_incomplete: InactiveGradient,
+    pub oscillo: ProgressGradient,
 }
 
 impl UiState {
@@ -52,7 +53,8 @@ impl UiState {
                 border_type: theme.border_type,
 
                 progress_complete: theme.progress.clone(),
-                progress_incomplete: theme.text_muted,
+                progress_incomplete: theme.progress_i.clone(),
+                oscillo: theme.oscillo.clone(),
             },
 
             false => DisplayTheme {
@@ -73,8 +75,46 @@ impl UiState {
                 border_type: theme.border_type,
 
                 progress_complete: theme.progress.clone(),
-                progress_incomplete: theme.text_muted,
+                progress_incomplete: theme.progress_i.clone(),
+                oscillo: theme.oscillo.clone(),
             },
+        }
+    }
+}
+
+impl DisplayTheme {
+    pub fn get_focused_color(&self, position: f32, time: f32) -> Color {
+        match &self.progress_complete {
+            ProgressGradient::Static(c) => *c,
+            ProgressGradient::Gradient(g) => get_gradient_color(&g, position, time),
+        }
+    }
+
+    pub fn get_oscilloscope_color(&self, position: f32, time: f32) -> Color {
+        match &self.oscillo {
+            ProgressGradient::Static(c) => *c,
+            ProgressGradient::Gradient(g) => get_gradient_color(&g, position, time),
+        }
+    }
+
+    pub fn get_inactive_color(&self, position: f32, time: f32, amp: f32) -> Color {
+        let brightness = match &self.progress_complete {
+            ProgressGradient::Static(_) => 0.5,
+            ProgressGradient::Gradient(x) if x.len() == 1 => 0.5,
+            _ => 0.2 + (amp * 0.5),
+        };
+
+        match &self.progress_incomplete {
+            InactiveGradient::Static(c) => *c,
+            InactiveGradient::Gradient(g) => get_gradient_color(g, position, time),
+            InactiveGradient::Dimmed => {
+                let now_color = self.get_focused_color(position, time);
+                dim_color(now_color, brightness)
+            }
+            InactiveGradient::Still => {
+                let now_color = self.get_focused_color(position, 0.0); // 0 to prevent movement
+                dim_color(now_color, brightness)
+            }
         }
     }
 }

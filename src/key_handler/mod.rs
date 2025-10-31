@@ -82,6 +82,7 @@ pub enum Action {
     // Display
     CycleTheme(MoveDirection),
     ThemeManager,
+    ThemeRefresh,
 
     IncrementWFSmoothness(MoveDirection),
     IncrementSidebarSize(isize),

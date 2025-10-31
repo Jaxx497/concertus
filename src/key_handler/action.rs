@@ -51,6 +51,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Esc) => Some(Action::SoftReset),
 
             (S, Char('C')) => Some(Action::ThemeManager),
+            (X, F(6)) => Some(Action::ThemeRefresh),
 
             (C, Char('t')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
             (C, Char('q')) => Some(Action::ChangeMode(Mode::Queue)),
@@ -374,7 +375,8 @@ impl Concertus {
             Action::SetFullscreen(p)        => self.ui.set_fullscreen(p),
             Action::RevertFullscreen        => self.ui.revert_fullscreen(),
 
-            Action::ThemeManager => self.ui.open_theme_manager(),
+            Action::ThemeRefresh    => self.ui.refresh_current_theme(),
+            Action::ThemeManager    => self.ui.open_theme_manager(),
             Action::CycleTheme(dir) => self.ui.cycle_theme(dir),
 
             // Ops

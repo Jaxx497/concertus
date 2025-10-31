@@ -1,11 +1,15 @@
-use crate::ui_state::theme::{
-    GOOD_RED_DARK,
-    theme_import::ThemeImport,
-    theme_utils::{parse_border_type, parse_borders, parse_color, parse_progress},
+use crate::ui_state::{
+    ProgressGradient,
+    theme::{
+        GOOD_RED_DARK,
+        gradients::InactiveGradient,
+        theme_import::ThemeImport,
+        theme_utils::{parse_border_type, parse_borders, parse_color},
+    },
 };
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use ratatui::{
-    style::{Color, palette::material::WHITE},
+    style::Color,
     widgets::{BorderType, Borders},
 };
 use std::path::Path;
@@ -44,6 +48,9 @@ pub struct ThemeConfig {
     pub border_type: BorderType,
 
     pub progress: ProgressGradient,
+    pub progress_i: InactiveGradient,
+
+    pub oscillo: ProgressGradient,
 }
 
 impl ThemeConfig {
@@ -56,7 +63,7 @@ impl ThemeConfig {
             .as_ref()
             .file_stem()
             .and_then(|s| s.to_str())
-            .unwrap_or(&theme.name)
+            .ok_or(anyhow!("Could not identify theme name"))?
             .to_string();
 
         Ok(theme)
@@ -89,10 +96,12 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
         let selection = parse_color(&colors.selection).unwrap_or(border_active);
         let selection_inactive = parse_color(&colors.selection_inactive).unwrap_or(selection);
 
-        let progress = parse_progress(&colors.progress)?;
+        let progress = ProgressGradient::from_raw(&colors.waveform)?;
+        let progress_i = InactiveGradient::from_raw(&colors.waveform_i)?;
+        let oscillo = ProgressGradient::from_raw(&colors.oscilloscope)?;
 
         Ok(ThemeConfig {
-            name: config.name.clone(),
+            name: String::new(),
 
             surface_global,
             surface_active,
@@ -118,6 +127,8 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
             border_type: parse_border_type(&config.borders.border_type),
 
             progress,
+            progress_i,
+            oscillo,
         })
     }
 }
@@ -152,18 +163,9 @@ impl Default for ThemeConfig {
             border_display: Borders::ALL,
             border_type: BorderType::Rounded,
 
-            progress: ProgressGradient::Gradient(Vec::from([
-                GOOD_RED,
-                WHITE,
-                Color::Rgb(30, 30, 255),
-                Color::Rgb(220, 20, 220),
-            ])), // progress: ProgressGradient::Gradient(Vec::from([DARK_WHITE, DARK_GRAY])),
+            progress: ProgressGradient::Gradient(Vec::from([DARK_WHITE, GOOD_RED_DARK, DARK_GRAY])),
+            progress_i: InactiveGradient::Dimmed,
+            oscillo: ProgressGradient::Gradient(Vec::from([DARK_WHITE, GOLD, DARK_GRAY])),
         }
     }
-}
-
-#[derive(Clone)]
-pub enum ProgressGradient {
-    Static(Color),
-    Gradient(Vec<Color>),
 }

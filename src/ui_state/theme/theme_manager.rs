@@ -1,3 +1,5 @@
+use anyhow::anyhow;
+
 use crate::{
     CONFIG_DIRECTORY, THEME_DIRECTORY,
     key_handler::MoveDirection,
@@ -12,7 +14,6 @@ pub struct ThemeManager {
 impl ThemeManager {
     pub fn new() -> Self {
         let theme_lib = Self::collect_themes();
-
         let active = theme_lib.first().cloned().unwrap_or_default();
 
         ThemeManager { active, theme_lib }
@@ -70,6 +71,23 @@ impl ThemeManager {
 }
 
 impl UiState {
+    pub fn refresh_current_theme(&mut self) {
+        self.theme_manager.update_themes();
+
+        match self.theme_manager.get_current_theme_index() {
+            Some(idx) => {
+                let theme = self
+                    .theme_manager
+                    .get_theme_at_index(idx)
+                    .unwrap_or_default();
+                self.theme_manager.set_theme(theme);
+            }
+            _ => self.set_error(anyhow!(
+                "Formatting error in theme!\n\nFalling back to last loaded"
+            )),
+        }
+    }
+
     pub fn open_theme_manager(&mut self) {
         self.theme_manager.update_themes();
 

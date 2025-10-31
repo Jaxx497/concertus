@@ -1,9 +1,6 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::{
-        WAVEFORM_WIDGET_HEIGHT,
-        progress::{SCROLL_FACTOR, get_gradient_color},
-    },
+    tui::widgets::WAVEFORM_WIDGET_HEIGHT,
     ui_state::{Pane, UiState},
 };
 use ratatui::{
@@ -26,20 +23,11 @@ impl StatefulWidget for Waveform {
     ) {
         let theme = state.get_theme(&Pane::TrackList);
 
-        let height = area.height as f32;
-
-        let normalized = ((height - 6.0) / 20.0).max(0.0);
-        let smoothed = normalized / (1.0 + normalized);
-        let padding_vertical = (smoothed * height * 0.45) as u16;
-
-        let padding = Padding {
-            left: 10,
-            right: 10,
-            top: match area.height > 6 {
-                true => padding_vertical,
-                false => 1,
-            },
-            bottom: padding_vertical,
+        let padding_vertical = match area.height {
+            0..=6 => 0,
+            7..=20 => (area.height as f32 * 0.15) as u16 - 1,
+            21..=40 => (area.height as f32 * 0.25) as u16,
+            _ => (area.height as f32 * 0.35) as u16,
         };
 
         let np = state
@@ -48,42 +36,37 @@ impl StatefulWidget for Waveform {
 
         let waveform = state.get_waveform_visual().to_vec();
         let wf_len = waveform.len();
+        let duration_f32 = &np.get_duration_f32();
 
         Canvas::default()
             .x_bounds([0.0, wf_len as f64])
             .y_bounds([WAVEFORM_WIDGET_HEIGHT * -1.0, WAVEFORM_WIDGET_HEIGHT])
             .paint(|ctx| {
-                let duration_f32 = &np.get_duration_f32();
-                let elapsed = &state.get_playback_elapsed();
-
-                let elapsed_secs = elapsed.as_secs_f32();
-                let progress = elapsed_secs / duration_f32;
-
-                let line_mode = area.width < 170;
+                let elapsed = state.get_playback_elapsed().as_secs_f32();
+                let progress = elapsed / duration_f32;
 
                 for (idx, amp) in waveform.iter().enumerate() {
                     let hgt = (*amp as f64 * WAVEFORM_WIDGET_HEIGHT).round();
                     let position = idx as f32 / wf_len as f32;
 
-                    let color = if position < progress {
-                        get_gradient_color(
-                            &theme.progress_complete,
-                            position,
-                            elapsed_secs,
-                            SCROLL_FACTOR,
-                        )
-                    } else {
-                        get_unplayed_color(position, *amp)
+                    let color = match position < progress {
+                        true => theme.get_focused_color(position, elapsed),
+                        false => theme.get_inactive_color(position, elapsed, *amp),
                     };
 
-                    match line_mode {
+                    match area.width < 170 {
                         true => draw_waveform_line(ctx, idx as f64, hgt, color),
                         false => draw_waveform_rect(ctx, idx as f64, hgt, color),
                     }
                 }
             })
             .background_color(theme.bg_global)
-            .block(Block::new().bg(theme.bg_global).padding(padding))
+            .block(Block::new().bg(theme.bg_global).padding(Padding {
+                left: 10,
+                right: 10,
+                top: padding_vertical + 1,
+                bottom: padding_vertical,
+            }))
             .render(area, buf)
     }
 }
@@ -110,11 +93,4 @@ fn draw_waveform_rect(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
         height: hgt * 2.0, // Rectangles are drawn from the bottom
         color,
     });
-}
-
-fn get_unplayed_color(position: f32, amplitude: f32) -> Color {
-    let h = (position * 360.0) % 360.0;
-    let s = 0.4;
-    let v = 0.3 + (amplitude * 0.15);
-    super::hsv_to_rgb(h, s, v)
 }

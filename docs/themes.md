@@ -2,14 +2,14 @@
 
 > **Disclaimer:** Themeing in Concertus is currently in an experimental stage. This document will reflect the most recent changes to the themeing engine, as well as the latest specification.
 
-Current specification: 0.3 
+Current specification: 0.4
 
 ### Hot keys
 
-The theme menu can be accessed via the `Ctrl`+`c` keymap. This will hot
-reload all themes, no need to reboot when making changes to a theme. Themes can
-also be cycled through via the `Shift`+`<` and `Shift`+`>` keys. (These will
-not be hot reloaded).
+The theme menu can be accessed via the `Ctrl`+`c` keymap. Attempt to hot reload
+the current them with `F6`. This will hot reload all themes, no need to reboot
+when making changes to a theme. Themes can also be cycled through via the
+`Shift`+`<` and `Shift`+`>` keys. (These will not be hot reloaded).
 
 ### Theme Folder Location & Formatting
 
@@ -24,9 +24,7 @@ accessible to the user in the program.
 Here is an example of a transparent theme:
 
 ```Toml 
-# Theme version 0.3
-``name = "Transparent 1"
-
+# Theme version 0.4
 [colors]
 surface_global      = "" # Background of application
 surface_active      = "" # Background of selected pane
@@ -48,8 +46,13 @@ selection_inactive  = "#82823C" # Multi-selected & unfocused selections
 accent              = "#dcdc64" 
 accent_inactive     = "#82823C"
 
-progress            = ["#ff0000", "#ffffff", "#0000ff"] 
-                    # Or "ff0000"
+progress            = ["#ff0000", "#ffffff", "#0000ff"] # Single colors are also allowed here
+progress_i          = "dimmed"  
+                    # Other acceptable values include
+                    #   "still"
+                    #   a single color
+                    #   an array of colors like above
+
 
 [borders]
 border_display      = "all"

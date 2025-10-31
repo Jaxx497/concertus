@@ -1,7 +1,4 @@
-use crate::{
-    tui::widgets::progress::{SCROLL_FACTOR, get_gradient_color},
-    ui_state::{Pane, ProgressGradient, UiState},
-};
+use crate::ui_state::{DisplayTheme, Pane, SCROLL_FACTOR, UiState};
 use ratatui::{
     style::Stylize,
     widgets::{
@@ -39,7 +36,7 @@ impl StatefulWidget for Oscilloscope {
             .x_bounds([0.0, samples.len() as f64])
             .y_bounds([-1.0, 1.0])
             .paint(|ctx| {
-                draw_vibrant_gradient(ctx, &samples, elapsed, &theme.progress_complete);
+                draw_oscilloscope(ctx, &samples, elapsed, &theme);
             })
             .background_color(theme.bg_global)
             .block(Block::new().bg(theme.bg_global).padding(Padding {
@@ -52,12 +49,7 @@ impl StatefulWidget for Oscilloscope {
     }
 }
 
-fn draw_vibrant_gradient(
-    ctx: &mut Context,
-    samples: &[f32],
-    time: f32,
-    gradient: &ProgressGradient,
-) {
+fn draw_oscilloscope(ctx: &mut Context, samples: &[f32], time: f32, theme: &DisplayTheme) {
     let peak = samples
         .iter()
         .map(|s| s.abs())
@@ -74,7 +66,8 @@ fn draw_vibrant_gradient(
 
         let progress = i as f32 / samples.len() as f32;
 
-        let color = get_gradient_color(gradient, progress, time, SCROLL_FACTOR / 2.0);
+        let time = time / 4.0; // Slow down gradient scroll substantially
+        let color = theme.get_oscilloscope_color(progress, time);
 
         ctx.draw(&Line {
             x1,

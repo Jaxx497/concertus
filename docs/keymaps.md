@@ -37,7 +37,8 @@ with the exception of searching as not to affect a user's search query.
 | Search | `\`
 | Open Settings | ``` ` ``` |
 | Update Library | `F5` \| `Ctrl` + `u` |
-| Clear Popup / Search | `Esc`|
+| Clear Popup / Search | `Esc` |
+| Hot Reload Current Theme | `F6` |
 | Open Theme Manager | `C`|
 | Cycle Themes | `<` `>`|
 | Quit | `Ctrl` + `c`|

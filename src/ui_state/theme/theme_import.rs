@@ -2,7 +2,6 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct ThemeImport {
-    pub name: String,
     pub colors: ColorScheme,
     pub borders: BorderScheme,
 }
@@ -33,7 +32,10 @@ pub struct ColorScheme {
     pub selection: String,
     pub selection_inactive: String,
 
-    pub progress: ProgressGradientRaw,
+    pub waveform: ProgressGradientRaw,
+    pub waveform_i: ProgressGradientRaw,
+
+    pub oscilloscope: ProgressGradientRaw,
 }
 
 #[derive(Deserialize)]
@@ -45,6 +47,6 @@ pub struct BorderScheme {
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub enum ProgressGradientRaw {
-    Static(String),
+    Single(String),
     Gradient(Vec<String>),
 }

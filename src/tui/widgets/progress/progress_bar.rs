@@ -1,7 +1,6 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::progress::{SCROLL_FACTOR, get_gradient_color},
-    ui_state::UiState,
+    ui_state::{Pane, UiState},
 };
 use ratatui::{
     style::Stylize,
@@ -19,6 +18,8 @@ impl StatefulWidget for ProgressBar {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
+        let theme = state.get_theme(&Pane::TrackList);
+
         let np = state
             .get_now_playing()
             .expect("Expected a song to be playing. [Widget: Progress Bar]");
@@ -32,24 +33,20 @@ impl StatefulWidget for ProgressBar {
             _ => 0.0,
         };
 
+        let fg = theme.get_focused_color(ratio, elapsed);
+
+        let amp = 1.0;
+        let bg = theme.get_inactive_color(ratio, elapsed, amp);
+
         let guage = LineGauge::default()
-            .block(
-                Block::new()
-                    .bg(state.theme_manager.active.surface_global)
-                    .padding(Padding {
-                        left: 1,
-                        right: 2,
-                        top: (area.height / 2),
-                        bottom: 0,
-                    }),
-            )
-            .filled_style(get_gradient_color(
-                &state.theme_manager.active.progress,
-                ratio,
-                elapsed,
-                SCROLL_FACTOR,
-            ))
-            .unfilled_style(state.theme_manager.active.text_muted)
+            .block(Block::new().bg(theme.bg_global).padding(Padding {
+                left: 1,
+                right: 2,
+                top: (area.height / 2),
+                bottom: 0,
+            }))
+            .filled_style(fg)
+            .unfilled_style(bg)
             .line_set(line::THICK)
             .label("")
             .ratio(ratio as f64);
