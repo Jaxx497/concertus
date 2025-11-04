@@ -1,4 +1,4 @@
-use crate::ui_state::{DisplayTheme, Pane, SCROLL_FACTOR, UiState};
+use crate::ui_state::{DisplayTheme, Pane, UiState};
 use ratatui::{
     style::Stylize,
     widgets::{
@@ -67,7 +67,7 @@ fn draw_oscilloscope(ctx: &mut Context, samples: &[f32], time: f32, theme: &Disp
         let progress = i as f32 / samples.len() as f32;
 
         let time = time / 4.0; // Slow down gradient scroll substantially
-        let color = theme.get_oscilloscope_color(progress, time);
+        let color = theme.get_focused_color(progress, time);
 
         ctx.draw(&Line {
             x1,

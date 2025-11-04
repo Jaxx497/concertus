@@ -1,15 +1,23 @@
-use super::{new_textarea, Pane, UiState};
+use super::{Pane, UiState, new_textarea};
 use crate::domain::{SimpleSong, SongInfo};
-use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use ratatui::crossterm::event::KeyEvent;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tui_textarea::TextArea;
 
 const MATCH_THRESHOLD: i64 = 70;
 
+#[derive(Copy, Clone)]
+pub enum MatchField {
+    Title,
+    Artist,
+    Album,
+}
+
 pub(super) struct SearchState {
     pub input: TextArea<'static>,
     matcher: SkimMatcherV2,
+    pub(super) match_fields: HashMap<u64, MatchField>,
 }
 
 impl SearchState {
@@ -17,6 +25,7 @@ impl SearchState {
         SearchState {
             input: new_textarea("Enter search query"),
             matcher: SkimMatcherV2::default(),
+            match_fields: HashMap::new(),
         }
     }
 }
@@ -49,15 +58,26 @@ impl UiState {
                     .unwrap_or(0) as f32
                     * 1.5) as i64;
 
-                let album_score = self
+                let album_score = (self
                     .search
                     .matcher
                     .fuzzy_match(&song.get_album().to_lowercase(), &query)
-                    .unwrap_or(0);
+                    .unwrap_or(0) as f32
+                    * 1.55) as i64;
 
-                // Apply height weight to title.
-                let weighted_score = [title_score + artist_score + album_score];
+                let weighted_score = [title_score, artist_score, album_score];
                 let best_score = weighted_score.iter().max().copied().unwrap_or(0);
+
+                if best_score > MATCH_THRESHOLD {
+                    let match_field = if best_score == title_score {
+                        MatchField::Title
+                    } else if best_score == artist_score {
+                        MatchField::Artist
+                    } else {
+                        MatchField::Album
+                    };
+                    self.search.match_fields.insert(song.get_id(), match_field);
+                }
 
                 (best_score > MATCH_THRESHOLD).then(|| (Arc::clone(&song), best_score))
             })
@@ -93,5 +113,9 @@ impl UiState {
 
     pub fn read_search(&self) -> &str {
         &self.search.input.lines()[0]
+    }
+
+    pub fn get_match_fields(&self, song_id: u64) -> Option<MatchField> {
+        self.search.match_fields.get(&song_id).copied()
     }
 }

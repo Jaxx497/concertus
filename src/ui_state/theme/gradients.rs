@@ -1,11 +1,12 @@
 use crate::ui_state::theme::{theme_import::ProgressGradientRaw, theme_utils::parse_color};
 use anyhow::Result;
 use ratatui::style::Color;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub enum ProgressGradient {
     Static(Color),
-    Gradient(Vec<Color>),
+    Gradient(Arc<[Color]>),
 }
 
 #[derive(Clone)]
@@ -13,7 +14,7 @@ pub enum InactiveGradient {
     Dimmed,
     Still,
     Static(Color),
-    Gradient(Vec<Color>),
+    Gradient(Arc<[Color]>),
 }
 
 impl ProgressGradient {
@@ -30,7 +31,7 @@ impl ProgressGradient {
                     .map(|c| parse_color(&c))
                     .collect::<Result<Vec<Color>>>()?;
 
-                Ok(ProgressGradient::Gradient(gradient))
+                Ok(ProgressGradient::Gradient(gradient.into()))
             }
         }
     }
@@ -55,7 +56,7 @@ impl InactiveGradient {
                     .map(|c| parse_color(&c))
                     .collect::<Result<Vec<Color>>>()?;
 
-                Ok(InactiveGradient::Gradient(gradient))
+                Ok(InactiveGradient::Gradient(gradient.into()))
             }
         }
     }

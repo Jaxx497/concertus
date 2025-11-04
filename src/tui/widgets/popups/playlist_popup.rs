@@ -1,6 +1,6 @@
 use crate::{
     tui::widgets::POPUP_PADDING,
-    ui_state::{Pane, PlaylistAction, PopupType, UiState},
+    ui_state::{Pane, PlaylistAction, PopupType, UiState, fade_color},
 };
 use ratatui::{
     layout::{Alignment, Constraint, Layout},
@@ -88,7 +88,9 @@ fn render_add_song_popup(
         .iter()
         .map(|p| {
             let playlist_name = p.name.to_string();
-            Line::from(playlist_name).fg(theme.text_muted).centered()
+            Line::from(playlist_name)
+                .fg(fade_color(theme.dark, theme.text_primary, 0.6))
+                .centered()
         })
         .collect::<Vec<Line>>();
 
@@ -102,8 +104,7 @@ fn render_add_song_popup(
         .bg(theme.bg);
 
     if list_items.is_empty() {
-        state.popup.selection.select(None); // Clear selection!
-
+        state.popup.selection.select(None);
         return Paragraph::new("\nThere are no playlists!\n\nCreate a playlist by pressing [c]")
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true })
@@ -142,7 +143,6 @@ fn render_delete_popup(
         .bg(theme.bg);
 
     if let Some(p) = state.get_selected_playlist() {
-        // let p_name = Line::from_iter([p.name.as_str().fg(theme.border), " ?".into()]);
         let p_name = Line::from_iter([p.name.as_str(), " ?".into()]);
         let warning = Paragraph::new(Text::from_iter([
             format!("Are you sure you want to delete\n").into(),
@@ -185,7 +185,6 @@ fn render_rename_popup(
     let chunks = Layout::vertical([Constraint::Max(3), Constraint::Length(3)]).split(inner);
 
     if let Some(playlist) = state.get_selected_playlist() {
-        // let p_name = playlist.name.as_str().fg(theme.border);
         let p_name = Span::from(playlist.name.as_str());
         Paragraph::new(Text::from_iter([
             format!("Enter a new name for\n").into(),

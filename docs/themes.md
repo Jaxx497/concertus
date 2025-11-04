@@ -2,7 +2,7 @@
 
 > **Disclaimer:** Themeing in Concertus is currently in an experimental stage. This document will reflect the most recent changes to the themeing engine, as well as the latest specification.
 
-Current specification: 0.4
+Current specification: 0.5
 
 ### Hot keys
 
@@ -24,8 +24,10 @@ accessible to the user in the program.
 Here is an example of a transparent theme:
 
 ```Toml 
-# Theme version 0.4
+# Theme version 0.5
 [colors]
+dark                = true
+
 surface_global      = "" # Background of application
 surface_active      = "" # Background of selected pane
 surface_inactive    = "" # Background of unselected areas
@@ -46,12 +48,17 @@ selection_inactive  = "#82823C" # Multi-selected & unfocused selections
 accent              = "#dcdc64" 
 accent_inactive     = "#82823C"
 
-progress            = ["#ff0000", "#ffffff", "#0000ff"] # Single colors are also allowed here
-progress_i          = "dimmed"  
-                    # Other acceptable values include
-                    #   "still"
-                    #   a single color
-                    #   an array of colors like above
+waveform            = ["#ff0000", "#ffffff", "#0000ff"] 
+                        # A single color value is also allowed
+
+waveform_i          = "dimmed"      ### Represents the "unplayed" portion of the waveform
+                        # Other options values include
+                        #   "dimmed"    => a faded version of the above field
+                        #   "still"     => a frozen version of the gradient
+                        #   "#ff4646"   => a solid single color
+                        #   ["#ff0000", "#ffffff", "#0000ff"
+
+oscilloscope        = ["#ff0000", "#ffffff", "#0000ff"] # The same fields that are legal for waveform are legal here
 
 
 [borders]
@@ -61,29 +68,21 @@ border_type         = "rounded"
 
 ### Acceptable Color Formats
 
-Colors can be formatted in rgb `"rgb(###, ###,###)"`, `"#XXXXXX"`, or as
-generic color names. E.g. "red", "light-blue".* All inputs are case insensitive.
+Colors should be formatted as their hexidecimal representations, enclosed in
+double quotes: `"#XXXXXX"`
+
 For those who wish to utilize transparency, simply leave the quotes empty or
 write "none" with the quotation marks. (Certain elements may not be able to be
 rendered as transparent. Your terminal may also play a role in what can/cannot
 be transparent.)
 
-```TOML
-# Valid Colors
-surface_global = ""
-text_primary = "#Ff4646" # Lowercase and uppercase allowed
-text_secondary =  "rgb(142, 32, 200)"
-border_inactive = "grey"
 
-# Invalid Colors
-text_focused = "FF4646" # Missing the `#` character
-text_secondary = "(132, 132, 55)" # Missing rgb qualifier
-```
-
-> \* Using generic color strings will fallback on ANSI terminal color
-> codes. These will not interpolate properly with gradients. 
-
+### Theme Tricks
 Users can create a borderless experience by setting the colors of the borders
-to the same values as the respective background panel colors. This will **not**
-work with transparent backgrounds. 
+to the same values as the respective background panel colors. However, there is
+no way to set transparent borders. The workaround for this is to change the
+border_display to "none". This may affect padding of some elements.
 
+The same principle applies to the selection colors- Instead of a highlited
+column, try setting the highlight color to the same color as the background,
+and the highlighted text to a distinct color. Test the results!

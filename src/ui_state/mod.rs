@@ -15,6 +15,7 @@ pub use domain::{AlbumSort, LibraryView, Mode, Pane, TableSort};
 pub use playback::{PlaybackView, ProgressDisplay};
 pub use playlist::PlaylistAction;
 pub use popup::PopupType;
+pub use search_state::MatchField;
 pub use settings::SettingsMode;
 pub use theme::DisplayTheme;
 pub use ui_snapshot::UiSnapshot;

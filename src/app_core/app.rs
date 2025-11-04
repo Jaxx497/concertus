@@ -1,6 +1,6 @@
 use crate::{
     Library,
-    domain::{QueueSong, SongDatabase as _, SongInfo, generate_waveform},
+    domain::{QueueSong, SongDatabase, SongInfo, generate_waveform},
     key_handler::{self},
     overwrite_line,
     player::{PlaybackState, PlayerController},

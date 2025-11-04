@@ -1,6 +1,5 @@
 use ratatui::style::Color;
 
-pub const SCROLL_FACTOR: f32 = 0.8;
 pub const SHARP_FACTOR: f32 = 2.0;
 
 pub fn get_gradient_color(gradient: &[Color], position: f32, time: f32) -> Color {
@@ -8,7 +7,7 @@ pub fn get_gradient_color(gradient: &[Color], position: f32, time: f32) -> Color
         return Color::Reset;
     }
 
-    let t = ((position + time * SCROLL_FACTOR) % 1.0).abs();
+    let t = ((position + time) % 1.0).abs();
 
     let segment_count = gradient.len();
     let segment_f = t * segment_count as f32;
@@ -40,12 +39,30 @@ fn sharpen_interpolation(t: f32, power: f32) -> f32 {
     }
 }
 
-pub fn dim_color(color: Color, factor: f32) -> Color {
+pub fn fade_color(is_dark: bool, color: Color, factor: f32) -> Color {
+    match is_dark {
+        true => dim_color(color, factor),
+        false => brighten_color(color, factor),
+    }
+}
+
+fn dim_color(color: Color, factor: f32) -> Color {
     match color {
         Color::Rgb(r, g, b) => Color::Rgb(
             (r as f32 * factor) as u8,
             (g as f32 * factor) as u8,
             (b as f32 * factor) as u8,
+        ),
+        other => other,
+    }
+}
+
+fn brighten_color(color: Color, factor: f32) -> Color {
+    match color {
+        Color::Rgb(r, g, b) => Color::Rgb(
+            (r as f32 + (255.0 - r as f32) * factor) as u8,
+            (g as f32 + (255.0 - g as f32) * factor) as u8,
+            (b as f32 + (255.0 - b as f32) * factor) as u8,
         ),
         other => other,
     }

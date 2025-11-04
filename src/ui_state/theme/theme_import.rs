@@ -1,4 +1,6 @@
-use serde::Deserialize;
+use ratatui::style::Color;
+use serde::{Deserialize, Deserializer};
+use std::str::FromStr;
 
 #[derive(Deserialize)]
 pub struct ThemeImport {
@@ -8,39 +10,40 @@ pub struct ThemeImport {
 
 #[derive(Deserialize)]
 pub struct ColorScheme {
-    pub surface_global: String,
-    pub surface_active: String,
-    pub surface_inactive: String,
-    pub surface_error: String,
+    pub dark: bool,
+    pub surface_global: ThemeColor,
+    pub surface_active: ThemeColor,
+    pub surface_inactive: ThemeColor,
+    pub surface_error: ThemeColor,
 
     // Text colors
-    pub text_primary: String,
-    pub text_secondary: String,
-    pub text_secondary_in: String,
-    pub text_selection: String,
-    pub text_muted: String,
+    pub text_primary: ThemeColor,
+    pub text_secondary: ThemeColor,
+    pub text_secondary_in: ThemeColor,
+    pub text_selection: ThemeColor,
+    pub text_muted: ThemeColor,
 
     // Border colors
-    pub border_active: String,
-    pub border_inactive: String,
+    pub border_active: ThemeColor,
+    pub border_inactive: ThemeColor,
 
     // Accent
-    pub accent: String,
-    pub accent_inactive: String,
+    pub accent: ThemeColor,
+    pub accent_inactive: ThemeColor,
 
     // Selection colors
-    pub selection: String,
-    pub selection_inactive: String,
+    pub selection: ThemeColor,
+    pub selection_inactive: ThemeColor,
 
-    pub waveform: ProgressGradientRaw,
-    pub waveform_i: ProgressGradientRaw,
-
-    pub oscilloscope: ProgressGradientRaw,
+    pub progress: ProgressGradientRaw,
+    pub progress_i: ProgressGradientRaw,
+    pub progress_speed: f32,
 }
 
 #[derive(Deserialize)]
 pub struct BorderScheme {
     pub border_display: String,
+    // pub border_display: Borders,
     pub border_type: String,
 }
 
@@ -49,4 +52,39 @@ pub struct BorderScheme {
 pub enum ProgressGradientRaw {
     Single(String),
     Gradient(Vec<String>),
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct ThemeColor(pub Color);
+
+impl<'de> Deserialize<'de> for ThemeColor {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+
+        // Handle transparent
+        match s.to_lowercase().as_str() {
+            "" | "none" => return Ok(ThemeColor(Color::Reset)),
+            _ => {}
+        }
+
+        Color::from_str(&s)
+            .map(ThemeColor)
+            .map_err(serde::de::Error::custom)
+    }
+}
+
+impl std::ops::Deref for ThemeColor {
+    type Target = Color;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<ThemeColor> for Color {
+    fn from(tc: ThemeColor) -> Self {
+        tc.0
+    }
 }

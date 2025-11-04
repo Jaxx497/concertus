@@ -1,10 +1,9 @@
 use crate::ui_state::{
     ProgressGradient,
     theme::{
-        GOOD_RED_DARK,
         gradients::InactiveGradient,
         theme_import::ThemeImport,
-        theme_utils::{parse_border_type, parse_borders, parse_color},
+        theme_utils::{parse_border_type, parse_borders},
     },
 };
 use anyhow::{Result, anyhow};
@@ -12,11 +11,12 @@ use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
 };
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 #[derive(Clone)]
 pub struct ThemeConfig {
     pub name: String,
+    pub dark: bool,
 
     // Surface Colors
     pub surface_global: Color,   // Global bg
@@ -49,8 +49,7 @@ pub struct ThemeConfig {
 
     pub progress: ProgressGradient,
     pub progress_i: InactiveGradient,
-
-    pub oscillo: ProgressGradient,
+    pub progress_speed: f32,
 }
 
 impl ThemeConfig {
@@ -76,32 +75,35 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
     fn try_from(config: &ThemeImport) -> anyhow::Result<Self> {
         let colors = &config.colors;
 
-        let surface_global = parse_color(&colors.surface_global)?;
-        let surface_active = parse_color(&colors.surface_active).unwrap_or(surface_global); // Fallback to surface_global
-        let surface_inactive = parse_color(&colors.surface_inactive).unwrap_or(surface_global); // Fallback to surface_global
-        let surface_error = parse_color(&colors.surface_error).unwrap_or(GOOD_RED_DARK);
+        let dark = colors.dark;
 
-        let text_primary = parse_color(&colors.text_primary)?;
-        let text_secondary = parse_color(&colors.text_secondary)?;
-        let text_secondary_in = parse_color(&colors.text_secondary_in)?;
-        let text_selection = parse_color(&colors.text_selection).unwrap_or(surface_global);
-        let text_muted = parse_color(&colors.text_muted)?;
+        let surface_global = *colors.surface_global;
+        let surface_active = *colors.surface_active;
+        let surface_inactive = *colors.surface_inactive;
+        let surface_error = *colors.surface_error;
 
-        let border_active = parse_color(&colors.border_active)?;
-        let border_inactive = parse_color(&colors.border_inactive).unwrap_or(border_active);
+        let text_primary = *colors.text_primary;
+        let text_secondary = *colors.text_secondary;
+        let text_secondary_in = *colors.text_secondary_in;
+        let text_selection = *colors.text_selection;
+        let text_muted = *colors.text_muted;
 
-        let accent = parse_color(&colors.accent)?;
-        let accent_inactive = parse_color(&colors.accent_inactive).unwrap_or(accent);
+        let border_active = *colors.border_active;
+        let border_inactive = *colors.border_inactive;
 
-        let selection = parse_color(&colors.selection).unwrap_or(border_active);
-        let selection_inactive = parse_color(&colors.selection_inactive).unwrap_or(selection);
+        let accent = *colors.accent;
+        let accent_inactive = *colors.accent_inactive;
 
-        let progress = ProgressGradient::from_raw(&colors.waveform)?;
-        let progress_i = InactiveGradient::from_raw(&colors.waveform_i)?;
-        let oscillo = ProgressGradient::from_raw(&colors.oscilloscope)?;
+        let selection = *colors.selection;
+        let selection_inactive = *colors.selection_inactive;
+
+        let progress = ProgressGradient::from_raw(&colors.progress)?;
+        let progress_i = InactiveGradient::from_raw(&colors.progress_i)?;
+        let progress_speed = colors.progress_speed / 10.0;
 
         Ok(ThemeConfig {
             name: String::new(),
+            dark,
 
             surface_global,
             surface_active,
@@ -128,7 +130,7 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
 
             progress,
             progress_i,
-            oscillo,
+            progress_speed,
         })
     }
 }
@@ -139,6 +141,7 @@ impl Default for ThemeConfig {
 
         ThemeConfig {
             name: String::from("Concertus_Alpha"),
+            dark: true,
 
             surface_global: DARK_GRAY_FADED,
             surface_active: DARK_GRAY,
@@ -163,9 +166,9 @@ impl Default for ThemeConfig {
             border_display: Borders::ALL,
             border_type: BorderType::Rounded,
 
-            progress: ProgressGradient::Gradient(Vec::from([DARK_WHITE, GOOD_RED_DARK, DARK_GRAY])),
+            progress: ProgressGradient::Gradient(Arc::from([DARK_WHITE, GOOD_RED_DARK, DARK_GRAY])),
             progress_i: InactiveGradient::Dimmed,
-            oscillo: ProgressGradient::Gradient(Vec::from([DARK_WHITE, GOLD, DARK_GRAY])),
+            progress_speed: 0.8,
         }
     }
 }
