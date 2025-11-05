@@ -1,4 +1,4 @@
-use crate::ui_state::{Pane, UiState};
+use crate::ui_state::UiState;
 use ratatui::{
     crossterm::style::Color,
     layout::{Alignment, Constraint, Layout},
@@ -25,8 +25,7 @@ impl StatefulWidget for ErrorMsg {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let focus = matches!(state.get_pane(), Pane::Popup);
-        let theme = state.get_theme(focus);
+        let theme = &state.theme_manager.get_display_theme(true);
 
         let block = Block::bordered()
             .border_type(theme.border_type)

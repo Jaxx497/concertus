@@ -19,7 +19,7 @@ impl StatefulWidget for StandardTable {
         state: &mut Self::State,
     ) {
         let focus = matches!(state.get_pane(), Pane::TrackList | Pane::Search);
-        let theme = &state.get_theme(focus);
+        let theme = &state.theme_manager.get_display_theme(focus);
 
         let songs = state.legal_songs.as_slice();
         let song_len = songs.len();

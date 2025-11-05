@@ -34,58 +34,8 @@ pub struct DisplayTheme {
 }
 
 impl UiState {
-    pub fn get_theme(&self, focused: bool) -> DisplayTheme {
-        let theme = &self.theme_manager.active;
-        let is_dark = self.theme_manager.active.dark;
-
-        match focused {
-            true => DisplayTheme {
-                dark: theme.dark,
-                bg: theme.surface_active,
-                bg_global: theme.surface_global,
-                bg_error: theme.surface_error,
-
-                text_primary: theme.text_primary,
-                text_secondary: theme.text_secondary,
-                text_muted: theme.text_muted,
-                text_selected: theme.text_selection,
-
-                selection: theme.selection,
-
-                accent: theme.accent,
-
-                border: theme.border_active,
-                border_display: theme.border_display,
-                border_type: theme.border_type,
-
-                progress_complete: theme.progress.clone(),
-                progress_incomplete: theme.progress_i.clone(),
-                progress_speed: theme.progress_speed,
-            },
-
-            false => DisplayTheme {
-                dark: theme.dark,
-                bg: theme.surface_inactive,
-                bg_global: theme.surface_global,
-                bg_error: theme.surface_error,
-
-                text_primary: theme.text_muted,
-                text_secondary: theme.text_secondary_in,
-                text_muted: fade_color(is_dark, theme.text_muted, 0.4),
-                text_selected: theme.text_selection,
-
-                selection: theme.selection_inactive,
-                accent: theme.accent_inactive,
-
-                border: theme.border_inactive,
-                border_display: theme.border_display,
-                border_type: theme.border_type,
-
-                progress_complete: theme.progress.clone(),
-                progress_incomplete: theme.progress_i.clone(),
-                progress_speed: theme.progress_speed,
-            },
-        }
+    pub fn get_decorator(&self) -> &str {
+        &self.theme_manager.active.decorator
     }
 }
 

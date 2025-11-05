@@ -1,7 +1,4 @@
-use crate::{
-    domain::SongInfo,
-    ui_state::{Pane, UiState},
-};
+use crate::{domain::SongInfo, ui_state::UiState};
 use ratatui::{
     style::Stylize,
     symbols::line,
@@ -18,8 +15,7 @@ impl StatefulWidget for ProgressBar {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let focus = matches!(state.get_pane(), Pane::TrackList);
-        let theme = state.get_theme(focus);
+        let theme = state.theme_manager.get_display_theme(true);
 
         let np = state
             .get_now_playing()

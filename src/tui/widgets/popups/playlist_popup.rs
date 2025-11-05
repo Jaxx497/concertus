@@ -38,7 +38,7 @@ fn render_create_popup(
     state: &mut UiState,
 ) {
     let focus = matches!(state.get_pane(), Pane::Popup);
-    let theme = state.get_theme(focus);
+    let theme = state.theme_manager.get_display_theme(focus);
     let padding_h = (area.height as f32 * 0.3) as u16;
     let padding_w = (area.width as f32 * 0.2) as u16;
 
@@ -84,7 +84,7 @@ fn render_add_song_popup(
     state: &mut UiState,
 ) {
     let focus = matches!(state.get_pane(), Pane::Popup);
-    let theme = state.get_theme(focus);
+    let theme = state.theme_manager.get_display_theme(focus);
     let list_items = state
         .playlists
         .iter()
@@ -129,7 +129,7 @@ fn render_delete_popup(
     state: &mut UiState,
 ) {
     let focus = matches!(state.get_pane(), Pane::Popup);
-    let theme = state.get_theme(focus);
+    let theme = state.theme_manager.get_display_theme(focus);
     let block = Block::bordered()
         .border_type(theme.border_type)
         .border_style(theme.border)
@@ -164,7 +164,7 @@ fn render_rename_popup(
     state: &mut UiState,
 ) {
     let focus = matches!(state.get_pane(), Pane::Popup);
-    let theme = state.get_theme(focus);
+    let theme = state.theme_manager.get_display_theme(focus);
     let padding_h = (area.height as f32 * 0.25) as u16;
     let padding_w = (area.width as f32 * 0.2) as u16;
 

@@ -1,5 +1,5 @@
 use crate::{
-    tui::widgets::{DECORATOR, sidebar::create_standard_list},
+    tui::widgets::sidebar::create_standard_list,
     ui_state::{AlbumSort, Pane, UiState},
 };
 use ratatui::{
@@ -19,7 +19,7 @@ impl StatefulWidget for SideBarAlbum {
         state: &mut Self::State,
     ) {
         let focus = matches!(&state.get_pane(), Pane::SideBar);
-        let theme = &state.get_theme(focus);
+        let theme = &state.theme_manager.get_display_theme(focus);
 
         let albums = &state.albums;
         let pane_sort = state.get_album_sort_string();
@@ -69,10 +69,11 @@ impl StatefulWidget for SideBarAlbum {
             if is_selected {
                 selected_display_idx = Some(current_display_idx);
             }
+            let decorator = state.get_decorator();
 
             list_items.push(ListItem::new(Line::from_iter([
                 Span::from(format!("{}{: >4} ", indent, year)).fg(year_color),
-                Span::from(format!("{DECORATOR} ")).fg(theme.text_muted),
+                Span::from(format!("{decorator} ")).fg(theme.text_muted),
                 Span::from(album.title.as_str()).fg(theme.text_primary),
             ])));
 

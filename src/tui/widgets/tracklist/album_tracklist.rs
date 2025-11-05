@@ -1,7 +1,7 @@
 use crate::{
     domain::SongInfo,
     truncate_at_last_space,
-    tui::widgets::tracklist::{CellFactory, DECORATOR, create_empty_block, create_standard_table},
+    tui::widgets::tracklist::{CellFactory, create_empty_block, create_standard_table},
     ui_state::{Pane, UiState},
 };
 use ratatui::{
@@ -20,7 +20,7 @@ impl StatefulWidget for AlbumView {
         state: &mut Self::State,
     ) {
         let focus = matches!(state.get_pane(), Pane::TrackList);
-        let theme = &state.get_theme(focus);
+        let theme = &state.theme_manager.get_display_theme(focus);
 
         if state.albums.is_empty() {
             create_empty_block(theme, "0 Songs").render(area, buf);
@@ -52,6 +52,8 @@ impl StatefulWidget for AlbumView {
             })
             .collect::<Vec<Row>>();
 
+        let decorator = state.get_decorator();
+
         let year_str = album
             .year
             .filter(|y| *y != 0)
@@ -62,7 +64,7 @@ impl StatefulWidget for AlbumView {
                 .fg(theme.text_secondary)
                 .italic(),
             Span::from(year_str).fg(theme.text_muted),
-            Span::from(format!(" {DECORATOR} ")).fg(theme.text_muted),
+            Span::from(format!(" {decorator} ")).fg(theme.text_muted),
             Span::from(album.artist.to_string()).fg(theme.accent),
             Span::from(format!(" [{} Songs] ", album.tracklist.len())).fg(theme.text_muted),
         ]);

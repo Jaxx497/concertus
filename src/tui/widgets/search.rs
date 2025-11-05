@@ -22,8 +22,8 @@ impl StatefulWidget for SearchBar {
         state: &mut Self::State,
     ) {
         let focus = matches!(&state.get_pane(), Pane::Search);
-        let theme = &state.get_theme(focus);
-        let search = state.get_search_widget();
+        let theme = &state.theme_manager.get_display_theme(focus);
+        let search = &mut state.search.input;
         search.set_block(
             Block::bordered()
                 .borders(theme.border_display)

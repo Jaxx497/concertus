@@ -15,7 +15,7 @@ use crate::{
     DurationStyle,
     domain::{SimpleSong, SongInfo},
     get_readable_duration,
-    tui::widgets::{DECORATOR, MUSIC_NOTE, QUEUED},
+    tui::widgets::{MUSIC_NOTE, QUEUED},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, UiState},
 };
 use ratatui::{
@@ -59,9 +59,9 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
     }
 }
 
-pub fn get_keymaps(mode: &Mode) -> String {
-    let full = format!(" [q]ueue {DECORATOR} [a]dd to playlist {DECORATOR} [x] remove ");
-    let basic = format!(" [q]ueue {DECORATOR} [a]dd to playlist ");
+pub fn get_keymaps(mode: &Mode, decorator: &str) -> String {
+    let full = format!(" [q]ueue {decorator} [a]dd to playlist {decorator} [x] remove ");
+    let basic = format!(" [q]ueue {decorator} [a]dd to playlist ");
 
     matches!(mode, Mode::Library(LibraryView::Playlists) | Mode::Queue)
         .then_some(full)
@@ -76,10 +76,11 @@ pub fn create_standard_table<'a>(
 ) -> Table<'a> {
     let mode = state.get_mode();
     let pane = state.get_pane();
+    let decorator = state.get_decorator();
 
     let widths = get_widths(mode);
     let keymaps = match pane {
-        Pane::TrackList => get_keymaps(mode),
+        Pane::TrackList => get_keymaps(mode, decorator),
         _ => String::default(),
     };
 
@@ -121,7 +122,7 @@ pub struct CellFactory;
 impl CellFactory {
     pub fn status_cell(song: &Arc<SimpleSong>, state: &UiState, ms: bool) -> Cell<'static> {
         let focus = matches!(state.get_pane(), Pane::TrackList);
-        let theme = &state.get_theme(focus);
+        let theme = state.theme_manager.get_display_theme(focus);
 
         let is_playing = state.get_now_playing().map(|s| s.id) == Some(song.id);
         let is_queued = state.playback.queue_ids.contains(&song.id);
@@ -222,7 +223,7 @@ static SUPERSCRIPT: LazyLock<HashMap<u32, &str>> = LazyLock::new(|| {
 
 fn get_title(state: &UiState, area: Rect) -> Line<'static> {
     let focus = matches!(state.get_pane(), Pane::TrackList);
-    let theme = &state.get_theme(focus);
+    let theme = state.theme_manager.get_display_theme(focus);
     let (title, track_count) = match state.get_mode() {
         &Mode::Queue => (
             Span::from(" Queue ").fg(theme.accent),
@@ -250,11 +251,13 @@ fn get_title(state: &UiState, area: Rect) -> Line<'static> {
         _ => (Span::default(), 0),
     };
 
+    let decorator = state.get_decorator();
+
     Line::from_iter([
         " ".into(),
-        Span::from(DECORATOR).fg(theme.text_primary),
+        Span::from(format!("{decorator}")).fg(theme.text_primary),
         title,
-        Span::from(DECORATOR).fg(theme.text_primary),
+        Span::from(format!("{decorator}")).fg(theme.text_primary),
         Span::from(format!(" [{} Songs] ", track_count)).fg(theme.text_muted),
     ])
 }

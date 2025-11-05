@@ -58,6 +58,7 @@ fn dim_color(color: Color, factor: f32) -> Color {
 }
 
 fn brighten_color(color: Color, factor: f32) -> Color {
+    let factor = 1.0 - factor;
     match color {
         Color::Rgb(r, g, b) => Color::Rgb(
             (r as f32 + (255.0 - r as f32) * factor) as u8,

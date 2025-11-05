@@ -18,7 +18,7 @@ impl StatefulWidget for GenericView {
         state: &mut Self::State,
     ) {
         let focus = matches!(state.get_pane(), Pane::TrackList);
-        let theme = &state.get_theme(focus);
+        let theme = &state.theme_manager.get_display_theme(focus);
         let songs = state.legal_songs.as_slice();
 
         let rows = songs

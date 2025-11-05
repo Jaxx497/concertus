@@ -14,7 +14,7 @@ pub enum MatchField {
     Album,
 }
 
-pub(super) struct SearchState {
+pub struct SearchState {
     pub input: TextArea<'static>,
     matcher: SkimMatcherV2,
     pub(super) match_fields: HashMap<u64, MatchField>,

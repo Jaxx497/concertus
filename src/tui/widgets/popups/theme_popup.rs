@@ -4,10 +4,7 @@ use ratatui::{
     widgets::{Block, List, StatefulWidget},
 };
 
-use crate::{
-    tui::widgets::POPUP_PADDING,
-    ui_state::{Pane, UiState},
-};
+use crate::{tui::widgets::POPUP_PADDING, ui_state::UiState};
 
 pub struct ThemeManager;
 impl StatefulWidget for ThemeManager {
@@ -19,8 +16,7 @@ impl StatefulWidget for ThemeManager {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let focus = matches!(state.get_pane(), Pane::Popup);
-        let theme = state.get_theme(focus);
+        let theme = &state.theme_manager.get_display_theme(true);
 
         let theme_names = state
             .theme_manager

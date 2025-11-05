@@ -50,6 +50,8 @@ pub struct ThemeConfig {
     pub progress: ProgressGradient,
     pub progress_i: InactiveGradient,
     pub progress_speed: f32,
+
+    pub decorator: String,
 }
 
 impl ThemeConfig {
@@ -101,6 +103,8 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
         let progress_i = InactiveGradient::from_raw(&colors.progress_i)?;
         let progress_speed = colors.progress_speed / 10.0;
 
+        let decorator = config.extras.decorator.clone();
+
         Ok(ThemeConfig {
             name: String::new(),
             dark,
@@ -131,6 +135,8 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
             progress,
             progress_i,
             progress_speed,
+
+            decorator,
         })
     }
 }
@@ -169,6 +175,8 @@ impl Default for ThemeConfig {
             progress: ProgressGradient::Gradient(Arc::from([DARK_WHITE, GOOD_RED_DARK, DARK_GRAY])),
             progress_i: InactiveGradient::Dimmed,
             progress_speed: 0.8,
+
+            decorator: "✧".to_string(),
         }
     }
 }

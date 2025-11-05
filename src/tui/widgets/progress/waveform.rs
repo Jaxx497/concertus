@@ -1,8 +1,4 @@
-use crate::{
-    domain::SongInfo,
-    tui::widgets::WAVEFORM_WIDGET_HEIGHT,
-    ui_state::{Pane, UiState},
-};
+use crate::{domain::SongInfo, tui::widgets::WAVEFORM_WIDGET_HEIGHT, ui_state::UiState};
 use ratatui::{
     style::{Color, Stylize},
     widgets::{
@@ -21,8 +17,7 @@ impl StatefulWidget for Waveform {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let focus = matches!(state.get_pane(), Pane::TrackList);
-        let theme = state.get_theme(focus);
+        let theme = state.theme_manager.get_display_theme(true);
 
         let padding_vertical = match area.height {
             0..=6 => 0,

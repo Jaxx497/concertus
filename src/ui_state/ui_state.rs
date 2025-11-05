@@ -1,14 +1,14 @@
-use super::{playback::PlaybackCoordinator, search_state::SearchState, DisplayState};
+use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState};
 use crate::{
+    Library,
     database::DbWorker,
     domain::{Album, Playlist, SimpleSong},
     key_handler::InputContext,
     player::PlayerState,
     ui_state::{
-        popup::{PopupState, PopupType},
         LibraryView, Mode, Pane, PlaybackView, PlaylistAction, SettingsMode, ThemeManager,
+        popup::{PopupState, PopupType},
     },
-    Library,
 };
 use anyhow::{Error, Result};
 use std::sync::{Arc, Mutex};
@@ -23,7 +23,7 @@ pub struct UiState {
     // Visual Elements
     pub(crate) theme_manager: ThemeManager,
     pub(crate) popup: PopupState,
-    pub(super) search: SearchState,
+    pub(crate) search: SearchState,
     pub(crate) display_state: DisplayState,
 
     // View models

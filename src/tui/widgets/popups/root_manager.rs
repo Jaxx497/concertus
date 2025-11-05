@@ -1,7 +1,7 @@
 use crate::{
     strip_win_prefix,
     tui::widgets::SELECTOR,
-    ui_state::{Pane, SettingsMode, UiState},
+    ui_state::{SettingsMode, UiState},
 };
 use ratatui::{
     layout::{Constraint, Layout},
@@ -23,8 +23,7 @@ impl StatefulWidget for RootManager {
         state: &mut Self::State,
     ) {
         let settings_mode = state.get_settings_mode();
-
-        let theme = state.get_theme(true);
+        let theme = state.theme_manager.get_display_theme(true);
 
         let padding_h = (area.height as f32 * 0.2) as u16;
         let padding_w = (area.width as f32 * 0.2) as u16;
@@ -80,7 +79,7 @@ fn render_roots_list(
     state: &mut UiState,
 ) {
     let roots = state.get_roots();
-    let theme = state.get_theme(true);
+    let theme = state.theme_manager.get_display_theme(true);
 
     if roots.is_empty() {
         Paragraph::new("No music library configured.\nPress 'a' to add a parent directory.")
@@ -124,8 +123,7 @@ fn render_add_root(
         .wrap(Wrap { trim: true })
         .render(chunks[0], buf);
 
-    let focus = matches!(state.get_pane(), Pane::Popup);
-    let theme = state.get_theme(focus);
+    let theme = state.theme_manager.get_display_theme(true);
 
     state.popup.input.set_block(
         Block::bordered()
@@ -157,7 +155,7 @@ fn render_remove_root(
     buf: &mut ratatui::prelude::Buffer,
     state: &UiState,
 ) {
-    let theme = state.get_theme(true);
+    let theme = state.theme_manager.get_display_theme(true);
     let roots = state.get_roots();
 
     if roots.is_empty() {

@@ -3,11 +3,14 @@ use anyhow::anyhow;
 use crate::{
     CONFIG_DIRECTORY, THEME_DIRECTORY,
     key_handler::MoveDirection,
-    ui_state::{PopupType, ThemeConfig, UiState},
+    ui_state::{DisplayTheme, PopupType, ThemeConfig, UiState, fade_color},
 };
 
 pub struct ThemeManager {
     pub active: ThemeConfig,
+    pub cached_focused: DisplayTheme,
+    pub cached_unfocused: DisplayTheme,
+
     pub theme_lib: Vec<ThemeConfig>,
 }
 
@@ -16,7 +19,28 @@ impl ThemeManager {
         let theme_lib = Self::collect_themes();
         let active = theme_lib.first().cloned().unwrap_or_default();
 
-        ThemeManager { active, theme_lib }
+        let cached_focused = Self::set_display_theme(&active, true);
+        let cached_unfocused = Self::set_display_theme(&active, false);
+
+        ThemeManager {
+            active,
+            theme_lib,
+            cached_focused,
+            cached_unfocused,
+        }
+    }
+
+    pub fn set_theme(&mut self, theme: ThemeConfig) {
+        self.cached_focused = Self::set_display_theme(&theme, true);
+        self.cached_unfocused = Self::set_display_theme(&theme, false);
+        self.active = theme;
+    }
+
+    pub fn get_display_theme(&self, focus: bool) -> &DisplayTheme {
+        match focus {
+            true => &self.cached_focused,
+            false => &self.cached_unfocused,
+        }
     }
 
     pub fn get_themes(&self) -> Vec<ThemeConfig> {
@@ -42,10 +66,6 @@ impl ThemeManager {
         self.theme_lib.get(idx).cloned()
     }
 
-    pub fn set_theme(&mut self, theme: ThemeConfig) {
-        self.active = theme
-    }
-
     fn collect_themes() -> Vec<ThemeConfig> {
         let mut themes = vec![];
         let theme_dir =
@@ -67,6 +87,59 @@ impl ThemeManager {
             }
         }
         themes
+    }
+
+    fn set_display_theme(theme: &ThemeConfig, focused: bool) -> DisplayTheme {
+        let is_dark = theme.dark;
+
+        match focused {
+            true => DisplayTheme {
+                dark: theme.dark,
+                bg: theme.surface_active,
+                bg_global: theme.surface_global,
+                bg_error: theme.surface_error,
+
+                text_primary: theme.text_primary,
+                text_secondary: theme.text_secondary,
+                text_muted: theme.text_muted,
+                text_selected: theme.text_selection,
+
+                selection: theme.selection,
+
+                accent: theme.accent,
+
+                border: theme.border_active,
+                border_display: theme.border_display,
+                border_type: theme.border_type,
+
+                progress_complete: theme.progress.clone(),
+                progress_incomplete: theme.progress_i.clone(),
+                progress_speed: theme.progress_speed,
+            },
+
+            false => DisplayTheme {
+                dark: theme.dark,
+                bg: theme.surface_inactive,
+                bg_global: theme.surface_global,
+                bg_error: theme.surface_error,
+
+                text_primary: theme.text_muted,
+                text_secondary: theme.text_secondary_in,
+                text_muted: fade_color(is_dark, theme.text_muted, 0.7),
+                text_selected: theme.text_selection,
+
+                selection: theme.selection_inactive,
+                accent: theme.accent_inactive,
+
+                border: theme.border_inactive,
+                border_display: theme.border_display,
+                border_type: theme.border_type,
+
+                progress_complete: theme.progress.clone(),
+                progress_incomplete: theme.progress_i.clone(),
+                progress_speed: theme.progress_speed,
+            },
+        }
     }
 }
 
@@ -116,11 +189,12 @@ impl UiState {
             MoveDirection::Down => (idx + 1) % len,
         };
 
-        self.theme_manager.active = self
-            .theme_manager
-            .theme_lib
-            .get(new_idx)
-            .cloned()
-            .unwrap_or_default()
+        self.theme_manager.set_theme(
+            self.theme_manager
+                .theme_lib
+                .get(new_idx)
+                .cloned()
+                .unwrap_or_default(),
+        );
     }
 }

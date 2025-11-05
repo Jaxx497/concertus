@@ -6,6 +6,8 @@ use std::str::FromStr;
 pub struct ThemeImport {
     pub colors: ColorScheme,
     pub borders: BorderScheme,
+    #[serde(default = "default_extras")]
+    pub extras: ExtraScheme,
 }
 
 #[derive(Deserialize)]
@@ -49,6 +51,12 @@ pub struct BorderScheme {
     pub border_display: String,
     // pub border_display: Borders,
     pub border_type: String,
+}
+
+#[derive(Deserialize)]
+pub struct ExtraScheme {
+    #[serde(default = "default_decorator")]
+    pub decorator: String,
 }
 
 #[derive(Deserialize)]
@@ -98,6 +106,17 @@ fn default_inactive() -> ProgressGradientRaw {
 }
 
 const DEFAULT_SPEED: f32 = 8.0;
-const fn default_speed() -> f32 {
+fn default_speed() -> f32 {
     DEFAULT_SPEED
+}
+
+const DECORATOR: &str = "✧";
+fn default_decorator() -> String {
+    DECORATOR.to_string()
+}
+
+fn default_extras() -> ExtraScheme {
+    ExtraScheme {
+        decorator: default_decorator(),
+    }
 }

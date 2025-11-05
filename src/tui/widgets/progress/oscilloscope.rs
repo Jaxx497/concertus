@@ -18,7 +18,7 @@ impl StatefulWidget for Oscilloscope {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = state.get_theme(true);
+        let theme = &state.theme_manager.get_display_theme(true);
         let samples = state.get_oscilloscope_data();
 
         if samples.is_empty() {
