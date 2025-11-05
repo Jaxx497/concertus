@@ -1,7 +1,7 @@
 use crate::{
     domain::SongInfo,
     truncate_at_last_space,
-    tui::widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
+    tui::widgets::{DECORATOR, PAUSE_ICON, QUEUE_ICON, SELECTED},
     ui_state::{DisplayTheme, UiState},
 };
 use ratatui::{
@@ -22,7 +22,7 @@ impl StatefulWidget for BufferLine {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = state.get_theme(state.get_pane());
+        let theme = state.get_theme(true);
 
         Block::new().bg(theme.bg_global).render(area, buf);
 
@@ -54,7 +54,7 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
         true => Span::from(format!(" {PAUSE_ICON} "))
             .fg(theme.text_primary)
             .rapid_blink(),
-        false => Span::from(" ✧ ").fg(theme.text_muted),
+        false => Span::from(format!(" {DECORATOR} ")).fg(theme.text_muted),
     };
 
     let title = song.get_title().to_string();

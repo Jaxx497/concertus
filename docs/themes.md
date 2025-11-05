@@ -48,18 +48,18 @@ selection_inactive  = "#82823C" # Multi-selected & unfocused selections
 accent              = "#dcdc64" 
 accent_inactive     = "#82823C"
 
-waveform            = ["#ff0000", "#ffffff", "#0000ff"] 
+progress            = ["#ff0000", "#ffffff", "#0000ff"] 
                         # A single color value is also allowed
 
-waveform_i          = "dimmed"      ### Represents the "unplayed" portion of the waveform
+progress_i          = "dimmed"      ### Represents the "unplayed" portion of the waveform
                         # Other options values include
-                        #   "dimmed"    => a faded version of the above field
+                        #   "dimmed"    => a faded version of the above field [default]
                         #   "still"     => a frozen version of the gradient
                         #   "#ff4646"   => a solid single color
                         #   ["#ff0000", "#ffffff", "#0000ff"
 
-oscilloscope        = ["#ff0000", "#ffffff", "#0000ff"] # The same fields that are legal for waveform are legal here
-
+progress_speed      = 8.0   # Defaults to 8.0 if field is not supplied.
+                            # Recommended to use an even value here
 
 [borders]
 border_display      = "all"

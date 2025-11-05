@@ -133,9 +133,9 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
         Mode::Library(_) => match (key.modifiers, key.code) {
             (S, Char('K')) => Some(Action::ShiftPosition(MoveDirection::Up)),
             (S, Char('J')) => Some(Action::ShiftPosition(MoveDirection::Down)),
-
             (S, Char('Q')) => Some(Action::QueueEntity),
             (S, Char('V')) => Some(Action::MultiSelectAll),
+            (X, Char('s')) => Some(Action::ShuffleEntity),
             (X, Char('x')) => Some(Action::RemoveSong),
             _ => None,
         },
@@ -165,6 +165,7 @@ fn handle_album_browser(key: &KeyEvent) -> Option<Action> {
         (X, Enter) | (X, Tab) | (X, Right) | (X, Char('l')) | (C, Char('a')) => {
             Some(Action::ChangePane(Pane::TrackList))
         }
+        (X, Char('s')) => Some(Action::ShuffleEntity),
 
         // Change album sorting algorithm
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
@@ -186,6 +187,7 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
 
         (X, Char('c')) => Some(Action::CreatePlaylist),
         (C, Char('d')) => Some(Action::DeletePlaylist),
+        (X, Char('s')) => Some(Action::ShuffleEntity),
         _ => None,
     }
 }
@@ -356,7 +358,8 @@ impl Concertus {
 
             // Queue
             Action::QueueSong       => self.ui.queue_song(None)?,
-            Action::QueueEntity     => self.ui.add_to_queue_multi()?,
+            Action::QueueEntity     => self.ui.add_to_queue_multi(false)?,
+            Action::ShuffleEntity   => self.ui.add_to_queue_multi(true)?,
             Action::RemoveSong      => self.ui.remove_song()?,
             Action::AddToPlaylist   => self.ui.add_to_playlist_popup(),
             Action::AddToPlaylistConfirm => self.ui.add_to_playlist()?,

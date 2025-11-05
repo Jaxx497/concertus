@@ -36,7 +36,11 @@ pub struct ColorScheme {
     pub selection_inactive: ThemeColor,
 
     pub progress: ProgressGradientRaw,
+
+    #[serde(default = "default_inactive")]
     pub progress_i: ProgressGradientRaw,
+
+    #[serde(default = "default_speed")]
     pub progress_speed: f32,
 }
 
@@ -87,4 +91,13 @@ impl From<ThemeColor> for Color {
     fn from(tc: ThemeColor) -> Self {
         tc.0
     }
+}
+
+fn default_inactive() -> ProgressGradientRaw {
+    ProgressGradientRaw::Single("dimmed".to_string())
+}
+
+const DEFAULT_SPEED: f32 = 8.0;
+const fn default_speed() -> f32 {
+    DEFAULT_SPEED
 }

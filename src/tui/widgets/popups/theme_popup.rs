@@ -19,7 +19,8 @@ impl StatefulWidget for ThemeManager {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = state.get_theme(&Pane::Popup);
+        let focus = matches!(state.get_pane(), Pane::Popup);
+        let theme = state.get_theme(focus);
 
         let theme_names = state
             .theme_manager

@@ -21,7 +21,8 @@ impl StatefulWidget for SearchBar {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = &state.get_theme(&Pane::Search);
+        let focus = matches!(&state.get_pane(), Pane::Search);
+        let theme = &state.get_theme(focus);
         let search = state.get_search_widget();
         search.set_block(
             Block::bordered()

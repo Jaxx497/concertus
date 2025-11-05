@@ -21,7 +21,8 @@ impl StatefulWidget for Waveform {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = state.get_theme(&Pane::TrackList);
+        let focus = matches!(state.get_pane(), Pane::TrackList);
+        let theme = state.get_theme(focus);
 
         let padding_vertical = match area.height {
             0..=6 => 0,

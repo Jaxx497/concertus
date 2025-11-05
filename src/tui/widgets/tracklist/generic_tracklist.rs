@@ -17,7 +17,8 @@ impl StatefulWidget for GenericView {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = &state.get_theme(&Pane::TrackList);
+        let focus = matches!(state.get_pane(), Pane::TrackList);
+        let theme = &state.get_theme(focus);
         let songs = state.legal_songs.as_slice();
 
         let rows = songs
@@ -44,7 +45,7 @@ impl StatefulWidget for GenericView {
 
         let title = get_title(state, area);
 
-        let table = create_standard_table(rows, title.into(), state);
+        let table = create_standard_table(rows, title.into(), state, theme);
         StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }
 }

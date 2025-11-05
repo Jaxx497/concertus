@@ -1,10 +1,11 @@
 use crate::{
     domain::SimpleSong,
     key_handler::{Director, MoveDirection},
-    ui_state::{LibraryView, Mode, UiState},
+    ui_state::{LibraryView, Mode, Pane, UiState},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use indexmap::IndexSet;
+use rand::seq::SliceRandom;
 use std::sync::Arc;
 
 impl UiState {
@@ -186,10 +187,10 @@ impl UiState {
         Ok(())
     }
 
-    pub fn add_to_queue_multi(&mut self) -> Result<()> {
-        let songs = if !self.multi_select_empty() {
+    pub fn add_to_queue_multi(&mut self, shuffle: bool) -> Result<()> {
+        let mut songs = if !self.multi_select_empty() {
             self.get_multi_select_songs()
-        } else {
+        } else if matches!(self.get_pane(), Pane::SideBar) {
             match self.get_mode() {
                 Mode::Library(LibraryView::Albums) => {
                     let album_idx = self
@@ -198,7 +199,7 @@ impl UiState {
                         .selected()
                         .ok_or_else(|| anyhow!("Illegal album selection!"))?;
 
-                    self.albums[album_idx].tracklist.clone()
+                    self.albums[album_idx].get_tracklist()
                 }
                 Mode::Library(LibraryView::Playlists) => {
                     let playlist_idx = self
@@ -211,8 +212,13 @@ impl UiState {
                 }
                 _ => return Ok(()),
             }
+        } else {
+            return Ok(());
         };
 
+        if shuffle {
+            songs.shuffle(&mut rand::rng());
+        }
         for song in songs {
             self.add_to_queue_single(Some(song))?;
         }

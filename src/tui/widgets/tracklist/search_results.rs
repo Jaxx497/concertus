@@ -18,7 +18,8 @@ impl StatefulWidget for StandardTable {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = &state.get_theme(&Pane::TrackList);
+        let focus = matches!(state.get_pane(), Pane::TrackList | Pane::Search);
+        let theme = &state.get_theme(focus);
 
         let songs = state.legal_songs.as_slice();
         let song_len = songs.len();
@@ -31,7 +32,7 @@ impl StatefulWidget for StandardTable {
             },
         };
 
-        let inactive = fade_color(theme.dark, theme.text_primary, 0.2);
+        let inactive = fade_color(theme.dark, theme.text_primary, 0.6);
         let rows = songs
             .iter()
             .map(|song| {
@@ -60,7 +61,7 @@ impl StatefulWidget for StandardTable {
             })
             .collect::<Vec<Row>>();
 
-        let table = create_standard_table(rows, title.into(), state);
+        let table = create_standard_table(rows, title.into(), state, theme);
 
         StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }

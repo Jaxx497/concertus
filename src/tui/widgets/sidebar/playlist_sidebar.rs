@@ -20,7 +20,8 @@ impl StatefulWidget for SideBarPlaylist {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = &state.get_theme(&Pane::SideBar);
+        let focus = matches!(&state.get_pane(), Pane::SideBar);
+        let theme = &state.get_theme(focus);
         let playlists = &state.playlists;
 
         if playlists.is_empty() {

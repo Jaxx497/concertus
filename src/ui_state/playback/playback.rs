@@ -4,7 +4,7 @@ use crate::{
     strip_win_prefix,
     ui_state::{LibraryView, Mode, UiState},
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use rand::seq::SliceRandom;
 use std::{
     collections::{HashSet, VecDeque},
@@ -77,7 +77,7 @@ impl UiState {
     pub fn queue_song(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
         match self.multi_select_empty() {
             true => self.add_to_queue_single(song),
-            false => self.add_to_queue_multi(),
+            false => self.add_to_queue_multi(false),
         }?;
 
         self.set_legal_songs();

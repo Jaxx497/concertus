@@ -42,6 +42,7 @@ pub enum Action {
     // Queue & Playlist Actions
     QueueSong,
     QueueEntity,
+    ShuffleEntity,
     RemoveSong,
 
     AddToPlaylist,

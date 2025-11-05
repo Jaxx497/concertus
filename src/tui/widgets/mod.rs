@@ -22,7 +22,7 @@ const QUEUE_ICON: &str = "󰐑";
 const MUSIC_NOTE: &str = "♫";
 const QUEUED: &str = "";
 const SELECTED: &str = "󱕣";
-const DECORATOR: &str = " ♠ ";
+const DECORATOR: &str = "✧";
 const WAVEFORM_WIDGET_HEIGHT: f64 = 50.0;
 
 static POPUP_PADDING: ratatui::widgets::Padding = ratatui::widgets::Padding {

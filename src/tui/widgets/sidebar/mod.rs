@@ -27,7 +27,8 @@ pub fn create_standard_list<'a>(
     state: &UiState,
     area: Rect,
 ) -> List<'a> {
-    let theme = state.get_theme(&Pane::SideBar);
+    let focus = matches!(&state.get_pane(), Pane::SideBar);
+    let theme = &state.get_theme(focus);
 
     let keymaps = if state.get_pane() == Pane::SideBar {
         match state.display_state.sidebar_view {

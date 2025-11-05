@@ -1,5 +1,5 @@
 use crate::ui_state::{
-    Pane, ProgressGradient, UiState,
+    ProgressGradient, UiState,
     theme::{
         color_utils::{fade_color, get_gradient_color},
         gradients::InactiveGradient,
@@ -34,11 +34,11 @@ pub struct DisplayTheme {
 }
 
 impl UiState {
-    pub fn get_theme(&self, pane: &Pane) -> DisplayTheme {
+    pub fn get_theme(&self, focused: bool) -> DisplayTheme {
         let theme = &self.theme_manager.active;
         let is_dark = self.theme_manager.active.dark;
 
-        match pane == self.get_pane() {
+        match focused {
             true => DisplayTheme {
                 dark: theme.dark,
                 bg: theme.surface_active,

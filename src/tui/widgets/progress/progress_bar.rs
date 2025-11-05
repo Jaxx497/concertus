@@ -18,7 +18,8 @@ impl StatefulWidget for ProgressBar {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = state.get_theme(&Pane::TrackList);
+        let focus = matches!(state.get_pane(), Pane::TrackList);
+        let theme = state.get_theme(focus);
 
         let np = state
             .get_now_playing()

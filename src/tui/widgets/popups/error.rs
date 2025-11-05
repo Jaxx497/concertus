@@ -25,7 +25,8 @@ impl StatefulWidget for ErrorMsg {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        let theme = state.get_theme(&Pane::Popup);
+        let focus = matches!(state.get_pane(), Pane::Popup);
+        let theme = state.get_theme(focus);
 
         let block = Block::bordered()
             .border_type(theme.border_type)
