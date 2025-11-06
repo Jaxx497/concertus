@@ -60,20 +60,24 @@ impl LongSong {
         song_info.sample_rate = properties.sample_rate();
         song_info.bit_rate = properties.audio_bitrate();
 
-        if let Some(tag) = tagged_file.primary_tag() {
-            song_info.title = tag
-                .title()
-                .map(|s| nms(&s))
-                .filter(|s| !s.is_empty())
-                .unwrap_or(
-                    path.file_stem()
-                        .map(|stem| stem.to_string_lossy().into_owned())
-                        .unwrap_or_default(),
-                );
+        song_info.title = tagged_file
+            .primary_tag()
+            .and_then(|tag| tag.title())
+            .map(|s| nms(&s))
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| {
+                path.file_stem()
+                    .map(|stem| stem.to_string_lossy().into_owned())
+                    .unwrap_or_default()
+            });
 
+        if let Some(tag) = tagged_file.primary_tag() {
             song_info.album = Arc::new(tag.album().map(|s| nms(&s)).unwrap_or_default());
 
-            let artist = tag.artist().map(|s| nms(&s)).unwrap_or_default();
+            let artist = tag
+                .artist()
+                .map(|s| nms(&s))
+                .unwrap_or("[NO ARTIST!]".into());
 
             let album_artist = tag
                 .get_string(&ItemKey::AlbumArtist)
@@ -84,7 +88,6 @@ impl LongSong {
             song_info.artist = Arc::new(artist);
             song_info.album_artist = Arc::new(album_artist);
 
-            //
             song_info.year = tag.year().or_else(|| {
                 tag.get_string(&ItemKey::Year)
                     .and_then(|s| {

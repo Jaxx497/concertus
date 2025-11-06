@@ -144,7 +144,6 @@ pub fn normalize_metadata_str(s: &str) -> String {
         .collect::<String>()
         .trim() // Only once!
         .to_string()
-        .to_string()
 }
 
 pub fn strip_win_prefix(path: &str) -> String {
