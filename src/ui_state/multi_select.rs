@@ -94,9 +94,7 @@ impl UiState {
 
                 let target_idx = match direction {
                     MoveDirection::Up if display_idx > 0 => display_idx - 1,
-                    MoveDirection::Down if display_idx < playlist.tracklist.len() - 1 => {
-                        display_idx + 1
-                    }
+                    MoveDirection::Down if display_idx < playlist.len() - 1 => display_idx + 1,
                     _ => return Ok(()),
                 };
 
@@ -264,7 +262,7 @@ impl UiState {
 
                 // Remove indicies in reverse order
                 for &idx in indicies.iter().rev() {
-                    if idx < playlist.tracklist.len() {
+                    if idx < playlist.len() {
                         playlist.tracklist.remove(idx);
                     }
                 }

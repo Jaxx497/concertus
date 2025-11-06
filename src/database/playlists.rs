@@ -1,30 +1,9 @@
-use indexmap::IndexMap;
-
-use crate::{database::queries::*, domain::Playlist, Database};
+use crate::{Database, database::queries::*};
 use anyhow::Result;
+use indexmap::IndexMap;
 use rusqlite::params;
 
 impl Database {
-    pub fn get_playlists(&mut self) -> Result<Vec<Playlist>> {
-        let mut stmt = self.conn.prepare_cached(GET_PLAYLISTS)?;
-
-        let rows = stmt.query_map([], |r| {
-            let id: i64 = r.get("id")?;
-            let name: String = r.get("name")?;
-
-            Ok(Playlist::new(id, name))
-        })?;
-
-        let mut playlists = vec![];
-        for row in rows {
-            if let Ok(playlist) = row {
-                playlists.push(playlist);
-            }
-        }
-
-        Ok(playlists)
-    }
-
     pub fn create_playlist(&mut self, name: &str) -> Result<()> {
         self.conn.execute(CREATE_NEW_PLAYLIST, params![name])?;
 

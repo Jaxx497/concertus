@@ -49,7 +49,7 @@ const MIN_ARTIST_LEN: usize = 15;
 
 fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
     let song = state.get_now_playing()?;
-    let decorator = state.get_decorator();
+    let decorator = &state.get_decorator();
 
     let separator = match state.is_paused() {
         true => Span::from(format!(" {PAUSE_ICON} "))
@@ -68,7 +68,7 @@ fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
         Some(
             Line::from_iter([
                 Span::from(title).fg(theme.text_secondary),
-                Span::from(separator).fg(theme.text_primary),
+                Span::from(separator),
                 Span::from(artist).fg(theme.text_muted),
             ])
             .centered(),

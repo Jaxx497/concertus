@@ -52,7 +52,7 @@ impl StatefulWidget for AlbumView {
             })
             .collect::<Vec<Row>>();
 
-        let decorator = state.get_decorator();
+        let decorator = &state.get_decorator();
 
         let year_str = album
             .year

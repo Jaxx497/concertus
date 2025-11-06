@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::ui_state::{
     ProgressGradient, UiState,
     theme::{
@@ -34,8 +36,8 @@ pub struct DisplayTheme {
 }
 
 impl UiState {
-    pub fn get_decorator(&self) -> &str {
-        &self.theme_manager.active.decorator
+    pub fn get_decorator(&self) -> Rc<String> {
+        Rc::clone(&self.theme_manager.active.decorator)
     }
 }
 

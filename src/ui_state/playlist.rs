@@ -32,13 +32,9 @@ impl UiState {
                             song: simple_song,
                         })
                     })
-                    .collect();
+                    .collect::<Vec<PlaylistSong>>();
 
-                Playlist {
-                    id: *id,
-                    name: name.to_string(),
-                    tracklist,
-                }
+                Playlist::new(*id, name.to_string(), tracklist)
             })
             .collect();
 

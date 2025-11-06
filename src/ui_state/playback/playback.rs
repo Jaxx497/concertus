@@ -129,7 +129,6 @@ impl UiState {
             false => self.remove_song_multi()?,
             _ => self.remove_song_single()?,
         }
-
         self.set_legal_songs();
         Ok(())
     }
@@ -163,6 +162,7 @@ impl UiState {
                 self.db_worker.remove_from_playlist(vec![ps_id])?;
 
                 playlist.tracklist.remove(song_idx);
+                playlist.update_length();
             }
             Mode::Queue => {
                 self.display_state

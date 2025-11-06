@@ -182,12 +182,6 @@ pub const ADD_SONG_TO_PLAYLIST_WITH_POSITION: &str = "
     
 ";
 
-pub const GET_PLAYLISTS: &str = "
-    SELECT id, name 
-        FROM playlists
-        ORDER BY updated_at DESC
-";
-
 pub const PLAYLIST_BUILDER: &str = "
     SELECT 
         ps.id,

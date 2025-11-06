@@ -69,7 +69,7 @@ impl StatefulWidget for SideBarAlbum {
             if is_selected {
                 selected_display_idx = Some(current_display_idx);
             }
-            let decorator = state.get_decorator();
+            let decorator = &state.get_decorator();
 
             list_items.push(ListItem::new(Line::from_iter([
                 Span::from(format!("{}{: >4} ", indent, year)).fg(year_color),

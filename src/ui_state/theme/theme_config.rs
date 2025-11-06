@@ -11,7 +11,7 @@ use ratatui::{
     style::Color,
     widgets::{BorderType, Borders},
 };
-use std::{path::Path, sync::Arc};
+use std::{path::Path, rc::Rc, sync::Arc};
 
 #[derive(Clone)]
 pub struct ThemeConfig {
@@ -51,7 +51,7 @@ pub struct ThemeConfig {
     pub progress_i: InactiveGradient,
     pub progress_speed: f32,
 
-    pub decorator: String,
+    pub decorator: Rc<String>,
 }
 
 impl ThemeConfig {
@@ -103,7 +103,7 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
         let progress_i = InactiveGradient::from_raw(&colors.progress_i)?;
         let progress_speed = colors.progress_speed / 10.0;
 
-        let decorator = config.extras.decorator.clone();
+        let decorator = Rc::from(config.extras.decorator.to_owned());
 
         Ok(ThemeConfig {
             name: String::new(),
@@ -176,7 +176,7 @@ impl Default for ThemeConfig {
             progress_i: InactiveGradient::Dimmed,
             progress_speed: 0.8,
 
-            decorator: "✧".to_string(),
+            decorator: Rc::from("✧".to_string()),
         }
     }
 }

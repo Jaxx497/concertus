@@ -70,20 +70,33 @@ pub enum DurationStyle {
 pub fn get_readable_duration(duration: Duration, style: DurationStyle) -> String {
     let mut secs = duration.as_secs();
     let millis = duration.subsec_millis() % 100;
-    let mins = secs / 60;
+    let hours = secs / 3600;
+    let mins = (secs % 3600) / 60;
     secs %= 60;
 
     match style {
-        DurationStyle::Clean => match mins {
-            0 => format!("{secs:02}s"),
-            _ => format!("{mins}m {secs:02}s"),
+        DurationStyle::Clean => match hours {
+            0 => match mins {
+                0 => format!("{secs:02}s"),
+                _ => format!("{mins}m {secs:02}s"),
+            },
+            _ => format!("{hours}h {mins}m {secs:02}s"),
         },
-        DurationStyle::CleanMillis => match mins {
-            0 => format!("{secs:02}s {millis:03}ms"),
-            _ => format!("{mins}m {secs:02}sec {millis:02}ms"),
+        DurationStyle::CleanMillis => match hours {
+            0 => match mins {
+                0 => format!("{secs:02}s {millis:03}ms"),
+                _ => format!("{mins}m {secs:02}sec {millis:02}ms"),
+            },
+            _ => format!("{hours}h {mins}m {secs:02}sec {millis:02}ms"),
         },
-        DurationStyle::Compact => format!("{mins}:{secs:02}"),
-        DurationStyle::CompactMillis => format!("{mins}:{secs:02}.{millis:02}"),
+        DurationStyle::Compact => match hours {
+            0 => format!("{mins}:{secs:02}"),
+            _ => format!("{hours}:{mins:02}:{secs:02}"),
+        },
+        DurationStyle::CompactMillis => match hours {
+            0 => format!("{mins}:{secs:02}.{millis:02}"),
+            _ => format!("{hours}:{mins:02}:{secs:02}.{millis:02}"),
+        },
     }
 }
 
