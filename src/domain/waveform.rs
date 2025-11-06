@@ -1,6 +1,10 @@
 use anyhow::{Context, Result, anyhow, bail};
-use byteorder::{LittleEndian, ReadBytesExt};
-use std::{io::Cursor, path::Path, process::Command, time::Duration};
+use std::{
+    io::{Cursor, Read},
+    path::Path,
+    process::Command,
+    time::Duration,
+};
 
 const WF_LEN: usize = 500;
 const MIN_SAMPLES_PER_POINT: usize = 200; // Minimum for short files
@@ -146,8 +150,10 @@ fn process_pcm_to_waveform(pcm_data: &[u8], samples_per_point: usize) -> Result<
                 break;
             }
 
-            match cursor.read_f32::<LittleEndian>() {
-                Ok(sample) => {
+            let mut bytes = [0u8; 4];
+            match cursor.read_exact(&mut bytes) {
+                Ok(_) => {
+                    let sample = f32::from_le_bytes(bytes);
                     let abs_sample = sample.abs();
                     if abs_sample > max_value {
                         max_value = abs_sample;

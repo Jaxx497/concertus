@@ -1,4 +1,4 @@
-# Concertus - v0.0.8a
+# Concertus - v0.0.9
 
 Concertus is a lightweight, plug and play, simple to use TUI music player written in Rust.
 
@@ -43,14 +43,9 @@ new backend options.
 
 ## TODO 
 
-> **Current Objective:** Implement a more comprehensive themeing system
-> - Figure out proper unplayed color schemeing
-> - Set scroll speed & sharpening as user controlled variables
-> - Set field to tell if theme is dark or light for dimming purposes
-
 - Provide visual progress when scanning in songs
-- Add more shuffle functionality
 - Display more song info in window (user controlled)
+- UI adjustments, more responsive areas
 - Improved testing for various formats
 - Re-work sort-by-column approach
 - Implement a secondary mpv backend

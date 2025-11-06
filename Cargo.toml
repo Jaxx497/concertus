@@ -1,13 +1,12 @@
 [package]
 name = "concertus"
-version = "0.0.8"
+version = "0.0.9"
 edition = "2024"
 
 [dependencies]
 
 anyhow = "1.0.100"
 bincode = "2.0.1"
-byteorder = "1.5"
 dirs = "6.0.0"
 fuzzy-matcher = "0.3.7"
 indexmap = "2.12.0"
@@ -22,7 +21,6 @@ rodio = { git = "https://github.com/RustAudio/rodio", branch = "feat/comprehensi
         "symphonia-mp3",
         "symphonia-isomp4"]}
 rusqlite = { version = "0.37.0", features = ["bundled"] }
-rustfft = "6.4.1"
 serde = { version = "1.0.228", features = ["derive"]}
 toml = "0.9.8"
 tui-textarea = "0.7.0"

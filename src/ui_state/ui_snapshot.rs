@@ -145,14 +145,19 @@ impl UiState {
                 }
             }
 
-            // Do not restore to queue mode
+            // Do not restore to queue or search mode
             let mode_to_restore = match snapshot.mode.as_str() {
-                "queue" => "library_album",
+                "search" | "queue" => "library_album",
                 _ => &snapshot.mode,
             };
 
+            let pane_to_restore = match snapshot.pane.as_str() {
+                "search" => "tracklist",
+                _ => &snapshot.pane,
+            };
+
             self.set_mode(Mode::from_str(mode_to_restore));
-            self.set_pane(Pane::from_str(&snapshot.pane));
+            self.set_pane(Pane::from_str(pane_to_restore));
 
             self.playback_view.waveform_smoothing = snapshot.smoothing_factor;
 
