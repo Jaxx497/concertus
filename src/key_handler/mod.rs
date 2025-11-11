@@ -1,6 +1,7 @@
 mod action;
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::LazyLock;
 use std::time::Duration;
@@ -8,6 +9,7 @@ use std::time::Instant;
 
 pub use action::handle_key_event;
 pub use action::next_event;
+use ratatui::crossterm::event::KeyCode;
 use ratatui::crossterm::event::KeyEvent;
 use ratatui::crossterm::event::KeyModifiers;
 
@@ -151,4 +153,47 @@ pub fn is_likely_paste() -> bool {
         *last = Some(Instant::now());
         is_paste
     })
+}
+
+pub struct ScrollAccelerator {
+    key_states: HashMap<KeyCode, (Instant, usize)>,
+}
+
+impl ScrollAccelerator {
+    pub fn new() -> Self {
+        ScrollAccelerator {
+            key_states: HashMap::new(),
+        }
+    }
+
+    pub fn get_scroll_multiplier(&mut self, key: KeyCode) -> usize {
+        let now = Instant::now();
+
+        let (first, count) = self.key_states.entry(key).or_insert((now, 0));
+
+        *count += 1;
+
+        let held_duration = now.duration_since(*first);
+
+        match held_duration.as_millis() {
+            0..=300 => 1,
+            _ => 2,
+        }
+    }
+
+    pub fn reset(&mut self, key: KeyCode) {
+        self.key_states.remove(&key);
+    }
+
+    pub fn reset_all(&mut self) {
+        self.key_states.clear();
+    }
+}
+
+thread_local! {static SCROLL_ACCEL: RefCell<ScrollAccelerator> = RefCell::new(ScrollAccelerator::new())}
+
+pub fn on_key_release(key_code: KeyCode) {
+    SCROLL_ACCEL.with(|accel| {
+        accel.borrow_mut().reset(key_code);
+    });
 }

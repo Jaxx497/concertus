@@ -75,13 +75,20 @@ impl Concertus {
 
             // Check for user input
             match key_handler::next_event()? {
-                Some(Event::Key(key)) if key.kind == KeyEventKind::Press => {
-                    // if !self.ui.is_text_input_active() && key_handler::is_likely_paste() {
-                    //     continue;
-                    // }
-                    if let Some(action) = key_handler::handle_key_event(key, &self.ui) {
-                        if let Err(e) = self.handle_action(action) {
-                            self.ui.set_error(e);
+                Some(Event::Key(key)) => {
+                    match key.kind {
+                        KeyEventKind::Press | KeyEventKind::Repeat => {
+                            // if !self.ui.is_text_input_active() && key_handler::is_likely_paste() {
+                            //     continue;
+                            // }
+                            if let Some(action) = key_handler::handle_key_event(key, &self.ui) {
+                                if let Err(e) = self.handle_action(action) {
+                                    self.ui.set_error(e);
+                                }
+                            }
+                        }
+                        KeyEventKind::Release => {
+                            key_handler::on_key_release(key.code);
                         }
                     }
                 }

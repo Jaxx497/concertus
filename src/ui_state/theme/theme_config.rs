@@ -101,7 +101,7 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
 
         let progress = ProgressGradient::from_raw(&colors.progress)?;
         let progress_i = InactiveGradient::from_raw(&colors.progress_i)?;
-        let progress_speed = colors.progress_speed / 10.0;
+        let progress_speed = colors.progress_speed / -10.0;
 
         let decorator = Rc::from(config.extras.decorator.to_owned());
 
