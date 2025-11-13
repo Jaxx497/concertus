@@ -219,11 +219,8 @@ fn process_short_pcm(pcm_data: &[u8]) -> Result<Vec<f32>> {
                 break;
             }
 
-            let mut bytes = [0u8; 4];
-            match cursor.read_exact(&mut bytes) {
-                Ok(_) => {
-                    let sample = f32::from_le_bytes(bytes);
-
+            match cursor.read_f32::<LittleEndian>() {
+                Ok(sample) => {
                     let abs_sample = sample.abs();
                     if abs_sample > max_value {
                         max_value = abs_sample;

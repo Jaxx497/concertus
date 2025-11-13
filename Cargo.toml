@@ -4,6 +4,7 @@ version = "0.0.9"
 edition = "2024"
 
 [dependencies]
+
 anyhow = "1.0.100"
 bincode = "2.0.1"
 dirs = "6.0.0"
