@@ -5,7 +5,7 @@ use ratatui::crossterm::event::KeyEvent;
 use std::{collections::HashMap, sync::Arc};
 use tui_textarea::TextArea;
 
-const MATCH_THRESHOLD: i64 = 70;
+const MATCH_THRESHOLD: i64 = 80;
 
 #[derive(Copy, Clone)]
 pub enum MatchField {
