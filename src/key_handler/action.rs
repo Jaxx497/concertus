@@ -13,7 +13,6 @@ use KeyCode::*;
 
 #[rustfmt::skip]
 pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> {
-
     if let Some(action) = global_commands(&key_event, &state) {
         return Some(action);
     }
@@ -32,17 +31,9 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
 
 fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
     let in_search = state.get_pane() == Pane::Search;
-    let is_sidebar = matches!(state.get_pane(), Pane::SideBar);
     let fullscreen = matches!(state.get_mode(), Mode::Fullscreen);
     let popup_active = state.popup.is_open();
 
-    let multiplier = match is_sidebar {
-        false => SCROLL_ACCEL.with(|accel| match key.code {
-            Char('j') | Down | Char('k') | Up => accel.borrow_mut().get_scroll_multiplier(key.code),
-            _ => 1,
-        }),
-        true => 1,
-    };
     // Works on every pane, even search
     match (key.modifiers, key.code) {
         (C, Char('c')) => Some(Action::QUIT),
@@ -85,8 +76,8 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('0')) => Some(Action::ChangeMode(Mode::Power)),
 
             // SCROLLING
-            (X, Char('j')) | (X, Down) => Some(Action::Scroll(Director::Down(1 * multiplier))),
-            (X, Char('k')) | (X, Up) => Some(Action::Scroll(Director::Up(1 * multiplier))),
+            (X, Char('j')) | (X, Down) => Some(Action::Scroll(Director::Down(1))),
+            (X, Char('k')) | (X, Up) => Some(Action::Scroll(Director::Up(1))),
             (X, Char('d')) => Some(Action::Scroll(Director::Down(SCROLL_MID))),
             (X, Char('u')) => Some(Action::Scroll(Director::Up(SCROLL_MID))),
             (S, Char('D')) => Some(Action::Scroll(Director::Down(SCROLL_XTRA))),

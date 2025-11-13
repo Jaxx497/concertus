@@ -39,7 +39,7 @@ pub type SongMap = IndexMap<u64, Arc<SimpleSong>, BuildNoHashHasher<u64>>;
 pub const CONFIG_DIRECTORY: &'static str = "concertus";
 pub const THEME_DIRECTORY: &'static str = "themes";
 pub const DATABASE_FILENAME: &'static str = "concertus.db";
-pub const REFRESH_RATE: Duration = Duration::from_millis(8);
+pub const REFRESH_RATE: Duration = Duration::from_millis(16);
 
 /// Create a hash based on...
 ///  - date of last modification (millis)
