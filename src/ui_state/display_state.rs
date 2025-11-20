@@ -347,10 +347,7 @@ impl UiState {
             }
             Mode::Search => match self.get_search_len() > 1 {
                 true => self.filter_songs_by_search(),
-                false => {
-                    self.legal_songs = self.library.get_all_songs().to_vec();
-                    self.sort_by_table_column();
-                }
+                false => self.sort_by_table_column(),
             },
             _ => (),
         }

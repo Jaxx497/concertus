@@ -91,7 +91,7 @@ fn render_add_song_popup(
         .map(|p| {
             let playlist_name = p.name.to_string();
             Line::from(playlist_name)
-                .fg(fade_color(theme.dark, theme.text_primary, 0.6))
+                .fg(fade_color(theme.dark, theme.text_muted, 0.85))
                 .centered()
         })
         .collect::<Vec<Line>>();

@@ -4,7 +4,10 @@ use ratatui::{
     widgets::{Block, List, StatefulWidget},
 };
 
-use crate::{tui::widgets::POPUP_PADDING, ui_state::UiState};
+use crate::{
+    tui::widgets::{POPUP_PADDING, SELECTOR},
+    ui_state::UiState,
+};
 
 pub struct ThemeManager;
 impl StatefulWidget for ThemeManager {
@@ -38,6 +41,7 @@ impl StatefulWidget for ThemeManager {
             .block(block)
             .scroll_padding(area.height as usize - 3)
             .fg(theme.text_muted)
+            .highlight_symbol(SELECTOR)
             .highlight_style(theme.accent);
 
         StatefulWidget::render(list, area, buf, &mut state.popup.selection);

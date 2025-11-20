@@ -6,6 +6,7 @@ use std::{collections::HashMap, sync::Arc};
 use tui_textarea::TextArea;
 
 const MATCH_THRESHOLD: i64 = 80;
+const MATCH_LIMIT: usize = 250;
 
 #[derive(Copy, Clone)]
 pub enum MatchField {
@@ -84,7 +85,11 @@ impl UiState {
             .collect();
 
         scored_songs.sort_by(|a, b| b.1.cmp(&a.1));
-        self.legal_songs = scored_songs.into_iter().map(|i| i.0).collect();
+        self.legal_songs = scored_songs
+            .into_iter()
+            .take(MATCH_LIMIT)
+            .map(|i| i.0)
+            .collect();
     }
 
     pub fn get_search_widget(&mut self) -> &mut TextArea<'static> {

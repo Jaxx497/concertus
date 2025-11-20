@@ -265,6 +265,7 @@ impl Concertus {
         let mut updated_lib = Library::init();
 
         let cached = self.ui.display_state.album_pos.selected();
+        let cached_offset = self.ui.display_state.album_pos.offset();
         self.ui.display_state.album_pos.select(None);
 
         // TODO: Alert user of changes on update
@@ -286,7 +287,8 @@ impl Concertus {
                 .select(match cached < Some(updated_len) {
                     true => cached,
                     false => Some(updated_len / 2),
-                })
+                });
+            *self.ui.display_state.album_pos.offset_mut() = cached_offset;
         }
 
         self.ui.set_legal_songs();

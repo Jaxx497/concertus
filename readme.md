@@ -47,7 +47,6 @@ new backend options.
 - Display more song info in window (user controlled)
 - UI adjustments, more responsive areas
 - Improved testing for various formats
-- Re-work sort-by-column approach
 - Implement a secondary mpv backend
 
 ## Other

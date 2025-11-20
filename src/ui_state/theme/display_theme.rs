@@ -55,7 +55,7 @@ impl DisplayTheme {
         let brightness = match &self.progress_complete {
             ProgressGradient::Static(_) => 0.4,
             ProgressGradient::Gradient(g) if g.len() == 1 => 0.4,
-            _ => 0.1 + (amp * 0.5),
+            _ => 0.08 + (amp * 0.4),
         };
 
         match &self.progress_incomplete {

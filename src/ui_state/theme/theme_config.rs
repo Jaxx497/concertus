@@ -16,7 +16,7 @@ use std::{path::Path, rc::Rc, sync::Arc};
 #[derive(Clone)]
 pub struct ThemeConfig {
     pub name: String,
-    pub dark: bool,
+    pub is_dark: bool,
 
     // Surface Colors
     pub surface_global: Color,   // Global bg
@@ -77,8 +77,6 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
     fn try_from(config: &ThemeImport) -> anyhow::Result<Self> {
         let colors = &config.colors;
 
-        let dark = colors.dark;
-
         let surface_global = *colors.surface_global;
         let surface_active = *colors.surface_active;
         let surface_inactive = *colors.surface_inactive;
@@ -104,10 +102,10 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
         let progress_speed = colors.progress_speed / -10.0;
 
         let decorator = Rc::from(config.extras.decorator.to_owned());
+        let is_dark = config.extras.is_dark;
 
         Ok(ThemeConfig {
             name: String::new(),
-            dark,
 
             surface_global,
             surface_active,
@@ -137,6 +135,7 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
             progress_speed,
 
             decorator,
+            is_dark,
         })
     }
 }
@@ -147,7 +146,7 @@ impl Default for ThemeConfig {
 
         ThemeConfig {
             name: String::from("Concertus_Alpha"),
-            dark: true,
+            is_dark: true,
 
             surface_global: DARK_GRAY_FADED,
             surface_active: DARK_GRAY,

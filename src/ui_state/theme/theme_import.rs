@@ -12,7 +12,6 @@ pub struct ThemeImport {
 
 #[derive(Deserialize)]
 pub struct ColorScheme {
-    pub dark: bool,
     pub surface_global: ThemeColor,
     pub surface_active: ThemeColor,
     pub surface_inactive: ThemeColor,
@@ -55,6 +54,8 @@ pub struct BorderScheme {
 
 #[derive(Deserialize)]
 pub struct ExtraScheme {
+    #[serde(default = "default_dark")]
+    pub is_dark: bool,
     #[serde(default = "default_decorator")]
     pub decorator: String,
 }
@@ -105,7 +106,7 @@ fn default_inactive() -> ProgressGradientRaw {
     ProgressGradientRaw::Single("dimmed".to_string())
 }
 
-const DEFAULT_SPEED: f32 = 8.0;
+const DEFAULT_SPEED: f32 = 6.0;
 fn default_speed() -> f32 {
     DEFAULT_SPEED
 }
@@ -115,8 +116,13 @@ fn default_decorator() -> String {
     DECORATOR.to_string()
 }
 
+fn default_dark() -> bool {
+    true
+}
+
 fn default_extras() -> ExtraScheme {
     ExtraScheme {
+        is_dark: default_dark(),
         decorator: default_decorator(),
     }
 }

@@ -90,11 +90,11 @@ impl ThemeManager {
     }
 
     fn set_display_theme(theme: &ThemeConfig, focused: bool) -> DisplayTheme {
-        let is_dark = theme.dark;
+        let is_dark = theme.is_dark;
 
         match focused {
             true => DisplayTheme {
-                dark: theme.dark,
+                dark: theme.is_dark,
                 bg: theme.surface_active,
                 bg_global: theme.surface_global,
                 bg_error: theme.surface_error,
@@ -118,7 +118,7 @@ impl ThemeManager {
             },
 
             false => DisplayTheme {
-                dark: theme.dark,
+                dark: theme.is_dark,
                 bg: theme.surface_inactive,
                 bg_global: theme.surface_global,
                 bg_error: theme.surface_error,
