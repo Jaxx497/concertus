@@ -7,7 +7,7 @@ pub struct Album {
     pub title: Arc<String>,
     pub artist: Arc<String>,
     pub year: Option<u32>,
-    pub tracklist: Vec<Arc<SimpleSong>>,
+    pub tracklist: Arc<[Arc<SimpleSong>]>,
 }
 
 impl Album {
@@ -18,11 +18,11 @@ impl Album {
             title,
             artist,
             year: None,
-            tracklist: Vec::new(),
+            tracklist: Arc::new([]),
         }
     }
 
     pub fn get_tracklist(&self) -> Vec<Arc<SimpleSong>> {
-        self.tracklist.clone()
+        self.tracklist.to_vec()
     }
 }

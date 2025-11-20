@@ -300,7 +300,7 @@ impl UiState {
             .position(|a| a.id == album_id)
             .ok_or_else(|| anyhow!("Could not identify album!"))?;
 
-        self.legal_songs = album.tracklist.clone();
+        self.legal_songs = album.get_tracklist();
 
         self.display_state.album_pos.select(Some(album_pos));
         self.display_state.table_pos.select(Some(track_pos));
@@ -320,7 +320,7 @@ impl UiState {
                 LibraryView::Albums => {
                     if let Some(idx) = self.display_state.album_pos.selected() {
                         if let Some(album) = self.albums.get(idx) {
-                            self.legal_songs = album.tracklist.clone();
+                            self.legal_songs = album.get_tracklist();
                         }
                     }
                 }

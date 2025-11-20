@@ -1,11 +1,11 @@
 use super::LEGAL_EXTENSION;
 use crate::{
-    calculate_signature,
+    SongMap, calculate_signature,
     database::Database,
     domain::{Album, LongSong, SimpleSong, SongInfo},
-    expand_tilde, SongMap,
+    expand_tilde,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use std::{
@@ -208,25 +208,49 @@ impl Library {
             self.albums.insert(album_id, album);
         }
 
-        // Assign each song to it's proper album
+        let mut album_songs: IndexMap<i64, Vec<Arc<SimpleSong>>> = IndexMap::new();
+
         for song in self.songs.values() {
-            if let Some(album) = self.albums.get_mut(&song.album_id) {
-                if album.year.is_none() {
-                    album.year = song.year
+            album_songs
+                .entry(song.album_id)
+                .or_insert_with(Vec::new)
+                .push(Arc::clone(&song));
+        }
+
+        for (album_id, mut songs) in album_songs {
+            if let Some(album) = self.albums.get_mut(&album_id) {
+                if !songs.is_empty() {
+                    if album.year.is_none() {
+                        album.year = songs[0].year
+                    }
+
+                    songs.sort_by_key(|s| (s.disc_no.unwrap_or(0), s.track_no.unwrap_or(0)));
+                    album.tracklist = songs.into()
                 }
-                album.tracklist.push(Arc::clone(song))
             }
         }
 
-        self.albums.retain(|_id, album| {
-            if album.tracklist.is_empty() {
-                return false;
-            }
-            album
-                .tracklist
-                .sort_by_key(|s| (s.disc_no.unwrap_or(0), s.track_no.unwrap_or(0)));
-            true
-        });
+        self.albums.retain(|_id, album| !album.tracklist.is_empty());
+
+        // // Assign each song to it's proper album
+        // for song in self.songs.values() {
+        //     if let Some(album) = self.albums.get_mut(&song.album_id) {
+        //         if album.year.is_none() {
+        //             album.year = song.year
+        //         }
+        //         album.tracklist.push(Arc::clone(song))
+        //     }
+        // }
+        //
+        // self.albums.retain(|_id, album| {
+        //     if album.tracklist.is_empty() {
+        //         return false;
+        //     }
+        //     album
+        //         .tracklist
+        //         .sort_by_key(|s| (s.disc_no.unwrap_or(0), s.track_no.unwrap_or(0)));
+        //     true
+        // });
 
         Ok(())
     }

@@ -2,7 +2,7 @@
 
 > **Disclaimer:** Themeing in Concertus is currently in an experimental stage. This document will reflect the most recent changes to the themeing engine, as well as the latest specification.
 
-Current specification: 0.5
+Current specification: 0.6
 
 ### Hot keys
 
@@ -24,10 +24,8 @@ accessible to the user in the program.
 Here is an example of a transparent theme:
 
 ```Toml 
-# Theme version 0.5
+# Theme version 0.6
 [colors]
-dark                = true
-
 surface_global      = "" # Background of application
 surface_active      = "" # Background of selected pane
 surface_inactive    = "" # Background of unselected areas
@@ -51,19 +49,24 @@ accent_inactive     = "#82823C"
 progress            = ["#ff0000", "#ffffff", "#0000ff"] 
                         # A single color value is also allowed
 
-progress_i          = "dimmed"      ### Represents the "unplayed" portion of the waveform
+progress_i          # [OPTIONAL]    
+                    = "dimmed"
                         # Other options values include
                         #   "dimmed"    => a faded version of the above field [default]
                         #   "still"     => a frozen version of the gradient
                         #   "#ff4646"   => a solid single color
                         #   ["#ff0000", "#ffffff", "#0000ff"
 
-progress_speed      = 8.0   # Defaults to 8.0 if field is not supplied.
+progress_speed      = 8.0   # Defaults to 6.0 if field is not supplied.
                             # Recommended to use an even value here
 
-[borders]
+[borders]   # These fields are optional, defaults shown
 border_display      = "all"
 border_type         = "rounded"
+
+[extras]    # These fields are optional, defaults shown
+is_dark             = true  # Defaults to true
+decorator           = "✧"   # Recommended to use a single utf8 compliant character here
 ```
 
 ### Acceptable Color Formats
@@ -76,13 +79,12 @@ write "none" with the quotation marks. (Certain elements may not be able to be
 rendered as transparent. Your terminal may also play a role in what can/cannot
 be transparent.)
 
-
 ### Theme Tricks
 Users can create a borderless experience by setting the colors of the borders
 to the same values as the respective background panel colors. However, there is
-no way to set transparent borders. The workaround for this is to change the
-border_display to "none". This may affect padding of some elements.
+no way to set transparent borders. Users can also set border_display to "none",
+although this may affect the padding of some elements.
 
-The same principle applies to the selection colors- Instead of a highlited
+The same principle applies to the selection colors- Instead of a highlighted
 column, try setting the highlight color to the same color as the background,
 and the highlighted text to a distinct color. Test the results!
