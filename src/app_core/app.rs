@@ -1,5 +1,6 @@
 use crate::{
     Library,
+    app_core::LibraryRefreshProgress,
     domain::{QueueSong, SongDatabase, SongInfo, generate_waveform},
     key_handler::{self},
     overwrite_line,
@@ -30,6 +31,7 @@ pub struct Concertus {
     pub(crate) ui: UiState,
     pub(crate) player: PlayerController,
     waveform_rec: Option<Receiver<Result<Vec<f32>>>>,
+    library_refresh_rec: Option<Receiver<LibraryRefreshProgress>>,
 }
 
 impl Concertus {
@@ -47,6 +49,7 @@ impl Concertus {
             player: PlayerController::new(),
             ui: UiState::new(lib_clone, shared_state_clone),
             waveform_rec: None,
+            library_refresh_rec: None,
         }
     }
 
@@ -108,6 +111,7 @@ impl Concertus {
             }
 
             let _ = self.await_waveform_completion();
+            self.check_library_refresh_progress();
 
             terminal.draw(|f| tui::render(f, &mut self.ui))?;
 
@@ -262,37 +266,114 @@ impl Concertus {
     }
 
     pub(crate) fn update_library(&mut self) -> Result<()> {
-        let mut updated_lib = Library::init();
-
-        let cached = self.ui.display_state.album_pos.selected();
-        let cached_offset = self.ui.display_state.album_pos.offset();
-        self.ui.display_state.album_pos.select(None);
-
-        // TODO: Alert user of changes on update
-        updated_lib.build_library()?;
-
-        let updated_len = updated_lib.albums.len();
-
-        self.library = Arc::new(updated_lib);
-        if let Err(e) = self.ui.sync_library(Arc::clone(&self.library)) {
-            self.ui.set_error(e);
+        // Don't start another refresh if one is already in progress
+        if self.library_refresh_rec.is_some() {
+            return Ok(());
         }
 
-        // Do not index a value out of bounds if current selection
-        // will be out of bounds after update
-        if updated_len > 0 {
-            self.ui
-                .display_state
-                .album_pos
-                .select(match cached < Some(updated_len) {
-                    true => cached,
-                    false => Some(updated_len / 2),
-                });
-            *self.ui.display_state.album_pos.offset_mut() = cached_offset;
-        }
+        let (tx, rx) = mpsc::channel();
+        self.library_refresh_rec = Some(rx);
 
-        self.ui.set_legal_songs();
+        // Show initial progress
+        self.ui.set_library_refresh_progress(Some(0));
+
+        thread::spawn(move || {
+            let _ = tx.send(LibraryRefreshProgress::Scanning { progress: 0 });
+            let mut updated_lib = Library::init();
+
+            if updated_lib.roots.is_empty() {
+                let _ = tx.send(LibraryRefreshProgress::Complete(updated_lib));
+                return;
+            }
+
+            let _ = match updated_lib.build_library_with_progress(&tx) {
+                Ok(_) => tx.send(LibraryRefreshProgress::Complete(updated_lib)),
+                Err(e) => tx.send(LibraryRefreshProgress::Error(e.to_string())),
+            };
+        });
 
         Ok(())
+    }
+
+    fn check_library_refresh_progress(&mut self) {
+        let should_clear = if let Some(rx) = &self.library_refresh_rec {
+            match rx.try_recv() {
+                Ok(progress) => match progress {
+                    LibraryRefreshProgress::Scanning { progress } => {
+                        self.ui.set_library_refresh_progress(Some(progress));
+                        self.ui
+                            .set_library_refresh_detail(Some(format!("Scanning Songs...")));
+                        false
+                    }
+                    LibraryRefreshProgress::Processing {
+                        progress,
+                        current,
+                        total,
+                    } => {
+                        self.ui.set_library_refresh_progress(Some(progress));
+                        self.ui.set_library_refresh_detail(Some(format!(
+                            "Processing {}/{}",
+                            current, total
+                        )));
+                        false
+                    }
+                    LibraryRefreshProgress::UpdatingDatabase { progress } => {
+                        self.ui.set_library_refresh_progress(Some(progress));
+                        self.ui
+                            .set_library_refresh_detail(Some("Updating database...".to_string()));
+                        false
+                    }
+                    LibraryRefreshProgress::Rebuilding { progress } => {
+                        self.ui.set_library_refresh_progress(Some(progress));
+                        self.ui
+                            .set_library_refresh_detail(Some("Rebuilding library...".to_string()));
+                        false
+                    }
+                    LibraryRefreshProgress::Complete(new_library) => {
+                        let cached = self.ui.display_state.album_pos.selected();
+                        let cached_offset = self.ui.display_state.album_pos.offset();
+                        let updated_len = new_library.albums.len();
+
+                        self.library = Arc::new(new_library);
+                        if let Err(e) = self.ui.sync_library(Arc::clone(&self.library)) {
+                            self.ui.set_error(e);
+                        }
+
+                        if updated_len > 0 {
+                            self.ui.display_state.album_pos.select(
+                                match cached < Some(updated_len) {
+                                    true => cached,
+                                    false => Some(updated_len / 2),
+                                },
+                            );
+                            *self.ui.display_state.album_pos.offset_mut() = cached_offset;
+                        }
+
+                        self.ui.set_legal_songs();
+                        self.ui.set_library_refresh_progress(None);
+                        self.ui.set_library_refresh_detail(None);
+                        true
+                    }
+                    LibraryRefreshProgress::Error(e) => {
+                        self.ui.set_error(anyhow!(e));
+                        self.ui.set_library_refresh_progress(None);
+                        self.ui.set_library_refresh_detail(None);
+                        true
+                    }
+                },
+                Err(mpsc::TryRecvError::Empty) => false,
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    self.ui.set_library_refresh_progress(None);
+                    self.ui.set_library_refresh_detail(None);
+                    true
+                }
+            }
+        } else {
+            false
+        };
+
+        if should_clear {
+            self.library_refresh_rec = None;
+        }
     }
 }

@@ -25,7 +25,10 @@ impl AppLayout {
             false => 0,
         };
 
-        let buffer_line_height = match state.is_playing() || !state.multi_select_empty() {
+        let buffer_line_height = match state.is_playing()
+            || !state.multi_select_empty()
+            || state.get_library_refresh_progress().is_some()
+        {
             true => 1,
             false => 0,
         };

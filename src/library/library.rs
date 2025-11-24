@@ -1,6 +1,8 @@
 use super::LEGAL_EXTENSION;
 use crate::{
-    SongMap, calculate_signature,
+    SongMap,
+    app_core::LibraryRefreshProgress,
+    calculate_signature,
     database::Database,
     domain::{Album, LongSong, SimpleSong, SongInfo},
     expand_tilde,
@@ -11,7 +13,11 @@ use rayon::prelude::*;
 use std::{
     collections::{HashSet, VecDeque},
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+        mpsc::Sender,
+    },
 };
 use walkdir::WalkDir;
 
@@ -21,6 +27,10 @@ pub struct Library {
     pub songs: SongMap,
     pub albums: IndexMap<i64, Album>,
 }
+
+const SCANNING_FINISHED: u8 = 25;
+const PROCESSING_FINISHED: u8 = 70;
+const REMOVALS_FINISHED: u8 = 90;
 
 impl Library {
     fn new() -> Self {
@@ -232,26 +242,6 @@ impl Library {
 
         self.albums.retain(|_id, album| !album.tracklist.is_empty());
 
-        // // Assign each song to it's proper album
-        // for song in self.songs.values() {
-        //     if let Some(album) = self.albums.get_mut(&song.album_id) {
-        //         if album.year.is_none() {
-        //             album.year = song.year
-        //         }
-        //         album.tracklist.push(Arc::clone(song))
-        //     }
-        // }
-        //
-        // self.albums.retain(|_id, album| {
-        //     if album.tracklist.is_empty() {
-        //         return false;
-        //     }
-        //     album
-        //         .tracklist
-        //         .sort_by_key(|s| (s.disc_no.unwrap_or(0), s.track_no.unwrap_or(0)));
-        //     true
-        // });
-
         Ok(())
     }
 }
@@ -264,11 +254,154 @@ impl Library {
     pub fn load_history(&mut self, songs: &SongMap) -> Result<VecDeque<Arc<SimpleSong>>> {
         self.db.import_history(songs)
     }
-}
 
-// UI State
-impl Library {
     pub fn get_all_songs(&self) -> Vec<Arc<SimpleSong>> {
         self.songs.values().cloned().collect()
+    }
+}
+
+impl Library {
+    pub fn build_library_with_progress(
+        &mut self,
+        tx: &Sender<LibraryRefreshProgress>,
+    ) -> Result<()> {
+        if self.roots.is_empty() {
+            return Ok(());
+        }
+
+        // Phase 1: Scanning directories
+        let _ = tx.send(LibraryRefreshProgress::Scanning { progress: 0 });
+
+        let mut existing_hashes = self.db.get_hashes()?;
+        let mut all_files = Vec::new();
+
+        // First pass: collect all files from all roots
+        for root in &self.roots {
+            let files: Vec<PathBuf> = Self::collect_valid_files(root).collect();
+            all_files.extend(files);
+        }
+
+        let _ = tx.send(LibraryRefreshProgress::Scanning { progress: 1 });
+
+        // Second pass: Filter files
+        let total_files = all_files.len();
+        let mut new_files = Vec::new();
+
+        for (i, path) in all_files.into_iter().enumerate() {
+            if i % 100 == 0 || i == total_files - 1 {
+                let progress = 5 + ((i * 10) / total_files.max(1)) as u8;
+                let _ = tx.send(LibraryRefreshProgress::Scanning { progress });
+            }
+
+            let hash = calculate_signature(&path).unwrap_or(0);
+            if !existing_hashes.remove(&hash) {
+                new_files.push(path);
+            }
+        }
+
+        let _ = tx.send(LibraryRefreshProgress::Scanning {
+            progress: SCANNING_FINISHED,
+        });
+
+        // Phase 2: Processing song metadata
+        let removed_ids = existing_hashes.into_iter().collect::<Vec<u64>>();
+        let total_new = new_files.len();
+
+        if !new_files.is_empty() {
+            let _ = tx.send(LibraryRefreshProgress::Processing {
+                progress: SCANNING_FINISHED,
+                current: 0,
+                total: total_new,
+            });
+            Self::insert_new_songs_with_progress(&mut self.db, new_files, tx)?;
+        } else {
+            let _ = tx.send(LibraryRefreshProgress::Processing {
+                progress: PROCESSING_FINISHED,
+                current: 0,
+                total: 0,
+            });
+        }
+
+        let _ = tx.send(LibraryRefreshProgress::UpdatingDatabase {
+            progress: PROCESSING_FINISHED,
+        });
+
+        let total_removed = removed_ids.len();
+        if !removed_ids.is_empty() {
+            // Delete in batches for progress reporting
+            for (i, chunk) in removed_ids.chunks(100).enumerate() {
+                let progress = PROCESSING_FINISHED + ((i * 100 * 15) / total_removed.max(1)) as u8;
+                let progress = progress.min(REMOVALS_FINISHED);
+                let _ = tx.send(LibraryRefreshProgress::UpdatingDatabase { progress });
+                self.db.delete_songs(chunk)?;
+            }
+        }
+
+        let _ = tx.send(LibraryRefreshProgress::UpdatingDatabase {
+            progress: REMOVALS_FINISHED,
+        });
+
+        // Phase 3: Collecting songs from database
+        self.collect_songs()?;
+        let _ = tx.send(LibraryRefreshProgress::UpdatingDatabase { progress: 90 });
+
+        // Phase 4: Rebuilding library structures
+        let _ = tx.send(LibraryRefreshProgress::Rebuilding { progress: 95 });
+        self.build_albums()?;
+        let _ = tx.send(LibraryRefreshProgress::Rebuilding { progress: 100 });
+
+        Ok(())
+    }
+
+    fn insert_new_songs_with_progress(
+        db: &mut Database,
+        new_files: Vec<PathBuf>,
+        tx: &Sender<LibraryRefreshProgress>,
+    ) -> Result<()> {
+        let total = new_files.len();
+        let processed = AtomicUsize::new(0);
+        let tx_clone = tx.clone();
+
+        let songs: Vec<LongSong> = new_files
+            .into_par_iter()
+            .filter_map(|path| {
+                let result = LongSong::build_song_lofty(&path).ok();
+
+                let count = processed.fetch_add(1, Ordering::Relaxed) + 1;
+
+                // Report progress periodically
+                if count % 50 == 0 || count == total {
+                    let progress = SCANNING_FINISHED + ((count * 30) / total.max(1)) as u8;
+                    let _ = tx_clone.send(LibraryRefreshProgress::Processing {
+                        progress,
+                        current: count,
+                        total,
+                    });
+                }
+
+                result
+            })
+            .collect();
+
+        let _ = tx.send(LibraryRefreshProgress::Processing {
+            progress: 45,
+            current: total,
+            total,
+        });
+
+        let mut artist_cache = HashSet::new();
+        let mut aa_binding = HashSet::new();
+
+        for song in &songs {
+            artist_cache.insert(song.get_artist());
+            artist_cache.insert(song.album_artist.as_str());
+            aa_binding.insert((song.album_artist.as_str(), song.get_album()));
+        }
+
+        db.insert_artists(&artist_cache)?;
+        db.insert_albums(&aa_binding)?;
+        db.insert_songs(&songs)?;
+
+        Ok(())
     }
 }

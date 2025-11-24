@@ -36,7 +36,6 @@ impl Player {
         }
     }
 
-    /// Play a song
     pub(crate) fn play_song(&mut self, song: &Arc<QueueSong>) -> Result<()> {
         let source = decode(song)?;
 
@@ -61,30 +60,6 @@ impl Player {
         Ok(())
     }
 
-    /// Toggles the playback state of the audio player.
-    ///
-    /// This function manages the playback state transitions:
-    /// - If no track is currently loaded (`now_playing` is None), it sets the state to `Stopped`.
-    /// - If a track is loaded and currently paused, it resumes playback.
-    /// - If a track is loaded and currently playing or in any other state, it pauses playback.
-    ///
-    /// # State Transitions
-    /// - `None` -> `Stopped`
-    /// - `Paused` -> `Playing` (resumes playback)
-    /// - `Playing` or any other state -> `Paused`
-    ///
-    /// # Effects
-    /// - When resuming, it calls `play()` on the sink.
-    /// - When pausing, it calls `pause()` on the sink.
-    ///
-    /// # Examples
-    /// ```
-    /// let mut player = AudioPlayer::new();
-    /// player.toggle_playback();       // Does nothing
-    /// player.play_song(some_track);   // Starts playing
-    /// player.toggle_playback();       // Pauses
-    /// player.toggle_playback();       // Resumes playing
-    /// ```
     pub(crate) fn toggle_playback(&mut self) {
         let (now_playing, playback_state) = {
             let state = self
@@ -115,7 +90,6 @@ impl Player {
         }
     }
 
-    // /// Stop playback
     pub(crate) fn stop(&mut self) {
         self.sink.clear();
 
@@ -167,7 +141,6 @@ impl Player {
         Ok(())
     }
 
-    /// Rewinds playback 5 seconds
     pub(crate) fn seek_back(&mut self, secs: usize) {
         let playback_state = {
             let state = self

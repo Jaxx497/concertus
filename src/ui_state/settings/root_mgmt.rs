@@ -1,9 +1,9 @@
 use crate::{
+    Library,
     app_core::Concertus,
     ui_state::{PopupType, SettingsMode, UiState},
-    Library,
 };
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::sync::Arc;
 
 impl UiState {
@@ -28,7 +28,7 @@ impl UiState {
     pub fn add_root(&mut self, path: &str) -> Result<()> {
         let mut lib = Library::init();
         lib.add_root(path)?;
-        lib.build_library()?;
+        // lib.build_library()?;
 
         self.library = Arc::new(lib);
 
@@ -46,6 +46,8 @@ impl UiState {
 
             let bad_root = &roots[selected];
             lib.delete_root(&bad_root)?;
+
+            self.library = Arc::new(lib);
         }
 
         Ok(())
@@ -104,6 +106,7 @@ impl Concertus {
                         .show_popup(PopupType::Settings(SettingsMode::ViewRoots));
                     self.ui.popup.selection.select(Some(0));
                     self.update_library()?;
+                    self.ui.close_popup();
                 }
             }
             _ => {}

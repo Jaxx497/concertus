@@ -1,14 +1,17 @@
 use crate::{
     domain::SongInfo,
     truncate_at_last_space,
-    tui::widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
+    tui::{
+        Progress,
+        widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
+    },
     ui_state::{DisplayTheme, UiState},
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::Stylize,
     text::{Line, Span},
-    widgets::{Block, StatefulWidget, Widget},
+    widgets::{self, Block, Borders, Gauge, StatefulWidget, Widget},
 };
 
 pub struct BufferLine;
@@ -25,6 +28,23 @@ impl StatefulWidget for BufferLine {
         let theme = state.theme_manager.get_display_theme(true);
 
         Block::new().bg(theme.bg_global).render(area, buf);
+
+        if let Some(progress) = state
+            .get_library_refresh_progress()
+            .filter(|p| *p > 1 && *p < 100)
+        {
+            let desc = state.get_library_refresh_detail().unwrap_or_default();
+            let label = format!("{desc} | {progress}%");
+            let guage = Gauge::default()
+                .block(Block::new().borders(Borders::NONE))
+                .gauge_style(theme.selection)
+                .fg(theme.text_selected)
+                .label(label)
+                .percent(progress as u16 - 1);
+
+            guage.render(area, buf);
+            return;
+        }
 
         let [left, center, right] = Layout::default()
             .direction(Direction::Horizontal)

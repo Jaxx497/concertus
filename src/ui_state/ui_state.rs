@@ -30,6 +30,9 @@ pub struct UiState {
     pub albums: Vec<Album>,
     pub legal_songs: Vec<Arc<SimpleSong>>,
     pub playlists: Vec<Playlist>,
+
+    pub library_refresh_progress: Option<u8>,
+    pub library_refresh_detail: Option<String>,
 }
 
 impl UiState {
@@ -47,6 +50,9 @@ impl UiState {
             albums: Vec::new(),
             legal_songs: Vec::new(),
             playlists: Vec::new(),
+
+            library_refresh_progress: None,
+            library_refresh_detail: None,
         }
     }
 }
@@ -130,5 +136,27 @@ impl UiState {
                 )
                 | (Pane::Popup, PopupType::Playlist(PlaylistAction::Rename))
         )
+    }
+}
+
+impl UiState {
+    pub fn set_library_refresh_progress(&mut self, progress: Option<u8>) {
+        self.library_refresh_progress = progress;
+    }
+
+    pub fn get_library_refresh_progress(&self) -> Option<u8> {
+        self.library_refresh_progress
+    }
+
+    pub fn set_library_refresh_detail(&mut self, detail: Option<String>) {
+        self.library_refresh_detail = detail;
+    }
+
+    pub fn get_library_refresh_detail(&self) -> Option<&str> {
+        self.library_refresh_detail.as_deref()
+    }
+
+    pub fn is_library_refreshing(&self) -> bool {
+        self.library_refresh_progress.is_some()
     }
 }
