@@ -36,8 +36,8 @@ with the exception of searching as not to affect a user's search query.
 | ----------- | ----------- |
 | Search | `\`
 | Open Settings | ``` ` ``` |
+| Clear Popup / Exit Search | `Esc` |
 | Update Library | `F5` \| `Ctrl` + `u` |
-| Clear Popup / Search | `Esc` |
 | Hot Reload Current Theme | `F6` |
 | Open Theme Manager | `C`|
 | Cycle Themes | `<` `>`|
@@ -84,7 +84,7 @@ are displayed.
 | Clear Multi-Selection | `Ctrl` + `v` |
 
 > **Multi-selection** enables users to select multiple songs to add, queue, or
-> remove to the queue or a playlist. Selection order is preserved.
+> remove from a playlist or the queue. Selection order is preserved.
 
 ##### Playlist/Queue Specific
 
