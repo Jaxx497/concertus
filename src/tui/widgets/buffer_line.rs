@@ -1,17 +1,14 @@
 use crate::{
     domain::SongInfo,
     truncate_at_last_space,
-    tui::{
-        Progress,
-        widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
-    },
+    tui::widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
     ui_state::{DisplayTheme, UiState},
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::Stylize,
     text::{Line, Span},
-    widgets::{self, Block, Borders, Gauge, StatefulWidget, Widget},
+    widgets::{Block, Borders, Gauge, StatefulWidget, Widget},
 };
 
 pub struct BufferLine;

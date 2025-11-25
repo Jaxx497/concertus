@@ -131,7 +131,9 @@ impl Player {
                     self.sink.clear();
                     state.state = PlaybackState::Stopped;
                 } else {
-                    state.elapsed = self.sink.get_pos()
+                    state.elapsed = self.sink.get_pos();
+                    state.elapsed_display =
+                        get_readable_duration(state.elapsed, crate::DurationStyle::Compact);
                 }
             } else {
                 self.sink.clear();
@@ -169,7 +171,9 @@ impl Player {
                 .shared_state
                 .lock()
                 .expect("Failed to unwrap mutex in music player");
-            state.elapsed = self.sink.get_pos()
+            state.elapsed = self.sink.get_pos();
+            state.elapsed_display =
+                get_readable_duration(state.elapsed, crate::DurationStyle::Compact);
         }
     }
 
