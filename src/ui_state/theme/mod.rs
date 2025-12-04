@@ -14,8 +14,8 @@ pub use theme_manager::ThemeManager;
 
 use ratatui::style::Color;
 
-const DARK_WHITE: Color = Color::Rgb(210, 210, 215);
-const MID_GRAY: Color = Color::Rgb(100, 100, 105);
+const DARK_WHITE: Color = Color::Rgb(210, 210, 213);
+const MID_GRAY: Color = Color::Rgb(100, 100, 103);
 const DARK_GRAY: Color = Color::Rgb(25, 25, 28);
 const DARK_GRAY_FADED: Color = Color::Rgb(15, 15, 18);
 const GOOD_RED: Color = Color::Rgb(255, 70, 70);

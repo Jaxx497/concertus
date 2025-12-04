@@ -1,0 +1,35 @@
+[colors]
+surface_global      = ""
+surface_active      = ""
+surface_inactive    = ""
+surface_error       = ""
+
+text_primary        = "#d2d2d7"
+text_secondary      = "#ff4646"
+text_secondary_in   = "#a62e2e"
+text_selection      = "#dcdc64"
+text_muted          = "#666669"
+
+border_active       = "#dcdc64"
+border_inactive     = "#343438"
+
+selection           = ""
+selection_inactive  = ""
+
+accent              = "#dcdc64"
+accent_inactive     = "#82823C"
+
+progress            = [ "#444446",
+                        "#ff4646", 
+                        "#FFFFFF" ]
+
+progress_i          = "dimmed"
+progress_speed      = 2
+
+[borders]
+border_display      = "all"
+border_type         = "rounded"
+
+[extras]
+decorator           = ""
+

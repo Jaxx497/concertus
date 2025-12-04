@@ -24,8 +24,8 @@ impl Default for PlayerState {
             oscilloscope_buffer: VecDeque::with_capacity(OSCILLO_BUFFER_CAPACITY),
 
             last_elapsed_secs: 0,
-            elapsed_display: String::new(),
-            duration_display: String::new(),
+            elapsed_display: String::with_capacity(11),
+            duration_display: String::with_capacity(11),
 
             player_error: None,
         }

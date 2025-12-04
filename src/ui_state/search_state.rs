@@ -64,7 +64,7 @@ impl UiState {
                     .matcher
                     .fuzzy_match(&song.get_album().to_lowercase(), &query)
                     .unwrap_or(0) as f32
-                    * 1.55) as i64;
+                    * 1.75) as i64;
 
                 let weighted_score = [title_score, artist_score, album_score];
                 let best_score = weighted_score.iter().max().copied().unwrap_or(0);

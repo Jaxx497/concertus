@@ -45,7 +45,7 @@ impl StatefulWidget for GenericView {
 
         let title = get_title(state, area);
 
-        let table = create_standard_table(rows, title.into(), state, theme);
+        let table = create_standard_table(rows, title, state, theme);
         StatefulWidget::render(table, area, buf, &mut state.display_state.table_pos);
     }
 }

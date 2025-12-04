@@ -6,32 +6,46 @@ Concertus is a lightweight, plug and play, TUI music player written in Rust.
 
 ## Usage
 
-To try Concertus, clone the repository and run the program with `cargo run
---release`. 
+To try Concertus, do the following:
 
-Begin by assigning one or more 'root' (or 'parent') directories when promted.
-The root management window can be managed by pressing the ``` ` ``` key.
+```bash
+git clone https://github.com/Jaxx497/concertus/
+cd concertus
+cargo run --release 
+
+# to intall globally:
+cargo install --path .
+```
+
+Begin by assigning one or more root directories when promted. The root
+management window can be accessed by pressing the ``` ` ``` key at any time.
 Concertus will walk through the supplied folder(s), and create a virtual
-library based on the valid files it finds.
+library based on any valid files it finds.
 
 It's recommended that users have ffmpeg installed for waveform visualization.
 This dependency however is not mandatory.
 
+Concertus aims to create an experience where no task is more than a keystroke
+or two away. Those familiar with vim-like bindings should pick up the
+keybindings quickly. Use `hjkl`/`d`/`u` for navigation, `n`/`p` for seeking, and `/`
+for searching. 
+
 For the full list of keymaps, refer to the [keymaps
 documentation](./docs/keymaps.md). \
-For information on custom themeing, refer
-to the [themeing specification](./docs/themes.md).
+For information on custom themeing, refer to the [themeing
+specification](./docs/themes.md).
 
 Currently, concertus supports the following filetypes: ```mp3, m4a, flac, ogg, wav```
 
 ## Disclaimers
 
-Concertus never writes to user files and does not have any online capabilities,
-however, the program relies on accurate tagging. It's strongly recommended that
-users ensure their libraries are properly tagged with a tool like
+Concertus never writes to user files and does not have any online capabilities.
+The program does however rely on accurate tagging. It's strongly recommended
+that users ensure their libraries are properly tagged with a tool like
 [MP3Tag](https://www.mp3tag.de/en/). 
 
-> **Tip:** Concertus supports live updates by pressing `Ctrl+u` or `F5`
+> **Tip:** Concertus supports hot reloading by pressing `Ctrl+u` or `F5` at any
+> point during runtime.
 
 ## Known bugs
 
@@ -49,7 +63,7 @@ new backend options.
 
 - Display more song info in window (user controlled)
 - Improved testing for various formats
-- Implement a secondary backend (likely mpv)
+- Implement a secondary backend (likely mpv) [Finally, OPUS support!!!]
 
 ## Other
 

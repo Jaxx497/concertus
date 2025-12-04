@@ -36,7 +36,7 @@ pub fn create_standard_list<'a>(
                 .centered()
                 .fg(theme.text_muted),
             LibraryView::Playlists => {
-                let playlist_keymaps = " [c]reate 󰲸 | [C-D]elete 󰐓 ";
+                let playlist_keymaps = " [c]reate 󰲸 | [^D]elete 󰐓 ";
                 match area.width as usize + 2 < playlist_keymaps.len() {
                     true => Line::default(),
                     false => Line::from(playlist_keymaps).centered().fg(theme.text_muted),

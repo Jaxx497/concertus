@@ -28,8 +28,6 @@ impl UiState {
     pub fn add_root(&mut self, path: &str) -> Result<()> {
         let mut lib = Library::init();
         lib.add_root(path)?;
-        // lib.build_library()?;
-
         self.library = Arc::new(lib);
 
         Ok(())

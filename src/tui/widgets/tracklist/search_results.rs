@@ -45,15 +45,9 @@ impl StatefulWidget for StandardTable {
 
                 if let Some(field) = state.get_match_fields(song.id) {
                     match field {
-                        MatchField::Title => {
-                            title_col = title_col.fg(theme.text_secondary).italic()
-                        }
-                        MatchField::Artist => {
-                            artist_col = artist_col.fg(theme.text_secondary).italic()
-                        }
-                        MatchField::Album => {
-                            album_col = album_col.fg(theme.text_secondary).italic()
-                        }
+                        MatchField::Title => title_col = title_col.fg(theme.text_secondary),
+                        MatchField::Artist => artist_col = artist_col.fg(theme.text_secondary),
+                        MatchField::Album => album_col = album_col.fg(theme.text_secondary),
                     }
                 }
 

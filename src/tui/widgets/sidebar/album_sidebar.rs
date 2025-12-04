@@ -29,7 +29,7 @@ impl StatefulWidget for SideBarAlbum {
         let selected_album_idx = state.display_state.album_pos.selected();
         let selected_artist = state.get_selected_album().map(|a| a.artist.as_str());
 
-        let mut list_items = Vec::new();
+        let mut list_items = Vec::with_capacity(albums.len());
         let mut current_artist = None;
         let mut current_display_idx = 0;
         let mut selected_display_idx = None;

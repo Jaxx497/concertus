@@ -218,7 +218,8 @@ impl Library {
             self.albums.insert(album_id, album);
         }
 
-        let mut album_songs: IndexMap<i64, Vec<Arc<SimpleSong>>> = IndexMap::new();
+        let mut album_songs: IndexMap<i64, Vec<Arc<SimpleSong>>> =
+            IndexMap::with_capacity(self.albums.len());
 
         for song in self.songs.values() {
             album_songs

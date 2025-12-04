@@ -173,7 +173,7 @@ impl Default for ThemeConfig {
 
             progress: ProgressGradient::Gradient(Arc::from([DARK_WHITE, GOOD_RED_DARK, DARK_GRAY])),
             progress_i: InactiveGradient::Dimmed,
-            progress_speed: 0.8,
+            progress_speed: 2.0,
 
             decorator: Rc::from("✧".to_string()),
         }

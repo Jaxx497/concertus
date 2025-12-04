@@ -51,7 +51,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
                 Constraint::Length(1),
                 Constraint::Min(25),
                 Constraint::Max(20),
-                Constraint::Max(4),
+                Constraint::Length(4),
                 Constraint::Length(7),
             ]
         }
@@ -102,7 +102,7 @@ pub fn create_standard_table<'a>(
     Table::new(rows, widths)
         .block(block)
         .column_spacing(COLUMN_SPACING)
-        .flex(Flex::Start)
+        .flex(Flex::SpaceBetween)
         .row_highlight_style(highlight_style)
 }
 

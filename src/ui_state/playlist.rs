@@ -66,10 +66,11 @@ impl UiState {
 
         self.get_playlists()?;
 
-        if self.display_state.playlist_pos.selected() == None {
+        if !self.playlists.is_empty() {
             self.display_state.playlist_pos.select_first();
         }
 
+        self.set_legal_songs();
         self.close_popup();
         Ok(())
     }
@@ -103,7 +104,11 @@ impl UiState {
         self.db_worker.rename_playlist(playlist.id, new_name)?;
 
         self.get_playlists()?;
-        self.display_state.playlist_pos.select_first();
+
+        if !self.playlists.is_empty() {
+            self.display_state.playlist_pos.select_first();
+        }
+
         self.close_popup();
         Ok(())
     }
@@ -116,7 +121,7 @@ impl UiState {
 
     pub fn delete_playlist(&mut self) -> Result<()> {
         let current_playlist = self.display_state.playlist_pos.selected();
-        let playlist_len = self.playlists.len();
+        // let playlist_len =
 
         if let Some(idx) = current_playlist {
             let playlist_id = self.playlists[idx].id;
@@ -126,7 +131,7 @@ impl UiState {
             self.set_legal_songs();
         }
 
-        if matches!(playlist_len, 1) {
+        if self.playlists.is_empty() {
             self.display_state.playlist_pos.select(None);
             self.legal_songs.clear();
         }
@@ -218,12 +223,7 @@ impl UiState {
             self.get_playlists()?;
         }
 
-        if self.display_state.playlist_pos.selected().is_none() {
-            self.display_state.playlist_pos.select_first();
-        }
-
         self.set_legal_songs();
-
         self.close_popup();
         Ok(())
     }
