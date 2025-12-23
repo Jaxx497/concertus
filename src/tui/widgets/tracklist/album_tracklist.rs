@@ -28,7 +28,10 @@ impl StatefulWidget for AlbumView {
         }
 
         let album = state.get_selected_album().unwrap_or(&state.albums[0]);
-        let album_title = truncate_at_last_space(&album.title, (area.width / 3) as usize);
+        let album_title = match &album.title.is_empty() {
+            true => String::from("[Unknown Album]"),
+            false => truncate_at_last_space(&album.title, (area.width / 3) as usize),
+        };
 
         let rows = album
             .tracklist
@@ -57,10 +60,10 @@ impl StatefulWidget for AlbumView {
         let year_str = album
             .year
             .filter(|y| *y != 0)
-            .map_or(String::new(), |y| format!("[{y}]"));
+            .map_or(String::new(), |y| format!(" [{y}]"));
 
         let title = Line::from_iter([
-            Span::from(format!(" {} ", album_title))
+            Span::from(format!(" {}", album_title))
                 .fg(theme.text_secondary)
                 .italic(),
             Span::from(year_str).fg(theme.text_muted),

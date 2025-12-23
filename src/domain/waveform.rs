@@ -8,7 +8,7 @@ use std::{
 
 const WF_LEN: usize = 500;
 const MIN_SAMPLES_PER_POINT: usize = 200; // Minimum for short files
-const MAX_SAMPLES_PER_POINT: usize = 5000; // Maximum for very long files
+const MAX_SAMPLES_PER_POINT: usize = 4000; // Maximum for very long files
 
 /// Generate a waveform using ffmpeg by piping output directly to memory
 pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {

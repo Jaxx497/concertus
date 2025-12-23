@@ -179,7 +179,7 @@ impl Database {
 
     pub(crate) fn update_play_count(&mut self, id: u64) -> Result<()> {
         let id = id.to_le_bytes();
-        self.conn.execute(UPDATE_PLAY_COUNT, params![id, 1])?;
+        self.conn.execute(UPDATE_PLAY_COUNT, params![id])?;
 
         Ok(())
     }
@@ -318,14 +318,20 @@ impl Database {
         let blob: Vec<u8> =
             self.conn
                 .query_row(GET_WAVEFORM, params![id.to_le_bytes()], |row| row.get(0))?;
-        Ok(bincode::decode_from_slice(&blob, bincode::config::standard())?.0)
+
+        let waveform = blob
+            .chunks_exact(4)
+            .map(|chunk| f32::from_le_bytes(chunk.try_into().unwrap()))
+            .collect();
+
+        Ok(waveform)
     }
 
     pub fn set_waveform(&mut self, id: u64, wf: &[f32]) -> Result<()> {
-        let serialized = bincode::encode_to_vec(wf, bincode::config::standard())?;
+        let bytes: Vec<u8> = wf.iter().flat_map(|&f| f.to_le_bytes()).collect();
 
         self.conn
-            .execute(INSERT_WAVEFORM, params![id.to_le_bytes(), serialized])?;
+            .execute(INSERT_WAVEFORM, params![id.to_le_bytes(), bytes])?;
 
         Ok(())
     }

@@ -118,9 +118,9 @@ pub const DELETE_FROM_HISTORY: &str = "
 pub const UPDATE_PLAY_COUNT: &str = "
     INSERT INTO plays 
         (song_id, count)
-    VALUES (?1, ?2)
+    VALUES (?1, 1)
     ON CONFLICT(song_id) DO UPDATE SET
-        count = count + ?2 
+        count = count + 1 
         WHERE song_id = ?1
 ";
 

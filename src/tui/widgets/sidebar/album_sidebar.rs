@@ -54,7 +54,7 @@ impl StatefulWidget for SideBarAlbum {
                 }
             }
 
-            let year = album.year.map_or("----".to_string(), |y| format!("{y}"));
+            let year = album.year.map_or("????".to_string(), |y| format!("{y}"));
             let year_color = match album_sort {
                 AlbumSort::Artist => theme.text_muted,
                 _ => theme.text_secondary,
@@ -71,10 +71,15 @@ impl StatefulWidget for SideBarAlbum {
             }
             let decorator = &state.get_decorator();
 
+            let album_title = match album.title.is_empty() {
+                true => album.artist.to_string() + " [Unknown Album]",
+                false => album.title.to_string(),
+            };
+
             list_items.push(ListItem::new(Line::from_iter([
                 Span::from(format!("{}{: >4} ", indent, year)).fg(year_color),
                 Span::from(format!("{decorator} ")).fg(theme.text_muted),
-                Span::from(album.title.as_str()).fg(theme.text_primary),
+                Span::from(album_title).fg(theme.text_primary),
             ])));
 
             current_display_idx += 1;

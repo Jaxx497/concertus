@@ -64,6 +64,7 @@ new backend options.
 - Display more song info in window (user controlled)
 - Improved testing for various formats
 - Implement a secondary backend (likely mpv) [Finally, OPUS support!!!]
+- Import/Export playlists
 
 ## Other
 
