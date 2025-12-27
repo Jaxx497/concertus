@@ -1,4 +1,4 @@
-use ratatui::style::Color;
+use ratatui::{style::Color, widgets::BorderType};
 use serde::{Deserialize, Deserializer};
 use std::str::FromStr;
 
@@ -48,8 +48,8 @@ pub struct ColorScheme {
 #[derive(Deserialize)]
 pub struct BorderScheme {
     pub border_display: String,
-    // pub border_display: Borders,
-    pub border_type: String,
+    #[serde(deserialize_with = "deserialize_border_type")]
+    pub border_type: BorderType,
 }
 
 #[derive(Deserialize)]
@@ -124,5 +124,36 @@ fn default_extras() -> ExtraScheme {
     ExtraScheme {
         is_dark: default_dark(),
         decorator: default_decorator(),
+    }
+}
+
+// Allows for case-insenstive matching
+fn deserialize_border_type<'de, D>(deserializer: D) -> Result<BorderType, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+
+    // Remove common separators and compare lowercase
+    let normalized: String = s
+        .chars()
+        .filter(|c| c.is_alphanumeric())
+        .flat_map(|c| c.to_lowercase())
+        .collect();
+
+    match normalized.as_str() {
+        "plain" => Ok(BorderType::Plain),
+        "rounded" => Ok(BorderType::Rounded),
+        "double" => Ok(BorderType::Double),
+        "thick" => Ok(BorderType::Thick),
+        "lightdoubledashed" => Ok(BorderType::LightDoubleDashed),
+        "heavydoubledashed" => Ok(BorderType::HeavyDoubleDashed),
+        "lighttripledashed" => Ok(BorderType::LightTripleDashed),
+        "heavytripledashed" => Ok(BorderType::HeavyTripleDashed),
+        "lightquadrupledashed" => Ok(BorderType::LightQuadrupleDashed),
+        "heavyquadrupledashed" => Ok(BorderType::HeavyQuadrupleDashed),
+        "quadrantinside" => Ok(BorderType::QuadrantInside),
+        "quadrantoutside" => Ok(BorderType::QuadrantOutside),
+        _ => Err(serde::de::Error::custom("Invalid variant")),
     }
 }

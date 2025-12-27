@@ -1,9 +1,11 @@
 # Concertus - v0.1.0
 
+
 Concertus is a lightweight, plug and play, TUI music player written in Rust.
 
 ![concertus.png](./docs/header.png)
 
+[![Built With Ratatui](https://ratatui.rs/built-with-ratatui/badge.svg)](https://ratatui.rs/)
 ## Usage
 
 To try Concertus, do the following:

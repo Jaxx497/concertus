@@ -67,7 +67,7 @@ progress_i          # [OPTIONAL]
                         #   ["#ff0000", "#ffffff", "#0000ff"
 
 progress_speed      = 8.0   # Defaults to 6.0 if field is not supplied.
-                            # Recommended to use an even value here.
+                            # Recommended to use a multiple of 2 for visual clarity.
                             # 0 Will disable any scrolling, negative values will reverse direction
 
 [borders]   # These fields are optional, defaults shown
@@ -76,7 +76,7 @@ border_type         = "rounded"
 
 [extras]    # These fields are optional, defaults shown
 is_dark             = true  # Defaults to true
-decorator           = "✧"   # Recommended to use a utf8 compliant character here
+decorator           = "✧"   # Recommended to use a utf8 compliant character here, strings allowed
 ```
 
 ### Acceptable Color Formats
@@ -89,12 +89,25 @@ write "none" with the quotation marks. (Certain elements may not be able to be
 rendered as transparent. Your terminal may also play a role in what can/cannot
 be transparent.)
 
-### Theme Tricks
+### Borders
 Users can create a borderless experience by setting the colors of the borders
-to the same values as the respective background panel colors. However, there is
-no way to set transparent borders. Users can also set border_display to "none",
-although this may affect the padding of some elements.
+to the same values as the respective background panel colors. Users can set
+border_display to "none", allowing for borderless displays for transparent
+themes. This may affect the padding of some elements.
 
-The same principle applies to the selection colors- Instead of a highlighted
-column, try setting the highlight color to the same color as the background,
-and the highlighted text to a distinct color. Test the results!
+As for the various border types, users can use any of the following:
+```
+Plain
+Rounded
+Double
+Thick
+LightDoubleDashed
+HeavyDoubleDashed
+LightTripleDashed
+HeavyTripleDashed
+LightQuadrupleDashed
+HeavyQuadrupleDashed
+QuadrantInside
+QuadrantOutside
+```
+

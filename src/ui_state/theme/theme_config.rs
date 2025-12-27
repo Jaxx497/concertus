@@ -1,10 +1,6 @@
 use crate::ui_state::{
     ProgressGradient,
-    theme::{
-        gradients::InactiveGradient,
-        theme_import::ThemeImport,
-        theme_utils::{parse_border_type, parse_borders},
-    },
+    theme::{gradients::InactiveGradient, theme_import::ThemeImport, theme_utils::parse_borders},
 };
 use anyhow::{Result, anyhow};
 use ratatui::{
@@ -128,7 +124,7 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
             accent_inactive,
 
             border_display: parse_borders(&config.borders.border_display),
-            border_type: parse_border_type(&config.borders.border_type),
+            border_type: config.borders.border_type,
 
             progress,
             progress_i,

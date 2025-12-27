@@ -1,8 +1,5 @@
 use anyhow::{Ok, Result, anyhow, bail};
-use ratatui::{
-    style::Color,
-    widgets::{BorderType, Borders},
-};
+use ratatui::{style::Color, widgets::Borders};
 
 pub(super) fn parse_color(s: &str) -> Result<Color> {
     match s {
@@ -61,15 +58,6 @@ pub(super) fn try_from_str(s: &str) -> Result<Color> {
         "lightmagenta" => Ok(Color::LightMagenta),
         "lightcyan" => Ok(Color::LightCyan),
         _ => Err(anyhow!("Invalid input: {}", s)),
-    }
-}
-
-pub(super) fn parse_border_type(s: &str) -> BorderType {
-    match s.trim().to_lowercase().as_str() {
-        "plain" => BorderType::Plain,
-        "double" => BorderType::Double,
-        "thick" => BorderType::Thick,
-        _ => BorderType::Rounded,
     }
 }
 

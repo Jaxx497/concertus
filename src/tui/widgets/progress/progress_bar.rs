@@ -1,7 +1,6 @@
 use crate::{domain::SongInfo, ui_state::UiState};
 use ratatui::{
     style::Stylize,
-    symbols::line,
     widgets::{Block, LineGauge, Padding, StatefulWidget, Widget},
 };
 
@@ -44,7 +43,8 @@ impl StatefulWidget for ProgressBar {
             }))
             .filled_style(fg)
             .unfilled_style(bg)
-            .line_set(line::THICK)
+            .filled_symbol("▰")
+            .unfilled_symbol("▱")
             .label("")
             .ratio(ratio as f64);
 

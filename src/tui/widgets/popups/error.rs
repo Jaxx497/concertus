@@ -1,8 +1,7 @@
 use crate::ui_state::UiState;
 use ratatui::{
-    crossterm::style::Color,
     layout::{Alignment, Constraint, Layout},
-    style::Stylize,
+    style::{Color, Stylize},
     widgets::{Block, Padding, Paragraph, StatefulWidget, Widget, Wrap},
 };
 
