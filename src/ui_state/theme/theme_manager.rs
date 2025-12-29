@@ -92,6 +92,14 @@ impl ThemeManager {
     fn set_display_theme(theme: &ThemeConfig, focused: bool) -> DisplayTheme {
         let is_dark = theme.is_dark;
 
+        let progress_played = theme.progress_played.to_owned();
+        let progress_unplayed = theme.progress_unplayed.to_owned();
+        let progress_speed = theme.progress_speed;
+        let bar_active = theme.bar_active.to_string();
+        let bar_inactive = theme.bar_inactive.to_string();
+        let waveform_style = theme.waveform_style;
+        let oscilloscope_style = theme.oscilloscope_style;
+
         match focused {
             true => DisplayTheme {
                 dark: theme.is_dark,
@@ -112,9 +120,13 @@ impl ThemeManager {
                 border_display: theme.border_display,
                 border_type: theme.border_type,
 
-                progress_complete: theme.progress.clone(),
-                progress_incomplete: theme.progress_i.clone(),
-                progress_speed: theme.progress_speed,
+                progress_played,
+                progress_unplayed,
+                progress_speed,
+                bar_active,
+                bar_inactive,
+                waveform_style,
+                oscilloscope_style,
             },
 
             false => DisplayTheme {
@@ -135,9 +147,13 @@ impl ThemeManager {
                 border_display: theme.border_display,
                 border_type: theme.border_type,
 
-                progress_complete: theme.progress.clone(),
-                progress_incomplete: theme.progress_i.clone(),
-                progress_speed: theme.progress_speed,
+                progress_played,
+                progress_unplayed,
+                progress_speed,
+                bar_active,
+                bar_inactive,
+                waveform_style,
+                oscilloscope_style,
             },
         }
     }

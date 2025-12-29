@@ -1,25 +1,13 @@
-use anyhow::{Ok, Result, anyhow, bail};
-use ratatui::{style::Color, widgets::Borders};
+use std::str::FromStr;
+
+use anyhow::{Result, anyhow};
+use ratatui::{style::Color, symbols::Marker, widgets::Borders};
 
 pub(super) fn parse_color(s: &str) -> Result<Color> {
     match s {
-        s if s.starts_with('#') => parse_hex(s),
         s if s.starts_with("rgb(") => parse_rgb(s),
-        _ => try_from_str(s.trim()),
+        _ => Ok(Color::from_str(s)?),
     }
-}
-
-pub(super) fn parse_hex(s: &str) -> Result<Color> {
-    let hex = s.trim_start_matches('#');
-    if hex.len() != 6 {
-        bail!("Invalid hex input: {s}\nExpected format\"#FF20D5\"");
-    }
-
-    let r = u8::from_str_radix(&hex[0..2], 16)?;
-    let g = u8::from_str_radix(&hex[2..4], 16)?;
-    let b = u8::from_str_radix(&hex[4..], 16)?;
-
-    Ok(Color::Rgb(r, g, b))
 }
 
 pub(super) fn parse_rgb(s: &str) -> Result<Color> {
@@ -38,32 +26,20 @@ pub(super) fn parse_rgb(s: &str) -> Result<Color> {
     ))
 }
 
-pub(super) fn try_from_str(s: &str) -> Result<Color> {
-    match s.to_lowercase().as_str() {
-        "" | "none" => Ok(Color::default()),
-        "black" => Ok(Color::Black),
-        "red" => Ok(Color::Red),
-        "green" => Ok(Color::Green),
-        "yellow" => Ok(Color::Yellow),
-        "blue" => Ok(Color::Blue),
-        "magenta" => Ok(Color::Magenta),
-        "cyan" => Ok(Color::Cyan),
-        "white" => Ok(Color::White),
-        "gray" | "grey" => Ok(Color::Gray),
-        "darkgray" | "darkgrey" => Ok(Color::DarkGray),
-        "lightred" => Ok(Color::LightRed),
-        "lightgreen" => Ok(Color::LightGreen),
-        "lightyellow" => Ok(Color::LightYellow),
-        "lightblue" => Ok(Color::LightBlue),
-        "lightmagenta" => Ok(Color::LightMagenta),
-        "lightcyan" => Ok(Color::LightCyan),
-        _ => Err(anyhow!("Invalid input: {}", s)),
-    }
-}
-
 pub(super) fn parse_borders(s: &str) -> Borders {
     match s.to_lowercase().trim() {
         "" | "none" => Borders::NONE,
         _ => Borders::ALL,
+    }
+}
+
+pub(super) fn parse_display(s: &str) -> Marker {
+    use Marker::*;
+    match s.to_lowercase().trim() {
+        "block2" | "halfblock" => HalfBlock,
+        "block4" | "quadrant" => Quadrant,
+        "block6" | "sextant" => Sextant,
+        "blocks" | "blocky" | "block8" | "octant" => Octant,
+        _ => Braille,
     }
 }

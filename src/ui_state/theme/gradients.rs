@@ -1,4 +1,4 @@
-use crate::ui_state::theme::{theme_import::ProgressGradientRaw, theme_utils::parse_color};
+use crate::ui_state::{ProgressGradientRaw, theme::theme_utils::parse_color};
 use anyhow::Result;
 use ratatui::style::Color;
 use std::sync::Arc;

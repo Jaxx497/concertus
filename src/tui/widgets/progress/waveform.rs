@@ -37,6 +37,7 @@ impl StatefulWidget for Waveform {
         Canvas::default()
             .x_bounds([0.0, wf_len as f64])
             .y_bounds([WAVEFORM_WIDGET_HEIGHT * -1.0, WAVEFORM_WIDGET_HEIGHT])
+            .marker(theme.waveform_style)
             .paint(|ctx| {
                 let elapsed = state.get_playback_elapsed().as_secs_f32();
                 let progress = elapsed / duration_f32;

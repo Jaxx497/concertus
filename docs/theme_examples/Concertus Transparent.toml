@@ -19,12 +19,13 @@ selection_inactive  = ""
 accent              = "#dcdc64"
 accent_inactive     = "#82823C"
 
-progress            = [ "#444446",
+[progress]
+elapsed             = [ "#444446",
                         "#ff4646", 
                         "#FFFFFF" ]
 
 progress_i          = "dimmed"
-progress_speed      = 2
+speed               = 2
 
 [borders]
 border_display      = "all"

@@ -19,16 +19,19 @@ selection_inactive  = "#75715E"
 accent              = "#FD971F"
 accent_inactive     = "#C57B13"
 
-
-progress            = [ "#F8F8F2",
-                        "#FD971F",
-                        "#C57B13" ]
-
-progress_i          = "still"
-
 [borders]
 border_display      = "all"
 border_type         = "rounded"
+
+[progress]            
+elapsed              = [ "#F8F8F2",
+                        "#FD971F",
+                        "#C57B13" ]
+
+unplayed            = "still"
+
+waveform_style      = "block8"
+oscilloscope_style  = "blocky"
 
 [extras]
 decorator           = "󰓏"

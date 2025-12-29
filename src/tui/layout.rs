@@ -1,5 +1,5 @@
 use crate::ui_state::{Mode, ProgressDisplay, UiState};
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Constraint, Layout, Rect};
 
 pub struct AppLayout {
     pub sidebar: Rect,
@@ -11,13 +11,12 @@ pub struct AppLayout {
 
 impl AppLayout {
     pub fn new(area: Rect, state: &mut UiState) -> Self {
-        let prog_height = if state.display_progress() {
-            match (state.get_progress_display(), area.height > 20) {
+        let prog_height = match state.display_progress() {
+            true => match (state.get_progress_display(), area.height > 20) {
                 (ProgressDisplay::Waveform | ProgressDisplay::Oscilloscope, true) => 6,
                 _ => 3,
-            }
-        } else {
-            0
+            },
+            false => 0,
         };
 
         let search_height = match state.get_mode() == Mode::Search {
@@ -33,28 +32,23 @@ impl AppLayout {
             false => 0,
         };
 
-        let [upper_block, progress_bar, buffer_line] = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Min(16),
-                Constraint::Length(prog_height),
-                Constraint::Length(buffer_line_height),
-            ])
-            .areas(area);
+        let [upper_block, progress_bar, buffer_line] = Layout::vertical([
+            Constraint::Min(16),
+            Constraint::Length(prog_height),
+            Constraint::Length(buffer_line_height),
+        ])
+        .areas(area);
 
-        let [sidebar, _, upper_block] = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Percentage(state.display_state.sidebar_percent),
-                Constraint::Length(0),
-                Constraint::Fill(1),
-            ])
-            .areas(upper_block);
+        let [sidebar, _, upper_block] = Layout::horizontal([
+            Constraint::Percentage(state.display_state.sidebar_percent),
+            Constraint::Length(0),
+            Constraint::Fill(1),
+        ])
+        .areas(upper_block);
 
-        let [search_bar, song_window] = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(search_height), Constraint::Fill(100)])
-            .areas(upper_block);
+        let [search_bar, song_window] =
+            Layout::vertical([Constraint::Length(search_height), Constraint::Fill(100)])
+                .areas(upper_block);
 
         AppLayout {
             sidebar,

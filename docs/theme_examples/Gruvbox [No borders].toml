@@ -19,13 +19,20 @@ selection_inactive  = "#7c6f64"
 accent              = "#83a598"
 accent_inactive     = "#6a7d76"
 
-progress            = ["#fabd2f", "#fb4934", "#fdf6f8"]
-# progress_i          = "still"
-progress_speed      = 6
-
 [borders]
 border_display      = "none"
 border_type         = "rounded"
+
+[progress]
+elapsed             = ["#fabd2f", "#fb4934", "#fdf6f8"]
+unplayed            = "dimmed"
+speed               = 6
+
+bar_elapsed         = "▰"
+bar_unplayed        = "▱"
+
+waveform_style      = "block8"
+oscilloscope_style  = "block8"
 
 [extras]
 decorator           = "󰯆"

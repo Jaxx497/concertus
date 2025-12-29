@@ -1,35 +1,32 @@
 [colors]
-surface_global      = "#0a0a0d"
-surface_active      = "#19191c"
-surface_inactive    = "#0a0a0d"
-surface_error       = "#e03e3e"
+surface_global      = "#f6e9ec"
+surface_active      = "#fdf6f8"
+surface_inactive    = "#f6e9ec"
+surface_error       = "#d14d4d"
 
-text_primary        = "#d2d2d7"
-text_secondary      = "#ff4646"
-text_secondary_in   = "#a62e2e"
-text_selection      = "#0a0a0d"
-text_muted          = "#646468"
+text_primary        = "#4a2f33"
+text_secondary      = "#d45a8a"  
+text_secondary_in   = "#e989a9"
+text_selection      = "#fdf6f8"
+text_muted          = "#B3B3B6"
 
-border_active       = "#dcdc64"
-border_inactive     = "#0a0a0d"
+border_active       = "#d45a8a" 
+border_inactive     = "#f8dbe4" 
 
-selection           = "#dcdc64"
-selection_inactive  = "#82823C"
+selection           = "#d45a8a" 
+selection_inactive  = "#e989a9" 
 
-accent              = "#dcdc64"
-accent_inactive     = "#82823C"
+accent              = "#3E3D32"
+accent_inactive     = ""
 
-progress            = [ "#444446", 
-                        "#ff4646", 
-                        "#d2d2d7" ]
-
-progress_speed      = 2
+progress            = ["#d45a8a", "#e989a9"]
+progress_i          = "dimmed"
+progress_speed      = 1 
 
 [borders]
 border_display      = "all"
 border_type         = "rounded"
 
 [extras]
-is_dark             = true
-decorator           = "☆"
-
+is_dark             = false
+decorator           = "󱁂"

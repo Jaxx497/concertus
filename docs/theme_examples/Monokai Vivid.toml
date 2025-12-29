@@ -13,22 +13,23 @@ text_muted          = "#888888"
 border_active       = "#00ff41"
 border_inactive     = "#6e8e5c"
 
-# selection           = "#a9dc76"
-# selection_inactive  = "#6e8e5c"
-
 selection           = "#00ff41"
 selection_inactive  = "#00a329"
 
 accent              = "#00ff41"
 accent_inactive     = "#00a329"
 
-progress            =  [ "#ffffff",
+[borders]
+border_display      = "all"
+border_type         = "Plain"
+
+[progress]
+elapsed             =  [ "#ffffff",
                          "#00ff41",
                          "#ffffff" ]
 
-[borders]
-border_display      = "all"
-border_type         = "plain"
+bar_elapsed         = "▰"
+bar_unplayed        = "▱"
 
 [extras]
 decorator           = ""

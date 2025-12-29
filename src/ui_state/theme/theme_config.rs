@@ -1,10 +1,14 @@
 use crate::ui_state::{
-    ProgressGradient,
-    theme::{gradients::InactiveGradient, theme_import::ThemeImport, theme_utils::parse_borders},
+    ProgressGradient, ThemeImport,
+    theme::{
+        gradients::InactiveGradient,
+        theme_utils::{parse_borders, parse_display},
+    },
 };
 use anyhow::{Result, anyhow};
 use ratatui::{
     style::Color,
+    symbols::Marker,
     widgets::{BorderType, Borders},
 };
 use std::{path::Path, rc::Rc, sync::Arc};
@@ -43,9 +47,14 @@ pub struct ThemeConfig {
     pub border_display: Borders,
     pub border_type: BorderType,
 
-    pub progress: ProgressGradient,
-    pub progress_i: InactiveGradient,
+    // Progress Displays
+    pub progress_played: ProgressGradient,
+    pub progress_unplayed: InactiveGradient,
     pub progress_speed: f32,
+    pub bar_active: String,
+    pub bar_inactive: String,
+    pub waveform_style: Marker,
+    pub oscilloscope_style: Marker,
 
     pub decorator: Rc<String>,
 }
@@ -72,6 +81,7 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
 
     fn try_from(config: &ThemeImport) -> anyhow::Result<Self> {
         let colors = &config.colors;
+        let progress = &config.progress;
 
         let surface_global = *colors.surface_global;
         let surface_active = *colors.surface_active;
@@ -93,9 +103,17 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
         let selection = *colors.selection;
         let selection_inactive = *colors.selection_inactive;
 
-        let progress = ProgressGradient::from_raw(&colors.progress)?;
-        let progress_i = InactiveGradient::from_raw(&colors.progress_i)?;
-        let progress_speed = colors.progress_speed / -10.0;
+        let border_display = parse_borders(&config.borders.border_display);
+
+        let progress_played = ProgressGradient::from_raw(&progress.elapsed)?;
+        let progress_unplayed = InactiveGradient::from_raw(&progress.unplayed)?;
+        let progress_speed = progress.speed / -10.0;
+
+        let bar_active = progress.bar_elapsed.to_owned();
+        let bar_inactive = progress.bar_unplayed.to_owned();
+
+        let waveform_style = parse_display(&progress.waveform_style);
+        let oscilloscope_style = parse_display(&progress.oscilloscope_style);
 
         let decorator = Rc::from(config.extras.decorator.to_owned());
         let is_dark = config.extras.is_dark;
@@ -123,12 +141,17 @@ impl TryFrom<&ThemeImport> for ThemeConfig {
             accent,
             accent_inactive,
 
-            border_display: parse_borders(&config.borders.border_display),
+            border_display,
             border_type: config.borders.border_type,
 
-            progress,
-            progress_i,
+            progress_played,
+            progress_unplayed,
             progress_speed,
+
+            bar_active,
+            bar_inactive,
+            waveform_style,
+            oscilloscope_style,
 
             decorator,
             is_dark,
@@ -167,9 +190,18 @@ impl Default for ThemeConfig {
             border_display: Borders::ALL,
             border_type: BorderType::Rounded,
 
-            progress: ProgressGradient::Gradient(Arc::from([DARK_WHITE, GOOD_RED_DARK, DARK_GRAY])),
-            progress_i: InactiveGradient::Dimmed,
-            progress_speed: 2.0,
+            progress_played: ProgressGradient::Gradient(Arc::from([
+                DARK_WHITE,
+                GOOD_RED_DARK,
+                DARK_GRAY,
+            ])),
+            progress_unplayed: InactiveGradient::Dimmed,
+            progress_speed: 6.0,
+
+            bar_active: "━".to_string(),
+            bar_inactive: "─".to_string(),
+            waveform_style: Marker::Braille,
+            oscilloscope_style: Marker::Braille,
 
             decorator: Rc::from("✧".to_string()),
         }

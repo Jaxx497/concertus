@@ -43,8 +43,8 @@ impl StatefulWidget for ProgressBar {
             }))
             .filled_style(fg)
             .unfilled_style(bg)
-            .filled_symbol("▰")
-            .unfilled_symbol("▱")
+            .filled_symbol(&theme.bar_active)
+            .unfilled_symbol(&theme.bar_inactive)
             .label("")
             .ratio(ratio as f64);
 

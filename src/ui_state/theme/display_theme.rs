@@ -9,6 +9,7 @@ use crate::ui_state::{
 };
 use ratatui::{
     style::Color,
+    symbols::Marker,
     widgets::{BorderType, Borders},
 };
 
@@ -30,9 +31,14 @@ pub struct DisplayTheme {
     pub border_display: Borders,
     pub border_type: BorderType,
 
-    pub progress_complete: ProgressGradient,
-    pub progress_incomplete: InactiveGradient,
+    pub progress_played: ProgressGradient,
+    pub progress_unplayed: InactiveGradient,
     pub progress_speed: f32,
+
+    pub bar_active: String,
+    pub bar_inactive: String,
+    pub waveform_style: Marker,
+    pub oscilloscope_style: Marker,
 }
 
 impl UiState {
@@ -43,7 +49,7 @@ impl UiState {
 
 impl DisplayTheme {
     pub fn get_focused_color(&self, position: f32, time: f32) -> Color {
-        match &self.progress_complete {
+        match &self.progress_played {
             ProgressGradient::Static(c) => *c,
             ProgressGradient::Gradient(g) => {
                 get_gradient_color(&g, position, time * self.progress_speed)
@@ -52,13 +58,13 @@ impl DisplayTheme {
     }
 
     pub fn get_inactive_color(&self, position: f32, time: f32, amp: f32) -> Color {
-        let brightness = match &self.progress_complete {
+        let brightness = match &self.progress_played {
             ProgressGradient::Static(_) => 0.4,
             ProgressGradient::Gradient(g) if g.len() == 1 => 0.4,
             _ => 0.08 + (amp * 0.4),
         };
 
-        match &self.progress_incomplete {
+        match &self.progress_unplayed {
             InactiveGradient::Static(c) => *c,
             InactiveGradient::Gradient(g) => {
                 get_gradient_color(g, position, time * self.progress_speed)

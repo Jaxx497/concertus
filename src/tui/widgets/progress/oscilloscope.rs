@@ -35,6 +35,7 @@ impl StatefulWidget for Oscilloscope {
         Canvas::default()
             .x_bounds([0.0, samples.len() as f64])
             .y_bounds([-1.0, 1.0])
+            .marker(theme.oscilloscope_style)
             .paint(|ctx| {
                 draw_oscilloscope(ctx, &samples, elapsed, &theme);
             })
