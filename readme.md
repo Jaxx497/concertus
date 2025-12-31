@@ -52,20 +52,31 @@ that users ensure their libraries are properly tagged with a tool like
 ## Known bugs
 
 1. Symphonia/Rodio Related*
-    1. There are no reliable Rodio compatible OPUS decoders.
+    1. There are no reliable rust based OPUS decoders.
     1. Seeking can be potentially unstable.
-    1. Gapless playback is not viable for the time being.
+    1. Gapless playback is not viable.
 
 > **Note:** This project is heavily reliant on the Symphonia and Rodio crates.
 Many of the playback related issues are due to upstream issues in the
-aforementioned libraries. Following several QOL additons, I intend to explore
-new backend options. 
+aforementioned libraries. 
+
+## Current Development Objective
+Replace rodio with a custom rust-based backend (cpal & symphonia). This should
+achieve the following: 
+
+1. Reduce the overall dependency count & binary size
+1. Allow for truly gapless playback
+1. Optimize playback for concertus
+1. Use more up-to-date cpal/symphonia code
+
+Following the successful implementation of a custom backend, I will experiement
+with a 3rd party backend, likely utilizing libmpv.
 
 ## TODO 
 
-- Display more song info in window (user controlled)
-- Improved testing for various formats
 - Implement a secondary backend (likely mpv) [Finally, OPUS support!!!]
+- Improved testing for various formats
+- Display more song info in window (user controlled)
 - Import/Export playlists
 
 ## Other

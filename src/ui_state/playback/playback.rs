@@ -1,10 +1,9 @@
 use crate::{
-    domain::{QueueSong, SimpleSong, SongDatabase, SongInfo},
+    domain::{QueueSong, SimpleSong, SongInfo},
     player::{PlaybackState, PlayerState},
-    strip_win_prefix,
     ui_state::{LibraryView, Mode, UiState},
 };
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Result};
 use rand::seq::SliceRandom;
 use std::{
     collections::{HashSet, VecDeque},
@@ -90,7 +89,7 @@ impl UiState {
             None => self.get_selected_song()?,
         };
 
-        let queue_song = self.make_playable_song(&simple_song)?;
+        let queue_song = QueueSong::from_simple_song(&simple_song)?;
         self.playback.queue_push_back(queue_song);
         Ok(())
     }
@@ -222,20 +221,6 @@ impl UiState {
         if let Some(e) = error {
             self.set_error(e);
         }
-    }
-
-    pub fn make_playable_song(&mut self, song: &Arc<SimpleSong>) -> Result<Arc<QueueSong>> {
-        let path = song.get_path()?;
-
-        std::fs::metadata(&path).context(anyhow!(
-            "Invalid file path!\n\nUnable to find: \"{}\"",
-            strip_win_prefix(&path)
-        ))?;
-
-        Ok(Arc::new(QueueSong {
-            meta: Arc::clone(&song),
-            path,
-        }))
     }
 
     pub fn shuffle_queue(&mut self) {

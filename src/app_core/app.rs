@@ -1,25 +1,25 @@
 use crate::{
-    Library,
     app_core::LibraryRefreshProgress,
-    domain::{QueueSong, SongDatabase, SongInfo, generate_waveform},
+    domain::{generate_waveform, QueueSong, SongDatabase, SongInfo},
     key_handler::{self},
     overwrite_line,
     player::{PlaybackState, PlayerController},
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
+    Library,
 };
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use ratatui::crossterm::{
-    ExecutableCommand,
     event::{
         DisableBracketedPaste, EnableBracketedPaste, Event, KeyEventKind, KeyboardEnhancementFlags,
         PushKeyboardEnhancementFlags,
     },
+    ExecutableCommand,
 };
 use std::{
     sync::{
-        Arc, Mutex,
         mpsc::{self, Receiver},
+        Arc, Mutex,
     },
     thread,
     time::Instant,
@@ -74,14 +74,12 @@ impl Concertus {
 
         // MAIN ROUTINE
         loop {
-            self.ui.update_player_state(self.player.get_shared_state());
+            let player_state = self.player.get_shared_state();
+            self.ui.update_player_state(Arc::clone(&player_state));
 
             // Check for user input
             match key_handler::next_event()? {
                 Some(Event::Key(key)) if key.kind == KeyEventKind::Press => {
-                    // if !self.ui.is_text_input_active() && key_handler::is_likely_paste() {
-                    //     continue;
-                    // }
                     if let Some(action) = key_handler::handle_key_event(key, &self.ui) {
                         if let Err(e) = self.handle_action(action) {
                             self.ui.set_error(e);
@@ -179,7 +177,7 @@ impl Concertus {
             self.ui.remove_song()?;
         }
 
-        let queue_song = self.ui.make_playable_song(&song)?;
+        let queue_song = QueueSong::from_simple_song(&song)?;
 
         self.ui.add_to_history(Arc::clone(&song));
         self.play_song(queue_song)
@@ -202,10 +200,10 @@ impl Concertus {
         match self.ui.get_prev_song() {
             Some(prev) => {
                 if let Some(now_playing) = self.ui.get_now_playing() {
-                    let queue_song = self.ui.make_playable_song(&now_playing)?;
+                    let queue_song = QueueSong::from_simple_song(&now_playing)?;
                     self.ui.playback.queue_push_front(queue_song);
                 }
-                let queue_song = self.ui.make_playable_song(&prev)?;
+                let queue_song = QueueSong::from_simple_song(&prev)?;
                 self.play_song(queue_song)?;
             }
             None => self.ui.set_error(anyhow!("End of history!")),
@@ -266,7 +264,6 @@ impl Concertus {
     }
 
     pub(crate) fn update_library(&mut self) -> Result<()> {
-        // Don't start another refresh if one is already in progress
         if self.library_refresh_rec.is_some() {
             return Ok(());
         }

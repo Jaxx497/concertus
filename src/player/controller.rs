@@ -46,6 +46,7 @@ impl PlayerController {
                         }
                         PlayerCommand::SeekBack(secs) => player.seek_back(secs),
                         PlayerCommand::Stop => player.stop(),
+                        PlayerCommand::Queue(_) => {}
                     };
                 }
 

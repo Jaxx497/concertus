@@ -1,11 +1,30 @@
 use super::{SimpleSong, SongInfo};
-use crate::{Database, domain::SongDatabase, get_readable_duration};
+use crate::strip_win_prefix;
+use crate::{domain::SongDatabase, get_readable_duration, Database};
+use anyhow::anyhow;
+use anyhow::Context;
 use anyhow::Result;
 use std::{sync::Arc, time::Duration};
 
 pub struct QueueSong {
     pub meta: Arc<SimpleSong>,
     pub path: String,
+}
+
+impl QueueSong {
+    pub fn from_simple_song(song: &Arc<SimpleSong>) -> Result<Arc<Self>> {
+        let path = song.get_path()?;
+
+        std::fs::metadata(&path).context(anyhow!(
+            "Invalid file path!\n\nUnable to find: \"{}\"",
+            strip_win_prefix(&path)
+        ))?;
+
+        Ok(Arc::new(QueueSong {
+            meta: Arc::clone(&song),
+            path,
+        }))
+    }
 }
 
 impl SongInfo for QueueSong {
@@ -41,8 +60,7 @@ impl SongInfo for QueueSong {
 impl SongDatabase for QueueSong {
     /// Returns the path of a song as a String
     fn get_path(&self) -> Result<String> {
-        let mut db = Database::open()?;
-        db.get_song_path(self.meta.id)
+        Ok(self.path.clone())
     }
 
     /// Update the play_count of the song

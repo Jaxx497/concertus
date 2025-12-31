@@ -33,8 +33,8 @@ impl StatefulWidget for Timer {
 
             Text::from(elapsed_str)
                 .fg(text_color)
-                .right_aligned()
-                .render(Rect::new(2, y_pos, DUR_WIDTH, 1), buf);
+                .left_aligned()
+                .render(Rect::new(3, y_pos, DUR_WIDTH, 1), buf);
 
             Text::from(duration_str)
                 .fg(text_color)

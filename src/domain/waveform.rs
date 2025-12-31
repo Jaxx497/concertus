@@ -90,7 +90,7 @@ fn extract_waveform_data<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
             "-",
         ])
         .output()
-        .context("Failed to execute ffmpeg. Is it installed and in your PATH?")?;
+        .context("Failed to execute ffmpeg. Is it installed and in your `PATH`?")?;
 
     // Check for errors
     if !output.status.success() {

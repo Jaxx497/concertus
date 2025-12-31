@@ -1,3 +1,5 @@
+use std::process::{self, Command};
+
 use crate::{
     domain::smooth_waveform,
     key_handler::MoveDirection,
@@ -67,7 +69,19 @@ impl UiState {
         self.playback_view.progress_display = match display {
             ProgressDisplay::Waveform => match !self.waveform_is_valid() {
                 true => {
-                    self.set_error(anyhow!("Invalid waveform! \nFallback to Oscilloscope"));
+                    match Command::new("ffmpeg")
+                        .arg("-version")
+                        .stdout(process::Stdio::null())
+                        .stderr(process::Stdio::null())
+                        .status()
+                    {
+                        Ok(_) => {
+                            self.set_error(anyhow!("Invalid waveform! \nFallback to Oscilloscope"))
+                        }
+                        Err(_) => self.set_error(anyhow!(
+                            "Failed to execute FFMPEG.\nIs it installed and in your `PATH`?"
+                        )),
+                    }
                     ProgressDisplay::Oscilloscope
                 }
                 false => display,

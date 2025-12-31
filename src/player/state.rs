@@ -1,9 +1,13 @@
-use crate::{domain::SimpleSong, player::OSCILLO_BUFFER_CAPACITY};
+use crate::{
+    domain::{QueueSong, SimpleSong},
+    player::OSCILLO_BUFFER_CAPACITY,
+};
 use anyhow::Error;
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 
 pub struct PlayerState {
     pub now_playing: Option<Arc<SimpleSong>>,
+    pub queued: Option<Arc<QueueSong>>,
     pub state: PlaybackState,
     pub elapsed: Duration,
     pub oscilloscope_buffer: VecDeque<f32>,
@@ -20,6 +24,7 @@ impl Default for PlayerState {
         PlayerState {
             state: PlaybackState::Stopped,
             now_playing: None,
+            queued: None,
             elapsed: Duration::default(),
             oscilloscope_buffer: VecDeque::with_capacity(OSCILLO_BUFFER_CAPACITY),
 
