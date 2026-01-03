@@ -3,7 +3,7 @@ use std::process::{self, Command};
 use crate::{
     domain::smooth_waveform,
     key_handler::MoveDirection,
-    player::PlaybackState,
+    player2::PlaybackState,
     ui_state::{ProgressDisplay, UiState},
 };
 use anyhow::anyhow;
@@ -44,8 +44,7 @@ impl UiState {
     }
 
     pub fn display_progress(&self) -> bool {
-        let state = self.playback.player_state.lock().unwrap();
-        state.state != PlaybackState::Stopped || !self.queue_is_empty()
+        self.playback.metrics.get_state() != PlaybackState::Stopped || !self.queue_is_empty()
     }
 
     pub fn set_waveform_valid(&mut self) {
@@ -91,11 +90,8 @@ impl UiState {
         }
     }
 
-    pub fn get_oscilloscope_data(&self) -> Vec<f32> {
-        match self.playback.player_state.lock() {
-            Ok(state) => state.oscilloscope_buffer.iter().copied().collect(),
-            Err(_) => Vec::new(),
-        }
+    pub fn get_tapped_samples(&self) -> Vec<f32> {
+        self.playback.metrics.drain_samples()
     }
 
     pub fn next_progress_display(&mut self) {

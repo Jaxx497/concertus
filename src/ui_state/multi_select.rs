@@ -3,7 +3,7 @@ use crate::{
     key_handler::{Director, MoveDirection},
     ui_state::{LibraryView, Mode, Pane, UiState},
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use indexmap::IndexSet;
 use rand::seq::SliceRandom;
 use std::sync::Arc;
@@ -217,6 +217,7 @@ impl UiState {
         if shuffle {
             songs.shuffle(&mut rand::rng());
         }
+
         for song in songs {
             self.add_to_queue_single(Some(song))?;
         }

@@ -1,10 +1,10 @@
 use crate::{
-    REFRESH_RATE,
     app_core::Concertus,
     key_handler::*,
     ui_state::{
         LibraryView, Mode, Pane, PlaylistAction, PopupType, ProgressDisplay, SettingsMode, UiState,
     },
+    REFRESH_RATE,
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -202,6 +202,7 @@ fn handle_search_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
         (_, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
         (_, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
+        (C, Enter) | (S, Enter) => None,
         (_, Char(x)) if ILLEGAL_CHARS.contains(&x) => None,
 
         _ => Some(Action::UpdateSearch(*key)),
@@ -357,7 +358,7 @@ impl Concertus {
             Action::DeletePlaylistConfirm => self.ui.delete_playlist()?,
 
             // Queue
-            Action::QueueSong       => self.ui.queue_song(None)?,
+            Action::QueueSong       => self.queue_song(None)?,
             Action::QueueEntity     => self.ui.add_to_queue_multi(false)?,
             Action::ShuffleEntity   => self.ui.add_to_queue_multi(true)?,
             Action::RemoveSong      => self.ui.remove_song()?,

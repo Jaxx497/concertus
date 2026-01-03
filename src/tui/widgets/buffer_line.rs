@@ -65,7 +65,8 @@ const MIN_TITLE_LEN: usize = 20;
 const MIN_ARTIST_LEN: usize = 15;
 
 fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
-    let song = state.get_now_playing()?;
+    // let song = state.get_now_playing()?;
+    let song = state.get_now_playing().as_ref()?;
     let decorator = &state.get_decorator();
 
     let separator = match state.is_paused() {

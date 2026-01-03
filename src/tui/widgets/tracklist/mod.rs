@@ -12,11 +12,11 @@ pub use generic_tracklist::GenericView;
 pub use search_results::StandardTable;
 
 use crate::{
-    DurationStyle,
     domain::{SimpleSong, SongInfo},
     get_readable_duration, truncate_at_last_space,
     tui::widgets::{MUSIC_NOTE, QUEUED},
     ui_state::{DisplayTheme, LibraryView, Mode, Pane, UiState},
+    DurationStyle,
 };
 use ratatui::{
     layout::{Alignment, Constraint, Flex, Rect},
@@ -124,7 +124,7 @@ impl CellFactory {
         let focus = matches!(state.get_pane(), Pane::TrackList);
         let theme = state.theme_manager.get_display_theme(focus);
 
-        let is_playing = state.get_now_playing().map(|s| s.id) == Some(song.id);
+        let is_playing = state.get_now_playing().as_ref().map(|s| s.id) == Some(song.id);
         let is_queued = state.playback.queue_ids.contains(&song.id);
 
         Cell::from(if is_playing {

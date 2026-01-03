@@ -1,11 +1,11 @@
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use indexmap::IndexMap;
 use nohash_hasher::BuildNoHashHasher;
 use ratatui::crossterm::{
-    ExecutableCommand,
     cursor::MoveToColumn,
     style::Print,
     terminal::{Clear, ClearType},
+    ExecutableCommand,
 };
 use std::{
     fs,
@@ -24,6 +24,7 @@ pub mod domain;
 pub mod key_handler;
 pub mod library;
 pub mod player;
+pub mod player2;
 pub mod tui;
 pub mod ui_state;
 

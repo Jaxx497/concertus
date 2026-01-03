@@ -17,7 +17,7 @@ pub const OSCILLO_BUFFER_CAPACITY: usize = 2048;
 
 pub enum PlayerCommand {
     Play(Arc<QueueSong>),
-    Queue(Arc<QueueSong>),
+    Queue(Option<Arc<QueueSong>>),
     TogglePlayback,
     SeekForward(usize),
     SeekBack(usize),

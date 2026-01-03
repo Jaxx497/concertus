@@ -1,13 +1,14 @@
 use crate::{
-    CONFIG_DIRECTORY, DATABASE_FILENAME, SongMap,
+    database::tables::CREATE_TABLES,
     domain::{LongSong, SimpleSong, SongInfo},
+    SongMap, CONFIG_DIRECTORY, DATABASE_FILENAME,
 };
 use anyhow::Result;
 use queries::*;
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
-    fs,
+    fs::{self},
     path::PathBuf,
     sync::Arc,
     time::{Duration, UNIX_EPOCH},
@@ -53,7 +54,7 @@ impl Database {
 
     fn create_tables(&mut self) -> Result<()> {
         let tx = self.conn.transaction()?;
-        tx.execute_batch(tables::CREATE_TABLES)?;
+        tx.execute_batch(&CREATE_TABLES)?;
         tx.commit()?;
 
         Ok(())

@@ -20,7 +20,7 @@ impl StatefulWidget for Progress {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        if state.get_now_playing().is_some() {
+        if state.get_now_playing().as_ref().is_some() {
             Timer.render(area, buf, state);
             match &state.get_progress_display() {
                 ProgressDisplay::ProgressBar => ProgressBar.render(area, buf, state),

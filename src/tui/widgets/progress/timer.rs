@@ -1,4 +1,5 @@
 use crate::{
+    get_readable_duration,
     tui::widgets::DUR_WIDTH,
     ui_state::{ProgressDisplay, UiState},
 };
@@ -26,20 +27,21 @@ impl StatefulWidget for Timer {
         };
 
         let text_color = state.theme_manager.active.text_muted;
-        let player_state = state.playback.player_state.lock().unwrap();
-        {
-            let elapsed_str = player_state.elapsed_display.as_str();
-            let duration_str = player_state.duration_display.as_str();
 
-            Text::from(elapsed_str)
-                .fg(text_color)
-                .left_aligned()
-                .render(Rect::new(3, y_pos, DUR_WIDTH, 1), buf);
+        let elapsed = state.playback.metrics.get_elapsed();
+        let elapsed_str = get_readable_duration(elapsed, crate::DurationStyle::Compact);
 
-            Text::from(duration_str)
-                .fg(text_color)
-                .right_aligned()
-                .render(Rect::new(x_pos, y_pos, DUR_WIDTH, 1), buf);
-        }
+        let duration = state.playback.now_playing.as_ref().unwrap().duration;
+        let duration_str = get_readable_duration(duration, crate::DurationStyle::Compact);
+
+        Text::from(elapsed_str)
+            .fg(text_color)
+            .left_aligned()
+            .render(Rect::new(3, y_pos, DUR_WIDTH, 1), buf);
+
+        Text::from(duration_str)
+            .fg(text_color)
+            .right_aligned()
+            .render(Rect::new(x_pos, y_pos, DUR_WIDTH, 1), buf);
     }
 }

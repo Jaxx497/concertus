@@ -1,17 +1,17 @@
-use super::{DisplayState, playback::PlaybackCoordinator, search_state::SearchState};
+use super::{playback::PlaybackCoordinator, search_state::SearchState, DisplayState};
 use crate::{
-    Library,
     database::DbWorker,
     domain::{Album, Playlist, SimpleSong},
     key_handler::InputContext,
-    player::PlayerState,
+    player2::PlaybackMetrics,
     ui_state::{
-        LibraryView, Mode, Pane, PlaybackView, PlaylistAction, SettingsMode, ThemeManager,
         popup::{PopupState, PopupType},
+        LibraryView, Mode, Pane, PlaybackView, PlaylistAction, SettingsMode, ThemeManager,
     },
+    Library,
 };
 use anyhow::{Error, Result};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 pub struct UiState {
     // Backend Modules
@@ -36,14 +36,14 @@ pub struct UiState {
 }
 
 impl UiState {
-    pub fn new(library: Arc<Library>, player_state: Arc<Mutex<PlayerState>>) -> Self {
+    pub fn new(library: Arc<Library>, metrics: Arc<PlaybackMetrics>) -> Self {
         UiState {
             library,
             db_worker: DbWorker::new()
                 .expect("Could not establish connection to database for UiState!"),
             search: SearchState::new(),
             display_state: DisplayState::new(),
-            playback: PlaybackCoordinator::new(player_state),
+            playback: PlaybackCoordinator::new(metrics),
             playback_view: PlaybackView::new(),
             popup: PopupState::new(),
             theme_manager: ThemeManager::new(),

@@ -1,13 +1,13 @@
 use crate::{
     domain::{QueueSong, SimpleSong, SongInfo},
-    player::{PlaybackState, PlayerState},
+    player2::{PlaybackMetrics, PlaybackState},
     ui_state::{LibraryView, Mode, UiState},
 };
 use anyhow::{anyhow, Result};
 use rand::seq::SliceRandom;
 use std::{
     collections::{HashSet, VecDeque},
-    sync::{Arc, Mutex},
+    sync::Arc,
     time::Duration,
 };
 
@@ -17,16 +17,18 @@ pub struct PlaybackCoordinator {
     pub queue: VecDeque<Arc<QueueSong>>,
     pub queue_ids: HashSet<u64>,
     pub history: VecDeque<Arc<SimpleSong>>,
-    pub player_state: Arc<Mutex<PlayerState>>,
+    pub metrics: Arc<PlaybackMetrics>,
+    pub now_playing: Option<Arc<SimpleSong>>,
 }
 
 impl PlaybackCoordinator {
-    pub fn new(player_state: Arc<Mutex<PlayerState>>) -> Self {
+    pub fn new(metrics: Arc<PlaybackMetrics>) -> Self {
         PlaybackCoordinator {
             queue: VecDeque::new(),
             queue_ids: HashSet::new(),
             history: VecDeque::new(),
-            player_state,
+            metrics,
+            now_playing: None,
         }
     }
 
@@ -95,12 +97,6 @@ impl UiState {
     }
 
     pub(crate) fn add_to_history(&mut self, song: Arc<SimpleSong>) {
-        if let Some(last) = self.playback.history.front() {
-            if last.id == song.id {
-                return;
-            }
-        }
-
         self.playback.history.push_front(song);
         while self.playback.history.len() > HISTORY_CAPACITY {
             self.playback.history.pop_back();
@@ -112,8 +108,8 @@ impl UiState {
         self.playback.history = self.db_worker.import_history(song_map).unwrap_or_default();
     }
 
-    pub fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {
-        self.playback.queue.front().map(|q| &q.meta)
+    pub fn peek_queue(&self) -> Option<&Arc<QueueSong>> {
+        self.playback.queue.front()
     }
 
     pub fn get_prev_song(&mut self) -> Option<Arc<SimpleSong>> {
@@ -179,48 +175,28 @@ impl UiState {
 //   PlayerState
 // =============
 impl UiState {
-    pub fn update_player_state(&mut self, player_state: Arc<Mutex<PlayerState>>) {
-        self.playback.player_state = player_state;
-        self.check_player_error();
-    }
-
     pub(crate) fn is_paused(&self) -> bool {
-        let state = self.playback.player_state.lock().unwrap();
-        state.state == PlaybackState::Paused
+        self.playback.metrics.is_paused()
     }
 
-    pub fn get_now_playing(&self) -> Option<Arc<SimpleSong>> {
-        let state = self.playback.player_state.lock().unwrap();
-        state.now_playing.clone()
+    pub fn set_now_playing(&mut self, song: Option<Arc<SimpleSong>>) {
+        self.playback.now_playing = song
+    }
+
+    pub fn get_now_playing(&self) -> &Option<Arc<SimpleSong>> {
+        &self.playback.now_playing
     }
 
     pub fn set_playback_state(&mut self, playback: PlaybackState) {
-        let mut state = self.playback.player_state.lock().unwrap();
-        state.state = playback
+        self.playback.metrics.set_playback_state(playback);
     }
 
     pub fn get_playback_elapsed(&self) -> Duration {
-        let state = self.playback.player_state.lock().unwrap();
-        state.elapsed
+        self.playback.metrics.get_elapsed()
     }
 
     pub fn is_playing(&self) -> bool {
-        let state = self.playback.player_state.lock().unwrap();
-        state.state != PlaybackState::Stopped
-    }
-
-    fn check_player_error(&mut self) {
-        let error = self
-            .playback
-            .player_state
-            .lock()
-            .unwrap()
-            .player_error
-            .take();
-
-        if let Some(e) = error {
-            self.set_error(e);
-        }
+        self.playback.metrics.get_state() == PlaybackState::Playing
     }
 
     pub fn shuffle_queue(&mut self) {

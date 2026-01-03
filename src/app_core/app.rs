@@ -1,9 +1,9 @@
 use crate::{
     app_core::LibraryRefreshProgress,
-    domain::{generate_waveform, QueueSong, SongDatabase, SongInfo},
+    domain::{generate_waveform, QueueSong, SimpleSong, SongDatabase, SongInfo},
     key_handler::{self},
     overwrite_line,
-    player::{PlaybackState, PlayerController},
+    player2::{PlaybackState, PlayerEvent, PlayerHandle},
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
     Library,
@@ -19,7 +19,7 @@ use ratatui::crossterm::{
 use std::{
     sync::{
         mpsc::{self, Receiver},
-        Arc, Mutex,
+        Arc,
     },
     thread,
     time::Instant,
@@ -29,7 +29,7 @@ pub struct Concertus {
     _initializer: Instant,
     library: Arc<Library>,
     pub(crate) ui: UiState,
-    pub(crate) player: PlayerController,
+    pub(crate) player: PlayerHandle,
     waveform_rec: Option<Receiver<Result<Vec<f32>>>>,
     library_refresh_rec: Option<Receiver<LibraryRefreshProgress>>,
 }
@@ -40,14 +40,14 @@ impl Concertus {
         let lib = Arc::new(lib);
         let lib_clone = Arc::clone(&lib);
 
-        let shared_state = Arc::new(Mutex::new(crate::player::PlayerState::default()));
-        let shared_state_clone = Arc::clone(&shared_state);
+        let player = PlayerHandle::spawn();
+        let metrics = player.metrics();
 
         Concertus {
             _initializer: Instant::now(),
             library: lib,
-            player: PlayerController::new(),
-            ui: UiState::new(lib_clone, shared_state_clone),
+            player,
+            ui: UiState::new(lib_clone, metrics),
             waveform_rec: None,
             library_refresh_rec: None,
         }
@@ -74,10 +74,12 @@ impl Concertus {
 
         // MAIN ROUTINE
         loop {
-            let player_state = self.player.get_shared_state();
-            self.ui.update_player_state(Arc::clone(&player_state));
+            for event in self.player.poll_events() {
+                if let Err(e) = self.handle_player_events(event) {
+                    self.ui.set_error(e);
+                }
+            }
 
-            // Check for user input
             match key_handler::next_event()? {
                 Some(Event::Key(key)) if key.kind == KeyEventKind::Press => {
                     if let Some(action) = key_handler::handle_key_event(key, &self.ui) {
@@ -87,25 +89,6 @@ impl Concertus {
                     }
                 }
                 _ => (),
-            }
-
-            // If nothing is playing...
-            if !self.ui.is_playing() {
-                // If there is a song in the queue
-                if let Some(song) = self.ui.playback.queue_pop_front() {
-                    self.ui.set_playback_state(PlaybackState::Transitioning);
-                    if let Err(e) = self.play_song(song) {
-                        self.ui.set_error(e);
-                    }
-                } else {
-                    if self.ui.get_mode() == Mode::Fullscreen {
-                        self.ui.revert_fullscreen();
-                    }
-                }
-                // Responsive update to queue visual when song ends
-                if self.ui.get_mode() == Mode::Queue {
-                    self.ui.set_legal_songs();
-                }
             }
 
             let _ = self.await_waveform_completion();
@@ -151,7 +134,6 @@ impl Concertus {
 
 impl Concertus {
     fn play_song(&mut self, song: Arc<QueueSong>) -> Result<()> {
-        // Return from function early if selected song is already playing
         if let Some(now_playing) = self.ui.get_now_playing() {
             if now_playing.id == song.get_id() {
                 return Ok(());
@@ -162,11 +144,28 @@ impl Concertus {
             bail!("File not found: {}", &song.path);
         }
 
-        self.ui.clear_waveform();
-        self.player.play_song(Arc::clone(&song))?;
-        self.waveform_handler(&song)?;
-        song.update_play_count()?;
+        self.player.play(Arc::clone(&song))?;
+        if let Some(up_next) = self.ui.peek_queue() {
+            self.player.set_next(Some(Arc::clone(up_next)))?;
+        };
 
+        Ok(())
+    }
+
+    pub fn queue_song(&mut self, song: Option<Arc<SimpleSong>>) -> Result<()> {
+        if self.player.is_stopped() {
+            let simple_song = match song {
+                Some(s) => s,
+                None => self.ui.get_selected_song()?,
+            };
+
+            let queue_song = QueueSong::from_simple_song(&simple_song)?;
+            self.play_song(queue_song)?;
+        } else {
+            self.ui.queue_song(song)?;
+        }
+
+        self.ui.set_legal_songs();
         Ok(())
     }
 
@@ -240,17 +239,16 @@ impl Concertus {
         if self.ui.get_waveform_visual().is_empty() && self.ui.get_now_playing().is_some() {
             if let Some(rx) = &self.waveform_rec {
                 if let Ok(waveform_result) = rx.try_recv() {
-                    let song = self.player.get_now_playing().unwrap();
+                    match waveform_result {
+                        Ok(waveform) => {
+                            self.ui.set_waveform_valid();
 
-                    if Some(&song) == self.ui.get_now_playing().as_ref() {
-                        match waveform_result {
-                            Ok(waveform) => {
-                                self.ui.set_waveform_valid();
-                                song.set_waveform_db(&waveform)?;
-                                self.ui.set_waveform_visual(waveform);
-                            }
-                            Err(_) => self.ui.set_waveform_invalid(),
+                            let song = self.ui.get_now_playing().as_ref().unwrap();
+
+                            song.set_waveform_db(&waveform)?;
+                            self.ui.set_waveform_visual(waveform);
                         }
+                        Err(_) => self.ui.set_waveform_invalid(),
                     }
 
                     self.waveform_rec = None;
@@ -371,6 +369,41 @@ impl Concertus {
 
         if should_clear {
             self.library_refresh_rec = None;
+        }
+    }
+}
+
+impl Concertus {
+    fn handle_player_events(&mut self, event: PlayerEvent) -> Result<()> {
+        match event {
+            PlayerEvent::TrackStarted(song) => {
+                self.ui.set_now_playing(Some(Arc::clone(&song.meta)));
+                self.ui.set_playback_state(PlaybackState::Playing);
+                self.ui.clear_waveform();
+                self.waveform_handler(&song)?;
+                song.update_play_count()?;
+
+                Ok(())
+            }
+            PlayerEvent::PlaybackStopped => {
+                // TODO: WE NEED TO HANDLE THE QUEUE
+
+                if let Some(song) = self.ui.get_now_playing() {
+                    self.ui.add_to_history(Arc::clone(&song));
+                }
+                self.ui.set_now_playing(None);
+
+                match self.ui.playback.queue_pop_front() {
+                    Some(song) => self.play_song(song)?,
+                    None => self.ui.set_playback_state(PlaybackState::Stopped),
+                }
+                self.ui.set_legal_songs();
+                Ok(())
+            }
+            PlayerEvent::Error(e) => {
+                self.ui.set_error(anyhow!(e));
+                Ok(())
+            }
         }
     }
 }
