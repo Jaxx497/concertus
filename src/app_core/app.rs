@@ -3,7 +3,7 @@ use crate::{
     domain::{generate_waveform, QueueSong, SimpleSong, SongDatabase, SongInfo},
     key_handler::{self},
     overwrite_line,
-    player2::{PlaybackState, PlayerEvent, PlayerHandle},
+    player2::{ConcertusTrack, PlaybackState, PlayerEvent, PlayerHandle},
     tui,
     ui_state::{Mode, PopupType, SettingsMode, UiState},
     Library,
@@ -144,9 +144,12 @@ impl Concertus {
             bail!("File not found: {}", &song.path);
         }
 
-        self.player.play(Arc::clone(&song))?;
+        let song = ConcertusTrack::try_from(song.meta.as_ref())?;
+
+        self.player.play(song)?;
         if let Some(up_next) = self.ui.peek_queue() {
-            self.player.set_next(Some(Arc::clone(up_next)))?;
+            let next_up = ConcertusTrack::try_from(up_next.meta.as_ref())?;
+            self.player.set_next(Some(next_up))?;
         };
 
         Ok(())
@@ -163,6 +166,11 @@ impl Concertus {
             self.play_song(queue_song)?;
         } else {
             self.ui.queue_song(song)?;
+            if self.ui.playback.queue.len() == 1 {
+                let x = self.ui.peek_queue().cloned().unwrap();
+                let y = ConcertusTrack::try_from(x.meta.as_ref())?;
+                let _ = self.player.set_next(Some(y));
+            }
         }
 
         self.ui.set_legal_songs();
@@ -374,14 +382,34 @@ impl Concertus {
 }
 
 impl Concertus {
+    // FIXME: ABSOLUTE FILTH
     fn handle_player_events(&mut self, event: PlayerEvent) -> Result<()> {
         match event {
-            PlayerEvent::TrackStarted(song) => {
-                self.ui.set_now_playing(Some(Arc::clone(&song.meta)));
-                self.ui.set_playback_state(PlaybackState::Playing);
-                self.ui.clear_waveform();
-                self.waveform_handler(&song)?;
-                song.update_play_count()?;
+            PlayerEvent::TrackStarted(return_song) => {
+                if let Some(next) = self.ui.peek_queue() {
+                    if return_song.get_id() == next.get_id() {
+                        if let Some(prev) = self.ui.get_now_playing() {
+                            self.ui.add_to_history(Arc::clone(&prev));
+                            self.ui.playback.queue_pop_front();
+
+                            if let Some(qs) = self.ui.peek_queue().cloned() {
+                                let next = ConcertusTrack::try_from(qs.meta.as_ref()).ok();
+                                self.player.set_next(next)?;
+                            }
+                        }
+                    };
+                } else {
+                    let now_playing = self.library.get_song_by_id(return_song.get_id()).cloned();
+                    self.ui.set_now_playing(now_playing)
+                }
+
+                if let Some(song) = self.library.get_song_by_id(return_song.get_id()) {
+                    self.ui.set_now_playing(Some(Arc::clone(&song)));
+                    self.ui.clear_waveform();
+                    song.update_play_count()?;
+                    let qs = QueueSong::from_simple_song(&song)?;
+                    self.waveform_handler(&qs)?;
+                }
 
                 Ok(())
             }

@@ -199,6 +199,10 @@ impl UiState {
         self.playback.metrics.get_state() == PlaybackState::Playing
     }
 
+    pub fn is_stopped(&self) -> bool {
+        self.playback.metrics.get_state() == PlaybackState::Stopped
+    }
+
     pub fn shuffle_queue(&mut self) {
         self.playback
             .queue

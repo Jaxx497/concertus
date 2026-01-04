@@ -8,17 +8,9 @@ use std::{
 
 use anyhow::Result;
 
-use crate::{
-    domain::QueueSong,
-    player2::{
-        // core_rodio::PlayerCore,
-        backend_cplayback::PlayerCore,
-        // ################
-        metrics::PlaybackMetrics,
-        PlaybackState,
-        PlayerCommand,
-        PlayerEvent,
-    },
+use crate::player2::{
+    backend_cplayback::ConcertusEngine, core::PlayerCore, metrics::PlaybackMetrics, ConcertusTrack,
+    PlaybackState, PlayerCommand, PlayerEvent,
 };
 
 pub struct PlayerHandle {
@@ -29,11 +21,13 @@ pub struct PlayerHandle {
 
 impl PlayerHandle {
     pub fn spawn() -> Self {
+        let backend = ConcertusEngine::new().expect("Failed to initialize backend");
+        // let backend = RodioBackend::new().expect("Failed to initialize backend");
         let (cmd_tx, cmd_rx) = mpsc::channel();
         let (evt_tx, evt_rx) = mpsc::channel();
         let metrics = PlaybackMetrics::new();
 
-        PlayerCore::spawn(cmd_rx, evt_tx, Arc::clone(&metrics));
+        PlayerCore::spawn(Box::new(backend), cmd_rx, evt_tx, Arc::clone(&metrics));
 
         Self {
             commands: cmd_tx,
@@ -51,13 +45,18 @@ impl PlayerHandle {
 //    COMMAND HANDLER
 // =====================
 impl PlayerHandle {
-    pub fn play(&self, song: Arc<QueueSong>) -> Result<()> {
+    pub fn play(&self, song: ConcertusTrack<u64>) -> Result<()> {
         self.commands.send(PlayerCommand::Play(song))?;
         Ok(())
     }
 
-    pub fn set_next(&self, song: Option<Arc<QueueSong>>) -> Result<()> {
+    pub fn set_next(&self, song: Option<ConcertusTrack<u64>>) -> Result<()> {
         self.commands.send(PlayerCommand::SetNext(song))?;
+        Ok(())
+    }
+
+    pub fn clear_next(&self) -> Result<()> {
+        self.commands.send(PlayerCommand::ClearNext)?;
         Ok(())
     }
 

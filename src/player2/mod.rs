@@ -1,26 +1,29 @@
+mod backend;
 mod backend_cplayback;
 mod backend_rodio;
+mod core;
 mod handle;
 mod metrics;
 mod track;
 
-use crate::domain::QueueSong;
-use std::sync::Arc;
+pub use crate::player2::track::ConcertusTrack;
 
+pub(self) use backend::ConcertusBackend;
 pub use handle::PlayerHandle;
 pub use metrics::PlaybackMetrics;
 
 pub(crate) const OSCILLO_BUFFER_CAPACITY: usize = 2048;
 
 pub enum PlayerEvent {
-    TrackStarted(Arc<QueueSong>),
+    TrackStarted(ConcertusTrack<u64>),
     PlaybackStopped,
     Error(String),
 }
 
 pub enum PlayerCommand {
-    Play(Arc<QueueSong>),
-    SetNext(Option<Arc<QueueSong>>),
+    Play(ConcertusTrack<u64>),
+    SetNext(Option<ConcertusTrack<u64>>),
+    ClearNext,
     TogglePlayback,
     Stop,
     SeekForward(u64),

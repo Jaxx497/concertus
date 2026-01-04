@@ -1,10 +1,11 @@
-// THIS WILL BE A PAIN IN THE ASS, SHOULD PROBABLY WAIT UNTIL WE FIGURE OUT THE QUEUE SITUATION
+use std::path::PathBuf;
 
 use crate::domain::{SimpleSong, SongDatabase};
 
-pub(super) struct ConcertusTrack<I> {
+#[derive(Clone)]
+pub struct ConcertusTrack<I> {
     id: I,
-    path: String,
+    path: PathBuf,
 }
 
 impl<I: PartialEq> PartialEq for ConcertusTrack<I> {
@@ -19,8 +20,17 @@ impl TryFrom<&SimpleSong> for ConcertusTrack<u64> {
     fn try_from(song: &SimpleSong) -> Result<Self, Self::Error> {
         Ok(Self {
             id: song.id,
-            path: song.get_path()?,
+            path: PathBuf::from(song.get_path()?),
         })
     }
 }
 
+impl ConcertusTrack<u64> {
+    pub fn get_id(&self) -> u64 {
+        self.id
+    }
+
+    pub fn get_path(&self) -> &PathBuf {
+        &self.path
+    }
+}
