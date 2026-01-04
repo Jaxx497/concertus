@@ -1,4 +1,5 @@
 use crate::{
+    domain::SongInfo,
     get_readable_duration,
     tui::widgets::DUR_WIDTH,
     ui_state::{ProgressDisplay, UiState},
@@ -28,11 +29,10 @@ impl StatefulWidget for Timer {
 
         let text_color = state.theme_manager.active.text_muted;
 
-        let elapsed = state.playback.metrics.get_elapsed();
+        let elapsed = state.get_playback_elapsed();
         let elapsed_str = get_readable_duration(elapsed, crate::DurationStyle::Compact);
 
-        let duration = state.playback.now_playing.as_ref().unwrap().duration;
-        let duration_str = get_readable_duration(duration, crate::DurationStyle::Compact);
+        let duration_str = state.playback.get_now_playing().unwrap().get_duration_str();
 
         Text::from(elapsed_str)
             .fg(text_color)

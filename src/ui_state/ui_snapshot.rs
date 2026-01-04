@@ -108,7 +108,7 @@ impl UiState {
             playlist_sel_offset: self.display_state.playlist_pos.offset(),
 
             progress_display: self.get_progress_display().to_string(),
-            smoothing_factor: self.playback_view.waveform_smoothing,
+            smoothing_factor: self.get_smoothing_factor(),
         }
     }
 
@@ -159,7 +159,7 @@ impl UiState {
             self.set_mode(Mode::from_str(mode_to_restore));
             self.set_pane(Pane::from_str(pane_to_restore));
 
-            self.playback_view.waveform_smoothing = snapshot.smoothing_factor;
+            self.set_smoothing_factor(snapshot.smoothing_factor);
 
             self.set_progress_display(ProgressDisplay::from_str(&snapshot.progress_display));
 

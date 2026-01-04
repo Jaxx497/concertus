@@ -30,7 +30,7 @@ impl StatefulWidget for Oscilloscope {
             false => 0,
         };
 
-        let elapsed = state.get_playback_elapsed().as_secs_f32();
+        let elapsed = state.get_playback_elapsed_f32();
 
         Canvas::default()
             .x_bounds([0.0, samples.len() as f64])

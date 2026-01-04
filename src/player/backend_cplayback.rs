@@ -1,4 +1,4 @@
-use crate::player2::{ConcertusBackend, OSCILLO_BUFFER_CAPACITY};
+use crate::player::{ConcertusBackend, OSCILLO_BUFFER_CAPACITY};
 use anyhow::Result;
 use std::{path::Path, time::Duration};
 
@@ -27,7 +27,7 @@ impl ConcertusBackend for ConcertusEngine {
     }
 
     fn resume(&mut self) {
-        self.engine.pause();
+        self.engine.resume();
     }
 
     fn stop(&mut self) {

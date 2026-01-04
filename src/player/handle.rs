@@ -1,15 +1,9 @@
-use std::{
-    sync::{
-        mpsc::{self, Receiver, Sender},
-        Arc,
-    },
-    time::Duration,
-};
-
 use anyhow::Result;
+use crossbeam_channel::{Receiver, Sender};
+use std::{sync::Arc, time::Duration};
 
-use crate::player2::{
-    backend_cplayback::ConcertusEngine, core::PlayerCore, metrics::PlaybackMetrics, ConcertusTrack,
+use crate::player::{
+    backend_rodio::RodioBackend, core::PlayerCore, metrics::PlaybackMetrics, ConcertusTrack,
     PlaybackState, PlayerCommand, PlayerEvent,
 };
 
@@ -21,17 +15,17 @@ pub struct PlayerHandle {
 
 impl PlayerHandle {
     pub fn spawn() -> Self {
-        let backend = ConcertusEngine::new().expect("Failed to initialize backend");
-        // let backend = RodioBackend::new().expect("Failed to initialize backend");
-        let (cmd_tx, cmd_rx) = mpsc::channel();
-        let (evt_tx, evt_rx) = mpsc::channel();
+        // let backend = ConcertusEngine::new().expect("Failed to initialize backend");
+        let backend = RodioBackend::new().expect("Failed to initialize backend");
+        let (cmd_tx, cmd_rx) = crossbeam_channel::bounded(32);
+        let (event_tx, event_rx) = crossbeam_channel::bounded(32);
         let metrics = PlaybackMetrics::new();
 
-        PlayerCore::spawn(Box::new(backend), cmd_rx, evt_tx, Arc::clone(&metrics));
+        PlayerCore::spawn(Box::new(backend), cmd_rx, event_tx, Arc::clone(&metrics));
 
         Self {
             commands: cmd_tx,
-            events: evt_rx,
+            events: event_rx,
             metrics,
         }
     }
@@ -45,12 +39,12 @@ impl PlayerHandle {
 //    COMMAND HANDLER
 // =====================
 impl PlayerHandle {
-    pub fn play(&self, song: ConcertusTrack<u64>) -> Result<()> {
+    pub fn play(&self, song: ConcertusTrack) -> Result<()> {
         self.commands.send(PlayerCommand::Play(song))?;
         Ok(())
     }
 
-    pub fn set_next(&self, song: Option<ConcertusTrack<u64>>) -> Result<()> {
+    pub fn set_next(&self, song: Option<ConcertusTrack>) -> Result<()> {
         self.commands.send(PlayerCommand::SetNext(song))?;
         Ok(())
     }
@@ -100,6 +94,10 @@ impl PlayerHandle {
 
     pub fn is_stopped(&self) -> bool {
         self.get_playback_state() == PlaybackState::Stopped
+    }
+
+    pub fn events(&self) -> &Receiver<PlayerEvent> {
+        &self.events
     }
 
     pub fn poll_events(&mut self) -> Vec<PlayerEvent> {

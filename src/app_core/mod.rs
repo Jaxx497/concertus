@@ -1,5 +1,22 @@
+use crate::{player::PlayerHandle, ui_state::UiState, Library};
+use crossbeam_channel::Receiver;
+use std::sync::Arc;
+
 mod app;
-pub use app::Concertus;
+mod key_events;
+mod library;
+mod playback;
+mod player;
+mod select;
+
+pub use key_events::key_loop;
+
+pub struct Concertus {
+    library: Arc<Library>,
+    pub(crate) ui: UiState,
+    player: PlayerHandle,
+    library_refresh_rec: Option<Receiver<LibraryRefreshProgress>>,
+}
 
 pub enum LibraryRefreshProgress {
     Scanning {

@@ -1,14 +1,161 @@
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
+use crossbeam_channel::Receiver;
 use std::{
     io::{Cursor, Read},
     path::Path,
     process::Command,
+    sync::Arc,
+    thread,
     time::Duration,
 };
 
+use crate::{
+    domain::{SimpleSong, SongDatabase},
+    key_handler::Incrementor,
+    ui_state::UiState,
+};
+
 const WF_LEN: usize = 500;
+static WAVEFORM_STEP: f32 = 0.5;
 const MIN_SAMPLES_PER_POINT: usize = 200; // Minimum for short files
 const MAX_SAMPLES_PER_POINT: usize = 4000; // Maximum for very long files
+
+#[derive(PartialEq)]
+pub enum WaveformState {
+    None,
+    Loading,
+    Ready(Vec<f32>),
+    Failed,
+}
+
+pub struct WaveformManager {
+    state: WaveformState,
+    smoothed_view: Vec<f32>,
+    smoothing_factor: f32,
+    reciever: Option<Receiver<Result<Vec<f32>>>>,
+}
+
+impl WaveformManager {
+    pub fn new() -> Self {
+        WaveformManager {
+            state: WaveformState::None,
+            smoothed_view: Vec::with_capacity(WF_LEN),
+            smoothing_factor: 1.0,
+            reciever: None,
+        }
+    }
+
+    pub fn request(&mut self, song: &SimpleSong) {
+        if let Ok(cached) = song.get_waveform() {
+            self.state = WaveformState::Ready(cached);
+            self.apply_smoothing();
+            return;
+        }
+
+        if let Ok(path) = song.get_path() {
+            let (tx, rx) = crossbeam_channel::bounded(1);
+            self.state = WaveformState::Loading;
+
+            thread::spawn(move || {
+                let res = generate_waveform(path);
+                let _ = tx.send(res);
+            });
+
+            self.reciever = Some(rx)
+        }
+    }
+
+    pub fn reciever(&self) -> Option<&Receiver<Result<Vec<f32>>>> {
+        self.reciever.as_ref()
+    }
+
+    pub fn complete(&mut self, result: Result<Vec<f32>>, song: Option<&Arc<SimpleSong>>) {
+        match result {
+            Ok(waveform) => {
+                if let Some(s) = song {
+                    let _ = s.set_waveform_db(&waveform);
+                }
+                self.state = WaveformState::Ready(waveform);
+                self.apply_smoothing();
+            }
+            Err(_) => self.state = WaveformState::Failed,
+        }
+        self.reciever = None;
+    }
+}
+
+impl WaveformManager {
+    pub fn clear(&mut self) {
+        self.reciever = None;
+        self.smoothed_view.clear();
+        self.state = WaveformState::None;
+    }
+
+    pub fn apply_smoothing(&mut self) {
+        if let WaveformState::Ready(raw) = &mut self.state {
+            self.smoothed_view = smooth_waveform(raw, self.smoothing_factor);
+        }
+    }
+
+    pub fn increment_smoothness(&mut self, direction: Incrementor) {
+        match direction {
+            Incrementor::Up => {
+                if self.smoothing_factor < 3.9 {
+                    self.smoothing_factor += WAVEFORM_STEP;
+                    self.apply_smoothing();
+                }
+            }
+            Incrementor::Down => {
+                if self.smoothing_factor > 0.1 {
+                    self.smoothing_factor -= WAVEFORM_STEP;
+                    self.apply_smoothing();
+                }
+            }
+        }
+    }
+
+    fn get_waveform_visual(&self) -> &[f32] {
+        self.smoothed_view.as_slice()
+    }
+}
+
+impl UiState {
+    pub fn request_waveform(&mut self, song: &SimpleSong) {
+        self.waveform.request(song);
+    }
+
+    pub fn handle_wf_result(&mut self, result: Result<Vec<f32>>, song: Option<&Arc<SimpleSong>>) {
+        self.waveform.complete(result, song);
+    }
+
+    pub fn get_waveform_state(&self) -> &WaveformState {
+        &self.waveform.state
+    }
+
+    pub fn wf_reciever(&self) -> Option<&Receiver<Result<Vec<f32>>>> {
+        self.waveform.reciever()
+    }
+
+    pub fn clear_waveform(&mut self) {
+        self.waveform.clear();
+    }
+
+    pub fn get_waveform_as_slice(&self) -> &[f32] {
+        self.waveform.get_waveform_visual()
+    }
+
+    pub fn get_smoothing_factor(&self) -> f32 {
+        self.waveform.smoothing_factor
+    }
+
+    pub fn set_smoothing_factor(&mut self, sf: f32) {
+        self.waveform.smoothing_factor = sf
+    }
+
+    pub fn increment_wf_smoothness(&mut self, direction: Incrementor) {
+        self.waveform.increment_smoothness(direction);
+    }
+}
 
 /// Generate a waveform using ffmpeg by piping output directly to memory
 pub fn generate_waveform<P: AsRef<Path>>(audio_path: P) -> Result<Vec<f32>> {
@@ -254,44 +401,49 @@ fn process_short_pcm(pcm_data: &[u8]) -> Result<Vec<f32>> {
 }
 
 /// Apply a smoothing filter to the waveform with float smoothing factor
-pub fn smooth_waveform(waveform: &mut Vec<f32>, smoothing_factor: f32) {
+pub fn smooth_waveform(waveform: &[f32], smoothing_factor: f32) -> Vec<f32> {
     if waveform.len() <= (smoothing_factor.ceil() as usize * 2 + 1) {
-        return;
+        return waveform.to_vec();
     }
 
-    let original = waveform.clone();
     let range = smoothing_factor.ceil() as isize;
 
-    for i in 0..waveform.len() {
-        let mut sum = 0.0;
-        let mut total_weight = 0.0;
+    waveform
+        .iter()
+        .enumerate()
+        .map(|(i, _)| {
+            let mut sum = 0.0;
+            let mut total_weight = 0.0;
 
-        // Calculate weighted average of surrounding points
-        for offset in -range..=range {
-            let idx = i as isize + offset;
-            if idx >= 0 && idx < original.len() as isize {
-                // Weight calculation - based on distance and the smoothing factor
-                // Points beyond the float smoothing factor get reduced weight
-                let distance = offset.abs() as f32;
-                let weight = if distance <= smoothing_factor {
-                    // Full weight for points within the smooth factor
-                    1.0
-                } else {
-                    // Partial weight for the fractional part
-                    1.0 - (distance - smoothing_factor)
-                };
+            // Calculate weighted average of surrounding points
+            for offset in -range..=range {
+                let idx = i as isize + offset;
+                if idx >= 0 && idx < waveform.len() as isize {
+                    // Weight calculation - based on distance and the smoothing factor
+                    // Points beyond the float smoothing factor get reduced weight
+                    let distance = offset.abs() as f32;
+                    let weight = if distance <= smoothing_factor {
+                        // Full weight for points within the smooth factor
+                        1.0
+                    } else {
+                        // Partial weight for the fractional part
+                        1.0 - (distance - smoothing_factor)
+                    };
 
-                if weight > 0.0 {
-                    sum += original[idx as usize] * weight;
-                    total_weight += weight;
+                    if weight > 0.0 {
+                        sum += waveform[idx as usize] * weight;
+                        total_weight += weight;
+                    }
                 }
             }
-        }
 
-        if total_weight > 0.0 {
-            waveform[i] = sum / total_weight;
-        }
-    }
+            if total_weight > 0.0 {
+                sum / total_weight
+            } else {
+                waveform[i]
+            }
+        })
+        .collect()
 }
 
 /// Normalize the waveform to a 0.0-1.0 range

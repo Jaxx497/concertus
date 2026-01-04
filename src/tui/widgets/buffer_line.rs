@@ -65,8 +65,7 @@ const MIN_TITLE_LEN: usize = 20;
 const MIN_ARTIST_LEN: usize = 15;
 
 fn playing_title(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
-    // let song = state.get_now_playing()?;
-    let song = state.get_now_playing().as_ref()?;
+    let song = state.get_now_playing()?;
     let decorator = &state.get_decorator();
 
     let separator = match state.is_paused() {
@@ -147,7 +146,7 @@ fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
 
     let up_next_line = Span::from(truncated).fg(state.theme_manager.active.selection_inactive);
 
-    let total = state.playback.queue.len();
+    let total = state.playback.queue_len();
     let queue_total = format!(" [{total}] ").fg(theme.text_muted);
 
     match width < BAD_WIDTH {

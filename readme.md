@@ -1,5 +1,4 @@
-# Concertus - v0.1.0
-
+# Concertus - v0.2.0
 
 Concertus is a lightweight, plug and play, TUI music player written in Rust.
 

@@ -16,26 +16,36 @@ impl StatefulWidget for SearchBar {
     ) {
         let focus = matches!(&state.get_pane(), Pane::Search);
         let theme = &state.theme_manager.get_display_theme(focus);
+        let (border_display, border_type, border_style, accent, bg) = {
+            (
+                theme.border_display,
+                theme.border_type,
+                theme.border,
+                theme.border,
+                theme.bg,
+            )
+        };
 
         let (pd_v, pd_h) = match theme.border_display {
             Borders::NONE => (2, 3),
             _ => (1, 2),
         };
 
-        let search = &mut state.search.input;
+        // let search = &mut state.search.input;
+        let search = state.get_search_widget();
         search.set_block(
             Block::bordered()
-                .borders(theme.border_display)
-                .border_type(theme.border_type)
-                .border_style(theme.border)
+                .borders(border_display)
+                .border_type(border_type)
+                .border_style(border_style)
                 .padding(Padding {
                     left: pd_h,
                     right: 0,
                     top: pd_v,
                     bottom: 0,
                 })
-                .fg(theme.accent)
-                .bg(theme.bg),
+                .fg(accent)
+                .bg(bg),
         );
 
         search.render(area, buf);

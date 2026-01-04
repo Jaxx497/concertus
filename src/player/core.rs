@@ -1,32 +1,14 @@
-#![allow(unused)]
-
-use anyhow::Result;
-use ratatui::backend;
-use rodio::{
-    decoder::builder::SeekMode, ChannelCount, Decoder, OutputStream, OutputStreamBuilder, Sink,
-    Source,
-};
-use std::{
-    fs::File,
-    io::BufReader,
-    num::NonZero,
-    ops::Sub,
-    path::{Path, PathBuf},
-    sync::{
-        mpsc::{Receiver, Sender},
-        Arc,
-    },
-    thread::{self, JoinHandle},
-    time::Duration,
-};
-
 use crate::{
-    player::{self, OSCILLO_BUFFER_CAPACITY},
-    player2::{
+    player::{
         track::ConcertusTrack, ConcertusBackend, PlaybackMetrics, PlaybackState, PlayerCommand,
-        PlayerEvent,
+        PlayerEvent, OSCILLO_BUFFER_CAPACITY,
     },
     REFRESH_RATE,
+};
+use crossbeam_channel::{Receiver, Sender};
+use std::{
+    sync::Arc,
+    thread::{self, JoinHandle},
 };
 
 pub struct PlayerCore {
@@ -35,8 +17,8 @@ pub struct PlayerCore {
     events: Sender<PlayerEvent>,
     metrics: Arc<PlaybackMetrics>,
 
-    current: Option<ConcertusTrack<u64>>,
-    next: Option<ConcertusTrack<u64>>,
+    current: Option<ConcertusTrack>,
+    next: Option<ConcertusTrack>,
 }
 
 impl PlayerCore {
@@ -91,12 +73,12 @@ impl PlayerCore {
                 // GAPLESS BRANCH
                 Some(next) => {
                     self.current = Some(next.clone());
-                    let _ = self.events.send(PlayerEvent::TrackStarted(next));
+                    self.emit(PlayerEvent::TrackStarted((next, true)));
                 }
                 // STANDARD BRANCH
                 None => {
                     self.current = None;
-                    let _ = self.events.send(PlayerEvent::PlaybackStopped);
+                    self.emit(PlayerEvent::PlaybackStopped);
                 }
             }
         }
@@ -122,19 +104,24 @@ impl PlayerCore {
         }
     }
 
-    fn play_song(&mut self, song: ConcertusTrack<u64>) {
-        self.backend.play(&song.get_path());
+    fn play_song(&mut self, song: ConcertusTrack) {
+        if let Err(e) = self.backend.play(&song.path()) {
+            self.emit(PlayerEvent::Error(e.to_string()));
+            return;
+        }
+
         self.current = Some(song.clone());
-
         self.metrics.set_playback_state(PlaybackState::Playing);
-
-        let _ = self.events.send(PlayerEvent::TrackStarted(song));
+        self.emit(PlayerEvent::TrackStarted((song, false)));
     }
 
-    fn set_next(&mut self, next: Option<ConcertusTrack<u64>>) {
+    fn set_next(&mut self, next: Option<ConcertusTrack>) {
         if self.backend.supports_gapless() {
             if let Some(song) = &next {
-                self.backend.set_next(&song.get_path());
+                if let Err(e) = self.backend.set_next(&song.path()) {
+                    self.emit(PlayerEvent::Error(e.to_string()));
+                    return;
+                }
             }
 
             self.next = next;
@@ -165,9 +152,8 @@ impl PlayerCore {
     fn stop(&mut self) {
         self.backend.stop();
         self.current = None;
-        self.metrics.reset();
         self.metrics.set_playback_state(PlaybackState::Stopped);
-        self.backend.drain_samples();
+        self.metrics.reset();
     }
 
     fn seek_forward(&mut self, secs: u64) {
@@ -179,8 +165,12 @@ impl PlayerCore {
     fn seek_back(&mut self, secs: u64) {
         if !self.backend.is_stopped() {
             if let Err(e) = self.backend.seek_back(secs) {
-                let _ = self.events.send(PlayerEvent::Error(e.to_string()));
+                self.emit(PlayerEvent::Error(e.to_string()));
             }
         }
+    }
+
+    fn emit(&self, event: PlayerEvent) {
+        let _ = self.events.send(event);
     }
 }

@@ -20,6 +20,8 @@ mod snapshot;
 mod tables;
 mod worker;
 
+pub(crate) const DB_BOUND: usize = 100;
+
 pub use worker::DbWorker;
 
 pub struct Database {

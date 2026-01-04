@@ -1,3 +1,4 @@
+#![allow(unused)]
 use anyhow::Result;
 use rodio::decoder::builder::SeekMode;
 use rodio::{ChannelCount, Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
@@ -14,7 +15,7 @@ use std::{
     time::Duration,
 };
 
-use crate::player2::ConcertusBackend;
+use crate::player::ConcertusBackend;
 
 pub struct RodioBackend {
     pub sink: Sink,

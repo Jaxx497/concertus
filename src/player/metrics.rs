@@ -1,4 +1,4 @@
-use crate::player2::PlaybackState;
+use crate::player::PlaybackState;
 
 use std::{
     collections::VecDeque,
@@ -55,6 +55,7 @@ impl PlaybackMetrics {
     pub fn reset(&self) {
         self.set_elapsed(Duration::ZERO);
         self.set_playback_state(PlaybackState::Stopped);
+        self.drain_samples();
     }
 
     pub fn drain_samples(&self) -> Vec<f32> {

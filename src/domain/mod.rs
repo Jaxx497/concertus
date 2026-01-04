@@ -2,18 +2,14 @@ mod album;
 mod filetype;
 mod long_song;
 mod playlist;
-mod queue_song;
 mod simple_song;
-mod waveform;
 
 pub use album::Album;
 pub use filetype::FileType;
 pub use long_song::LongSong;
 pub use playlist::Playlist;
 pub use playlist::PlaylistSong;
-pub use queue_song::QueueSong;
 pub use simple_song::SimpleSong;
-pub use waveform::{generate_waveform, smooth_waveform};
 
 pub trait SongInfo {
     fn get_id(&self) -> u64;

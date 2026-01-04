@@ -26,12 +26,11 @@ impl StatefulWidget for Waveform {
             _ => (area.height as f32 * 0.35) as u16,
         };
 
-        let np = state
+        let np = &state
             .get_now_playing()
-            .as_ref()
             .expect("Expected a song to be playing. [Widget: Waveform]");
 
-        let waveform = state.get_waveform_visual().to_vec();
+        let waveform = state.get_waveform_as_slice();
         let wf_len = waveform.len();
         let duration_f32 = &np.get_duration_f32();
 
@@ -40,7 +39,7 @@ impl StatefulWidget for Waveform {
             .y_bounds([WAVEFORM_WIDGET_HEIGHT * -1.0, WAVEFORM_WIDGET_HEIGHT])
             .marker(theme.waveform_style)
             .paint(|ctx| {
-                let elapsed = state.playback.metrics.get_elapsed().as_secs_f32();
+                let elapsed = state.get_playback_elapsed_f32();
                 let progress = elapsed / duration_f32;
 
                 for (idx, amp) in waveform.iter().enumerate() {

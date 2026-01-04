@@ -18,22 +18,15 @@ impl StatefulWidget for ProgressBar {
 
         let np = state
             .get_now_playing()
-            .as_ref()
             .expect("Expected a song to be playing. [Widget: Progress Bar]");
-        let elapsed = state.playback.metrics.get_elapsed().as_secs_f32();
+        let elapsed = state.get_playback_elapsed_f32();
         let duration = np.get_duration().as_secs_f32();
-        let progress_raw = elapsed / duration;
 
-        // The program will crash if this hits 1.0
-        let ratio = match progress_raw {
-            i if i < 1.0 => i,
-            _ => 0.0,
-        };
+        // Prevent crash
+        let ratio = (elapsed / duration).min(0.9999);
 
         let fg = theme.get_focused_color(ratio, elapsed);
-
-        let amp = 1.0;
-        let bg = theme.get_inactive_color(ratio, elapsed, amp);
+        let bg = theme.get_inactive_color(ratio, elapsed, super::DEFAULT_AMP);
 
         let guage = LineGauge::default()
             .block(Block::new().bg(theme.bg_global).padding(Padding {

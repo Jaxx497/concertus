@@ -4,7 +4,7 @@ use crate::{
     key_handler::Director,
     ui_state::{PopupType, ProgressDisplay},
 };
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;
@@ -69,6 +69,7 @@ impl UiState {
     }
 
     pub fn set_mode(&mut self, mode: Mode) {
+        self.clear_multi_select();
         match self.display_state.mode {
             Mode::Power => {
                 self.display_state.table_pos_cached = self
@@ -118,7 +119,7 @@ impl UiState {
                 self.set_legal_songs();
             }
             Mode::Fullscreen => {
-                if self.is_playing() || !self.queue_is_empty() {
+                if self.player_is_active() || !self.queue_is_empty() {
                     self.display_state.mode_cached = Some(self.display_state.mode.to_owned());
                     self.display_state.mode = Mode::Fullscreen
                 }
@@ -141,16 +142,10 @@ impl UiState {
                 self.display_state.pane = Pane::Search;
             }
             Mode::QUIT => {
-                let song_ids = self
-                    .playback
-                    .history
-                    .make_contiguous()
-                    .iter()
-                    .map(|s| s.id)
-                    .collect::<Vec<_>>();
+                let history_ids = self.playback.export_history();
 
                 let _ = self.save_state();
-                let _ = self.db_worker.save_history_to_db(song_ids);
+                let _ = self.db_worker.save_history_to_db(history_ids);
 
                 self.display_state.mode = Mode::QUIT;
             }
@@ -309,8 +304,11 @@ impl UiState {
         Ok(())
     }
 
+    pub fn get_legal_songs(&self) -> &[Arc<SimpleSong>] {
+        &self.legal_songs.as_slice()
+    }
+
     pub(crate) fn set_legal_songs(&mut self) {
-        self.clear_multi_select();
         match &self.display_state.mode {
             Mode::Power => {
                 self.legal_songs = self.library.get_all_songs().to_vec();
@@ -327,24 +325,15 @@ impl UiState {
                 LibraryView::Playlists => {
                     if let Some(idx) = self.display_state.playlist_pos.selected() {
                         if let Some(playlist) = self.playlists.get(idx) {
-                            self.legal_songs = playlist.get_tracks()
+                            self.legal_songs = playlist.get_tracklist()
                         }
                     } else {
                         self.legal_songs.clear()
                     }
                 }
             },
-            Mode::Queue => {
-                self.playback.queue.make_contiguous();
-                self.legal_songs = self
-                    .playback
-                    .queue
-                    .as_slices()
-                    .0
-                    .iter()
-                    .map(|s| Arc::clone(&s.meta))
-                    .collect::<Vec<Arc<_>>>();
-            }
+            Mode::Queue => self.legal_songs = self.playback.get_queue(),
+
             Mode::Search => match self.get_search_len() > 1 {
                 true => self.filter_songs_by_search(),
                 false => self.sort_by_table_column(),

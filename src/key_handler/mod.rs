@@ -33,7 +33,7 @@ pub enum Action {
     // Player Controls
     Play,
     Stop,
-    TogglePause,
+    TogglePlayback,
     PlayNext,
     PlayPrev,
     SeekForward(u64),
@@ -41,8 +41,10 @@ pub enum Action {
 
     // Queue & Playlist Actions
     QueueSong,
-    QueueEntity,
-    ShuffleEntity,
+    QueueMany {
+        sel_type: SelectionType,
+        shuffle: bool,
+    },
     RemoveSong,
 
     AddToPlaylist,
@@ -77,15 +79,15 @@ pub enum Action {
     RenamePlaylist,
     RenamePlaylistConfirm,
 
-    ShiftPosition(MoveDirection),
+    ShiftPosition(Incrementor),
     ShuffleElements,
 
     // Display
-    CycleTheme(MoveDirection),
+    CycleTheme(Incrementor),
     ThemeManager,
     ThemeRefresh,
 
-    IncrementWFSmoothness(MoveDirection),
+    IncrementWFSmoothness(Incrementor),
     IncrementSidebarSize(isize),
 
     SetProgressDisplay(ProgressDisplay),
@@ -121,6 +123,13 @@ pub enum InputContext {
 }
 
 #[derive(PartialEq, Eq)]
+pub enum SelectionType {
+    Multi,
+    Album,
+    Playlist,
+}
+
+#[derive(PartialEq, Eq)]
 pub enum Director {
     Up(usize),
     Down(usize),
@@ -129,7 +138,7 @@ pub enum Director {
 }
 
 #[derive(PartialEq, Eq)]
-pub enum MoveDirection {
+pub enum Incrementor {
     Up,
     Down,
 }

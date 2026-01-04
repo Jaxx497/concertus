@@ -2,7 +2,7 @@ use crate::{
     domain::{Playlist, PlaylistSong},
     ui_state::{LibraryView, PopupType, UiState},
 };
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 
 #[derive(PartialEq, Clone)]
 pub enum PlaylistAction {

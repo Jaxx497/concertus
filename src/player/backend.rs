@@ -23,7 +23,8 @@ pub(super) trait ConcertusBackend: Send + 'static {
     fn set_next(&mut self, _path: &Path) -> Result<()> {
         Ok(()) // silently succeed if not supported
     }
-    fn clear_queue(&mut self) {}
+
+    // fn clear_queue(&mut self) {}
 
     fn drain_samples(&mut self) -> Vec<f32> {
         Vec::new()

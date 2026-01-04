@@ -1,39 +1,18 @@
-use super::{playback::PlaybackCoordinator, search_state::SearchState, DisplayState};
+use super::{search_state::SearchState, DisplayState};
 use crate::{
     database::DbWorker,
-    domain::{Album, Playlist, SimpleSong},
+    domain::SimpleSong,
     key_handler::InputContext,
-    player2::PlaybackMetrics,
+    player::{PlaybackMetrics, PlaybackState},
     ui_state::{
         popup::{PopupState, PopupType},
-        LibraryView, Mode, Pane, PlaybackView, PlaylistAction, SettingsMode, ThemeManager,
+        LibraryView, Mode, Pane, PlaylistAction, ProgressDisplay, SettingsMode, ThemeManager,
+        UiState, WaveformManager,
     },
-    Library,
+    Library, PlaybackSession,
 };
 use anyhow::{Error, Result};
-use std::sync::Arc;
-
-pub struct UiState {
-    // Backend Modules
-    pub(super) library: Arc<Library>,
-    pub(crate) db_worker: DbWorker,
-    pub(crate) playback: PlaybackCoordinator,
-    pub playback_view: PlaybackView,
-
-    // Visual Elements
-    pub(crate) theme_manager: ThemeManager,
-    pub(crate) popup: PopupState,
-    pub(crate) search: SearchState,
-    pub(crate) display_state: DisplayState,
-
-    // View models
-    pub albums: Vec<Album>,
-    pub legal_songs: Vec<Arc<SimpleSong>>,
-    pub playlists: Vec<Playlist>,
-
-    pub library_refresh_progress: Option<u8>,
-    pub library_refresh_detail: Option<String>,
-}
+use std::{sync::Arc, time::Duration};
 
 impl UiState {
     pub fn new(library: Arc<Library>, metrics: Arc<PlaybackMetrics>) -> Self {
@@ -43,8 +22,12 @@ impl UiState {
                 .expect("Could not establish connection to database for UiState!"),
             search: SearchState::new(),
             display_state: DisplayState::new(),
-            playback: PlaybackCoordinator::new(metrics),
-            playback_view: PlaybackView::new(),
+            metrics,
+            playback: PlaybackSession::init(),
+
+            waveform: WaveformManager::new(),
+            progress_display: ProgressDisplay::Oscilloscope,
+
             popup: PopupState::new(),
             theme_manager: ThemeManager::new(),
             albums: Vec::new(),
@@ -158,5 +141,43 @@ impl UiState {
 
     pub fn is_library_refreshing(&self) -> bool {
         self.library_refresh_progress.is_some()
+    }
+}
+
+impl UiState {
+    pub fn get_tapped_samples(&self) -> Vec<f32> {
+        self.metrics.drain_samples()
+    }
+
+    pub fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {
+        self.playback.peek_queue()
+    }
+
+    pub fn queue_is_empty(&self) -> bool {
+        self.playback.queue_is_empty()
+    }
+
+    pub(crate) fn is_paused(&self) -> bool {
+        self.metrics.is_paused()
+    }
+
+    pub fn set_now_playing(&mut self, song: Option<Arc<SimpleSong>>) {
+        self.playback.set_now_playing(song);
+    }
+
+    pub fn get_now_playing(&self) -> Option<&Arc<SimpleSong>> {
+        self.playback.get_now_playing()
+    }
+
+    pub fn get_playback_elapsed(&self) -> Duration {
+        self.metrics.get_elapsed()
+    }
+
+    pub fn get_playback_elapsed_f32(&self) -> f32 {
+        self.metrics.get_elapsed().as_secs_f32()
+    }
+
+    pub fn player_is_active(&self) -> bool {
+        self.metrics.get_state() != PlaybackState::Stopped && self.get_now_playing().is_some()
     }
 }

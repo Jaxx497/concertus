@@ -1,6 +1,6 @@
 use crate::{
     domain::SongInfo,
-    tui::widgets::tracklist::{CellFactory, create_standard_table, get_title},
+    tui::widgets::tracklist::{create_standard_table, get_title, CellFactory},
     ui_state::{Pane, UiState},
 };
 use ratatui::{
@@ -19,7 +19,7 @@ impl StatefulWidget for GenericView {
     ) {
         let focus = matches!(state.get_pane(), Pane::TrackList);
         let theme = &state.theme_manager.get_display_theme(focus);
-        let songs = state.legal_songs.as_slice();
+        let songs = state.get_legal_songs();
 
         let rows = songs
             .iter()
