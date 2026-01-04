@@ -1,12 +1,10 @@
 mod controller;
 mod player;
-mod player_event;
 mod state;
 mod tapped_source;
 
 pub use controller::PlayerController;
 pub use player::Player;
-pub use player_event::PlayerEvent;
 pub use state::{PlaybackState, PlayerState};
 pub use tapped_source::TappedSource;
 
