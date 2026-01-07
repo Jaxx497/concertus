@@ -1,17 +1,19 @@
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
+use crossbeam_channel::Receiver;
 use indexmap::IndexMap;
 use nohash_hasher::BuildNoHashHasher;
 use ratatui::crossterm::{
-    ExecutableCommand,
     cursor::MoveToColumn,
     style::Print,
     terminal::{Clear, ClearType},
+    ExecutableCommand,
 };
 use std::{
     fs,
     io::Write,
     path::{Path, PathBuf},
-    sync::Arc,
+    process::{self, Command},
+    sync::{Arc, LazyLock},
     time::{Duration, UNIX_EPOCH},
 };
 use ui_state::UiState;
@@ -23,15 +25,25 @@ pub mod database;
 pub mod domain;
 pub mod key_handler;
 pub mod library;
+pub mod playback;
 pub mod player;
 pub mod tui;
 pub mod ui_state;
 
 pub use database::Database;
 pub use library::Library;
-pub use player::Player;
+pub use playback::PlaybackSession;
 
 use crate::domain::SimpleSong;
+
+pub static FFMPEG_AVAILABLE: LazyLock<bool> = LazyLock::new(|| {
+    Command::new("ffmpeg")
+        .arg("-version")
+        .stdout(process::Stdio::null())
+        .stderr(process::Stdio::null())
+        .status()
+        .is_ok()
+});
 
 pub type SongMap = IndexMap<u64, Arc<SimpleSong>, BuildNoHashHasher<u64>>;
 

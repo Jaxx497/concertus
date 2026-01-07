@@ -11,6 +11,8 @@ use crate::{
 };
 use ratatui::widgets::StatefulWidget;
 
+pub(crate) const DEFAULT_AMP: f32 = 1.0;
+
 pub struct Progress;
 impl StatefulWidget for Progress {
     type State = UiState;
@@ -20,11 +22,11 @@ impl StatefulWidget for Progress {
         buf: &mut ratatui::prelude::Buffer,
         state: &mut Self::State,
     ) {
-        if state.get_now_playing().is_some() {
+        if state.player_is_active() {
             Timer.render(area, buf, state);
             match &state.get_progress_display() {
                 ProgressDisplay::ProgressBar => ProgressBar.render(area, buf, state),
-                ProgressDisplay::Waveform => match state.waveform_is_valid() {
+                ProgressDisplay::Waveform => match !state.get_waveform_as_slice().is_empty() {
                     true => Waveform.render(area, buf, state),
                     false => Oscilloscope.render(area, buf, state),
                 },

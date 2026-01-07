@@ -1,22 +1,21 @@
 use super::LEGAL_EXTENSION;
 use crate::{
-    SongMap,
     app_core::LibraryRefreshProgress,
     calculate_signature,
     database::Database,
     domain::{Album, LongSong, SimpleSong, SongInfo},
-    expand_tilde,
+    expand_tilde, SongMap,
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
+use crossbeam_channel::Sender;
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use std::{
     collections::{HashSet, VecDeque},
     path::{Path, PathBuf},
     sync::{
-        Arc,
         atomic::{AtomicUsize, Ordering},
-        mpsc::Sender,
+        Arc,
     },
 };
 use walkdir::WalkDir;

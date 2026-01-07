@@ -2,8 +2,8 @@ use crate::ui_state::{DisplayTheme, UiState};
 use ratatui::{
     style::Stylize,
     widgets::{
-        Block, Padding, StatefulWidget, Widget,
         canvas::{Canvas, Context, Line},
+        Block, Padding, StatefulWidget, Widget,
     },
 };
 
@@ -19,7 +19,7 @@ impl StatefulWidget for Oscilloscope {
         state: &mut Self::State,
     ) {
         let theme = &state.theme_manager.get_display_theme(true);
-        let samples = state.get_oscilloscope_data();
+        let samples = state.get_tapped_samples();
 
         if samples.is_empty() {
             return;
@@ -30,7 +30,7 @@ impl StatefulWidget for Oscilloscope {
             false => 0,
         };
 
-        let elapsed = state.get_playback_elapsed().as_secs_f32();
+        let elapsed = state.get_playback_elapsed_f32();
 
         Canvas::default()
             .x_bounds([0.0, samples.len() as f64])

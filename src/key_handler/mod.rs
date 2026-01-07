@@ -22,8 +22,8 @@ const X: KeyModifiers = KeyModifiers::NONE;
 const S: KeyModifiers = KeyModifiers::SHIFT;
 const C: KeyModifiers = KeyModifiers::CONTROL;
 
-const SEEK_SMALL: usize = 5;
-const SEEK_LARGE: usize = 30;
+const SEEK_SMALL: u64 = 5;
+const SEEK_LARGE: u64 = 30;
 const SCROLL_MID: usize = 5;
 const SCROLL_XTRA: usize = 20;
 const SIDEBAR_INCREMENT: isize = 1;
@@ -33,16 +33,18 @@ pub enum Action {
     // Player Controls
     Play,
     Stop,
-    TogglePause,
+    TogglePlayback,
     PlayNext,
     PlayPrev,
-    SeekForward(usize),
-    SeekBack(usize),
+    SeekForward(u64),
+    SeekBack(u64),
 
     // Queue & Playlist Actions
     QueueSong,
-    QueueEntity,
-    ShuffleEntity,
+    QueueMany {
+        sel_type: SelectionType,
+        shuffle: bool,
+    },
     RemoveSong,
 
     AddToPlaylist,
@@ -77,15 +79,15 @@ pub enum Action {
     RenamePlaylist,
     RenamePlaylistConfirm,
 
-    ShiftPosition(MoveDirection),
+    ShiftPosition(Incrementor),
     ShuffleElements,
 
     // Display
-    CycleTheme(MoveDirection),
+    CycleTheme(Incrementor),
     ThemeManager,
     ThemeRefresh,
 
-    IncrementWFSmoothness(MoveDirection),
+    IncrementWFSmoothness(Incrementor),
     IncrementSidebarSize(isize),
 
     SetProgressDisplay(ProgressDisplay),
@@ -121,6 +123,13 @@ pub enum InputContext {
 }
 
 #[derive(PartialEq, Eq)]
+pub enum SelectionType {
+    Multi,
+    Album,
+    Playlist,
+}
+
+#[derive(PartialEq, Eq)]
 pub enum Director {
     Up(usize),
     Down(usize),
@@ -129,7 +138,7 @@ pub enum Director {
 }
 
 #[derive(PartialEq, Eq)]
-pub enum MoveDirection {
+pub enum Incrementor {
     Up,
     Down,
 }

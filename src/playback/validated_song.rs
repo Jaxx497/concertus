@@ -1,33 +1,41 @@
-use super::{SimpleSong, SongInfo};
-use crate::strip_win_prefix;
-use crate::{domain::SongDatabase, get_readable_duration, Database};
-use anyhow::anyhow;
-use anyhow::Context;
+use crate::{
+    domain::{SimpleSong, SongDatabase, SongInfo},
+    get_readable_duration, Database,
+};
 use anyhow::Result;
-use std::{sync::Arc, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
-pub struct QueueSong {
+pub struct ValidatedSong {
     pub meta: Arc<SimpleSong>,
     pub path: String,
 }
 
-impl QueueSong {
-    pub fn from_simple_song(song: &Arc<SimpleSong>) -> Result<Arc<Self>> {
+impl ValidatedSong {
+    pub fn new(song: &Arc<SimpleSong>) -> Result<Arc<Self>> {
         let path = song.get_path()?;
 
-        std::fs::metadata(&path).context(anyhow!(
-            "Invalid file path!\n\nUnable to find: \"{}\"",
-            strip_win_prefix(&path)
-        ))?;
+        std::fs::metadata(&path)?;
 
-        Ok(Arc::new(QueueSong {
+        Ok(Arc::new(Self {
             meta: Arc::clone(&song),
             path,
         }))
     }
+
+    pub fn id(&self) -> u64 {
+        self.meta.get_id()
+    }
+
+    pub fn path_str(&self) -> String {
+        self.path.clone()
+    }
+
+    pub fn path(&self) -> PathBuf {
+        PathBuf::from(&self.path)
+    }
 }
 
-impl SongInfo for QueueSong {
+impl SongInfo for ValidatedSong {
     fn get_id(&self) -> u64 {
         self.meta.id
     }
@@ -57,28 +65,29 @@ impl SongInfo for QueueSong {
     }
 }
 
-impl SongDatabase for QueueSong {
+impl SongDatabase for ValidatedSong {
     /// Returns the path of a song as a String
     fn get_path(&self) -> Result<String> {
-        Ok(self.path.clone())
+        let mut db = Database::open()?;
+        db.get_song_path(self.id())
     }
 
     /// Update the play_count of the song
     fn update_play_count(&self) -> Result<()> {
         let mut db = Database::open()?;
-        db.update_play_count(self.meta.id)
+        db.update_play_count(self.id())
     }
 
     /// Retrieve the waveform of a song
     /// returns Result<Vec<f32>>
     fn get_waveform(&self) -> Result<Vec<f32>> {
         let mut db = Database::open()?;
-        db.get_waveform(self.meta.id)
+        db.get_waveform(self.id())
     }
 
     /// Store the waveform of a song in the databse
     fn set_waveform_db(&self, wf: &[f32]) -> Result<()> {
         let mut db = Database::open()?;
-        db.set_waveform(self.meta.id, wf)
+        db.set_waveform(self.id(), wf)
     }
 }

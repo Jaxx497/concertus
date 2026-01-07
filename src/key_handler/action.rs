@@ -1,10 +1,9 @@
 use crate::{
-    REFRESH_RATE,
-    app_core::Concertus,
     key_handler::*,
     ui_state::{
         LibraryView, Mode, Pane, PlaylistAction, PopupType, ProgressDisplay, SettingsMode, UiState,
     },
+    REFRESH_RATE,
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -38,12 +37,12 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
     match (key.modifiers, key.code) {
         (C, Char('c')) => Some(Action::QUIT),
 
-        (C, Char(' ')) => Some(Action::TogglePause),
+        (C, Char(' ')) => Some(Action::TogglePlayback),
 
         (C, Char('n')) => Some(Action::PlayNext),
         (C, Char('p')) => Some(Action::PlayPrev),
 
-        (X, Media(event::MediaKeyCode::PlayPause)) => Some(Action::TogglePause),
+        (X, Media(event::MediaKeyCode::PlayPause)) => Some(Action::TogglePlayback),
 
         // Works on everything except search or popup
         _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
@@ -58,7 +57,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (C, Char('z')) => Some(Action::ChangeMode(Mode::Power)),
 
             (X, Char('`')) => Some(Action::ViewSettings),
-            (X, Char(' ')) => Some(Action::TogglePause),
+            (X, Char(' ')) => Some(Action::TogglePlayback),
             (C, Char('s')) => Some(Action::Stop),
 
             (X, Char('n')) => Some(Action::SeekForward(SEEK_SMALL)),
@@ -88,11 +87,11 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('[')) => Some(Action::IncrementSidebarSize(-SIDEBAR_INCREMENT)),
             (X, Char(']')) => Some(Action::IncrementSidebarSize(SIDEBAR_INCREMENT)),
 
-            (S, Char('{')) => Some(Action::IncrementWFSmoothness(MoveDirection::Down)),
-            (S, Char('}')) => Some(Action::IncrementWFSmoothness(MoveDirection::Up)),
+            (S, Char('{')) => Some(Action::IncrementWFSmoothness(Incrementor::Down)),
+            (S, Char('}')) => Some(Action::IncrementWFSmoothness(Incrementor::Up)),
 
-            (S, Char('<')) => Some(Action::CycleTheme(MoveDirection::Up)),
-            (S, Char('>')) => Some(Action::CycleTheme(MoveDirection::Down)),
+            (S, Char('<')) => Some(Action::CycleTheme(Incrementor::Up)),
+            (S, Char('>')) => Some(Action::CycleTheme(Incrementor::Down)),
 
             (_, Char('f') | Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
             (X, Char('w')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
@@ -131,11 +130,17 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
     match state.get_mode() {
         Mode::Library(_) => match (key.modifiers, key.code) {
-            (S, Char('K')) => Some(Action::ShiftPosition(MoveDirection::Up)),
-            (S, Char('J')) => Some(Action::ShiftPosition(MoveDirection::Down)),
-            (S, Char('Q')) => Some(Action::QueueEntity),
+            (S, Char('K')) => Some(Action::ShiftPosition(Incrementor::Up)),
+            (S, Char('J')) => Some(Action::ShiftPosition(Incrementor::Down)),
+            (S, Char('Q')) => Some(Action::QueueMany {
+                sel_type: SelectionType::Multi,
+                shuffle: false,
+            }),
             (S, Char('V')) => Some(Action::MultiSelectAll),
-            (X, Char('s')) => Some(Action::ShuffleEntity),
+            (X, Char('s')) => Some(Action::QueueMany {
+                sel_type: SelectionType::Multi,
+                shuffle: true,
+            }),
             (X, Char('x')) => Some(Action::RemoveSong),
             _ => None,
         },
@@ -145,8 +150,8 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
             (X, Char('s')) => Some(Action::ShuffleElements),
             (S, Char('V')) => Some(Action::MultiSelectAll),
 
-            (S, Char('K')) => Some(Action::ShiftPosition(MoveDirection::Up)),
-            (S, Char('J')) => Some(Action::ShiftPosition(MoveDirection::Down)),
+            (S, Char('K')) => Some(Action::ShiftPosition(Incrementor::Up)),
+            (S, Char('J')) => Some(Action::ShiftPosition(Incrementor::Down)),
             _ => None,
         },
 
@@ -161,11 +166,17 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
 fn handle_album_browser(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
-        (X, Char('q')) => Some(Action::QueueEntity),
+        (X, Char('q')) => Some(Action::QueueMany {
+            sel_type: SelectionType::Album,
+            shuffle: false,
+        }),
         (X, Enter) | (X, Tab) | (X, Right) | (X, Char('l')) | (C, Char('a')) => {
             Some(Action::ChangePane(Pane::TrackList))
         }
-        (X, Char('s')) => Some(Action::ShuffleEntity),
+        (X, Char('s')) => Some(Action::QueueMany {
+            sel_type: SelectionType::Album,
+            shuffle: true,
+        }),
 
         // Change album sorting algorithm
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
@@ -179,7 +190,10 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
         (C, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
         (X, Char('r')) => Some(Action::RenamePlaylist),
-        (X, Char('q')) => Some(Action::QueueEntity),
+        (X, Char('q')) => Some(Action::QueueMany {
+            sel_type: SelectionType::Playlist,
+            shuffle: false,
+        }),
 
         (X, Enter) | (X, Tab) | (X, Right) | (X, Char('l')) => {
             Some(Action::ChangePane(Pane::TrackList))
@@ -187,7 +201,10 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
 
         (X, Char('c')) => Some(Action::CreatePlaylist),
         (C, Char('d')) => Some(Action::DeletePlaylist),
-        (X, Char('s')) => Some(Action::ShuffleEntity),
+        (X, Char('s')) => Some(Action::QueueMany {
+            sel_type: SelectionType::Playlist,
+            shuffle: true,
+        }),
         _ => None,
     }
 }
@@ -202,6 +219,7 @@ fn handle_search_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
         (_, Left) | (C, Char('h')) => Some(Action::SortColumnsPrev),
         (_, Right) | (C, Char('l')) => Some(Action::SortColumnsNext),
+        (C, Enter) | (S, Enter) => None,
         (_, Char(x)) if ILLEGAL_CHARS.contains(&x) => None,
 
         _ => Some(Action::UpdateSearch(*key)),
@@ -210,7 +228,7 @@ fn handle_search_pane(key: &KeyEvent, state: &UiState) -> Option<Action> {
 
 fn handle_fullscreen(key: &KeyEvent) -> Option<Action> {
     let action = match (key.modifiers, key.code) {
-        (X, Char(' ')) => Action::TogglePause,
+        (X, Char(' ')) => Action::TogglePlayback,
 
         (X, Char('n')) => Action::SeekForward(SEEK_SMALL),
         (S, Char('N')) => Action::SeekForward(SEEK_LARGE),
@@ -224,8 +242,8 @@ fn handle_fullscreen(key: &KeyEvent) -> Option<Action> {
         }
         (X, Char('b')) | (S, Char('B')) => Action::SetProgressDisplay(ProgressDisplay::ProgressBar),
 
-        (S, Char('{')) => Action::IncrementWFSmoothness(MoveDirection::Down),
-        (S, Char('}')) => Action::IncrementWFSmoothness(MoveDirection::Up),
+        (S, Char('{')) => Action::IncrementWFSmoothness(Incrementor::Down),
+        (S, Char('}')) => Action::IncrementWFSmoothness(Incrementor::Up),
 
         _ => Action::RevertFullscreen,
     };
@@ -314,90 +332,5 @@ pub fn next_event() -> Result<Option<Event>> {
     match event::poll(REFRESH_RATE)? {
         true => Ok(Some(event::read()?)),
         false => Ok(None),
-    }
-}
-
-impl Concertus {
-    #[rustfmt::skip]
-    pub fn handle_action(&mut self, action: Action) -> Result<()> {
-        match action {
-            // Player 
-            Action::Play            => self.play_selected_song()?,
-            Action::TogglePause     => self.player.toggle_playback()?,
-            Action::Stop            => self.player.stop()?,
-            Action::SeekForward(s)  => self.player.seek_forward(s)?,
-            Action::SeekBack(s)     => self.player.seek_back(s)?,
-            Action::PlayNext        => self.play_next()?,
-            Action::PlayPrev        => self.play_prev()?,
-
-            // UI 
-            Action::Scroll(s)       => self.ui.scroll(s),
-            Action::GoToAlbum       => self.ui.go_to_album()?,
-            Action::ChangeMode(m)   => self.ui.set_mode(m),
-            Action::ChangePane(p)   => self.ui.set_pane(p),
-            Action::SortColumnsNext => self.ui.next_song_column(),
-            Action::SortColumnsPrev => self.ui.prev_song_column(),
-            Action::ToggleAlbumSort(next)   => self.ui.toggle_album_sort(next),
-
-            // Search Related
-            Action::UpdateSearch(k) => self.ui.process_search(k),
-            Action::SendSearch      => self.ui.send_search(),
-
-            //Playlist
-            Action::CreatePlaylist  => self.ui.create_playlist_popup(),
-            Action::CreatePlaylistConfirm => self.ui.create_playlist()?,
-
-            Action::CreatePlaylistWithSongs => self.ui.create_playlist_with_songs_popup(),
-            Action::CreatePlaylistWithSongsConfirm => self.ui.create_playlist_with_songs()?,
-
-            Action::RenamePlaylist  => self.ui.rename_playlist_popup(),
-            Action::RenamePlaylistConfirm => self.ui.rename_playlist()?,
-
-            Action::DeletePlaylist  => self.ui.delete_playlist_popup(),
-            Action::DeletePlaylistConfirm => self.ui.delete_playlist()?,
-
-            // Queue
-            Action::QueueSong       => self.ui.queue_song(None)?,
-            Action::QueueEntity     => self.ui.add_to_queue_multi(false)?,
-            Action::ShuffleEntity   => self.ui.add_to_queue_multi(true)?,
-            Action::RemoveSong      => self.ui.remove_song()?,
-            Action::AddToPlaylist   => self.ui.add_to_playlist_popup(),
-            Action::AddToPlaylistConfirm => self.ui.add_to_playlist()?,
-
-            Action::ShuffleElements => self.ui.shuffle_queue(),
-
-            Action::MultiSelect      => self.ui.toggle_multi_selection()?,
-            Action::MultiSelectAll   => self.ui.multi_select_all()?,
-            Action::ClearMultiSelect => self.ui.clear_multi_select(),
-
-            Action::ShiftPosition(direction) => self.ui.shift_position(direction)?,
-            Action::IncrementWFSmoothness(direction) => self.ui.playback_view.increment_smoothness(direction),
-            Action::IncrementSidebarSize(x) => self.ui.adjust_sidebar_size(x),
-
-            Action::SetProgressDisplay(p)   => self.ui.set_progress_display(p),
-            Action::SetFullscreen(p)        => self.ui.set_fullscreen(p),
-            Action::RevertFullscreen        => self.ui.revert_fullscreen(),
-
-            Action::ThemeRefresh    => self.ui.refresh_current_theme(),
-            Action::ThemeManager    => self.ui.open_theme_manager(),
-            Action::CycleTheme(dir) => self.ui.cycle_theme(dir),
-
-            // Ops
-            Action::PopupInput(key) => self.ui.process_popup_input(&key),
-            Action::ClosePopup      => self.ui.close_popup(),
-            Action::SoftReset       => self.ui.soft_reset(),
-            Action::UpdateLibrary   => self.update_library()?,
-            Action::QUIT            => self.ui.set_mode(Mode::QUIT),
-
-            Action::ViewSettings    => self.activate_settings(),
-            Action::PopupScrollUp   => self.ui.popup_scroll_up(),
-            Action::PopupScrollDown => self.ui.popup_scroll_down(),
-            Action::RootAdd         => self.settings_add_root(),
-            Action::RootRemove      => self.settings_remove_root(),
-            Action::RootConfirm     => self.settings_root_confirm()?,
-
-            _ => (),
-        }
-        Ok(())
     }
 }

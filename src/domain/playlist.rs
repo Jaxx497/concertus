@@ -22,7 +22,7 @@ impl Playlist {
         }
     }
 
-    pub fn get_tracks(&self) -> Vec<Arc<SimpleSong>> {
+    pub fn get_tracklist(&self) -> Vec<Arc<SimpleSong>> {
         self.tracklist
             .iter()
             .map(|s| Arc::clone(&s.song))

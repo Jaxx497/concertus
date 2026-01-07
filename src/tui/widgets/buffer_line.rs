@@ -146,7 +146,7 @@ fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<
 
     let up_next_line = Span::from(truncated).fg(state.theme_manager.active.selection_inactive);
 
-    let total = state.playback.queue.len();
+    let total = state.playback.queue_len();
     let queue_total = format!(" [{total}] ").fg(theme.text_muted);
 
     match width < BAD_WIDTH {

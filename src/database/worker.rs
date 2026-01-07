@@ -1,9 +1,14 @@
-use crate::{database::Database, domain::SimpleSong, ui_state::UiSnapshot, SongMap};
+use crate::{
+    database::{Database, DB_BOUND},
+    domain::SimpleSong,
+    ui_state::UiSnapshot,
+    SongMap,
+};
 use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
 use std::{
     collections::{HashSet, VecDeque},
-    sync::{mpsc, Arc},
+    sync::Arc,
     thread,
 };
 
@@ -13,13 +18,13 @@ pub enum DbMessage {
 }
 
 pub struct DbWorker {
-    sender: mpsc::Sender<DbMessage>,
+    sender: crossbeam_channel::Sender<DbMessage>,
     pub handle: Option<thread::JoinHandle<()>>,
 }
 
 impl DbWorker {
     pub fn new() -> Result<Self> {
-        let (sender, receiver) = mpsc::channel::<DbMessage>();
+        let (sender, receiver) = crossbeam_channel::bounded::<DbMessage>(DB_BOUND);
 
         let handle = thread::spawn(move || {
             let mut db = match Database::open() {
@@ -32,12 +37,8 @@ impl DbWorker {
 
             while let Ok(msg) = receiver.recv() {
                 match msg {
-                    DbMessage::Operation(operation) => {
-                        operation(&mut db);
-                    }
-                    DbMessage::Shutdown => {
-                        break;
-                    }
+                    DbMessage::Operation(operation) => operation(&mut db),
+                    DbMessage::Shutdown => break,
                 }
             }
         });
@@ -62,7 +63,7 @@ impl DbWorker {
         F: FnOnce(&mut Database) -> Result<T> + Send + 'static,
         T: Send + 'static,
     {
-        let (result_tx, result_rx) = mpsc::channel();
+        let (result_tx, result_rx) = crossbeam_channel::bounded(128);
 
         self.execute(move |db| {
             let result = operation(db);
@@ -155,7 +156,6 @@ impl DbWorker {
         self.execute_sync(move |db| db.get_song_path(id))
     }
 
-    // Fire-and-forget operations
     pub fn update_play_count(&self, song_id: u64) {
         self.execute(move |db| {
             let _ = db.update_play_count(song_id);

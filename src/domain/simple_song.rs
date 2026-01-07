@@ -1,5 +1,5 @@
 use super::{FileType, SongInfo};
-use crate::{Database, domain::SongDatabase, get_readable_duration};
+use crate::{domain::SongDatabase, get_readable_duration, Database};
 use anyhow::Result;
 use std::{sync::Arc, time::Duration};
 

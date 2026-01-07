@@ -1,9 +1,9 @@
 use anyhow::anyhow;
 
 use crate::{
+    key_handler::Incrementor,
+    ui_state::{fade_color, DisplayTheme, PopupType, ThemeConfig, UiState},
     CONFIG_DIRECTORY, THEME_DIRECTORY,
-    key_handler::MoveDirection,
-    ui_state::{DisplayTheme, PopupType, ThemeConfig, UiState, fade_color},
 };
 
 pub struct ThemeManager {
@@ -193,7 +193,7 @@ impl UiState {
         self.show_popup(PopupType::ThemeManager);
     }
 
-    pub fn cycle_theme(&mut self, dir: MoveDirection) {
+    pub fn cycle_theme(&mut self, dir: Incrementor) {
         let len = self.theme_manager.theme_lib.len();
         if len < 2 {
             return;
@@ -201,8 +201,8 @@ impl UiState {
 
         let idx = self.theme_manager.get_current_theme_index().unwrap_or(0);
         let new_idx = match dir {
-            MoveDirection::Up => (idx + len - 1) % len,
-            MoveDirection::Down => (idx + 1) % len,
+            Incrementor::Up => (idx + len - 1) % len,
+            Incrementor::Down => (idx + 1) % len,
         };
 
         self.theme_manager.set_theme(
