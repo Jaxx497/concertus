@@ -1,11 +1,11 @@
 use crate::{
+    CONFIG_DIRECTORY, DATABASE_FILENAME, SongMap,
     database::tables::CREATE_TABLES,
-    domain::{LongSong, SimpleSong, SongInfo},
-    SongMap, CONFIG_DIRECTORY, DATABASE_FILENAME,
+    library::{LongSong, SimpleSong, SongInfo},
 };
 use anyhow::Result;
 use queries::*;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs::{self},

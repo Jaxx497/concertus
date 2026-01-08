@@ -1,4 +1,3 @@
-#![allow(unused)]
 use anyhow::Result;
 use rodio::decoder::builder::SeekMode;
 use rodio::{ChannelCount, Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
@@ -9,8 +8,8 @@ use std::{
     num::NonZero,
     path::{Path, PathBuf},
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
     },
     time::Duration,
 };
@@ -19,6 +18,7 @@ use crate::player::ConcertusBackend;
 
 pub struct RodioBackend {
     pub sink: Sink,
+    duration: Option<Duration>,
     track_ended: Arc<AtomicBool>,
     _stream: OutputStream,
     sample_buffer: Arc<Mutex<VecDeque<f32>>>,
@@ -28,12 +28,14 @@ impl RodioBackend {
     pub fn new() -> Result<Self> {
         let stream = OutputStreamBuilder::open_default_stream()?;
         let sink = Sink::connect_new(stream.mixer());
+        let duration = None;
 
         Ok(Self {
             sink,
             _stream: stream,
             sample_buffer: Arc::new(Mutex::new(VecDeque::with_capacity(8192))),
             track_ended: Arc::new(AtomicBool::new(false)),
+            duration,
         })
     }
 }
@@ -48,6 +50,8 @@ impl ConcertusBackend for RodioBackend {
             Arc::clone(&self.sample_buffer),
             Arc::clone(&self.track_ended),
         );
+
+        self.duration = tapped.total_duration();
 
         self.sink.clear();
         self.sink.append(tapped);
@@ -71,6 +75,13 @@ impl ConcertusBackend for RodioBackend {
     fn seek_forward(&mut self, secs: u64) -> Result<()> {
         let elapsed = self.position();
         let new_time = Duration::from_secs(secs) + elapsed;
+
+        if let Some(dur) = self.duration {
+            if new_time > dur {
+                self.stop();
+                return Ok(());
+            }
+        }
 
         self.sink.try_seek(new_time)?;
         Ok(())

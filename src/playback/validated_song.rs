@@ -1,6 +1,6 @@
 use crate::{
-    domain::{SimpleSong, SongDatabase, SongInfo},
-    get_readable_duration, Database,
+    Database, get_readable_duration,
+    library::{SimpleSong, SongDatabase, SongInfo},
 };
 use anyhow::Result;
 use std::{path::PathBuf, sync::Arc, time::Duration};

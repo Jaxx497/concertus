@@ -1,12 +1,11 @@
-use anyhow::{anyhow, bail, Result};
-use crossbeam_channel::Receiver;
+use anyhow::{Result, anyhow, bail};
 use indexmap::IndexMap;
 use nohash_hasher::BuildNoHashHasher;
 use ratatui::crossterm::{
+    ExecutableCommand,
     cursor::MoveToColumn,
     style::Print,
     terminal::{Clear, ClearType},
-    ExecutableCommand,
 };
 use std::{
     fs,
@@ -22,7 +21,6 @@ use xxhash_rust::xxh3::xxh3_64;
 
 pub mod app_core;
 pub mod database;
-pub mod domain;
 pub mod key_handler;
 pub mod library;
 pub mod playback;
@@ -31,10 +29,8 @@ pub mod tui;
 pub mod ui_state;
 
 pub use database::Database;
-pub use library::Library;
+pub use library::{Library, SimpleSong};
 pub use playback::PlaybackSession;
-
-use crate::domain::SimpleSong;
 
 pub static FFMPEG_AVAILABLE: LazyLock<bool> = LazyLock::new(|| {
     Command::new("ffmpeg")

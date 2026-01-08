@@ -1,6 +1,6 @@
 use crate::{
-    domain::SongInfo,
-    tui::widgets::tracklist::{create_standard_table, get_title, CellFactory},
+    library::SongInfo,
+    tui::widgets::tracklist::{CellFactory, create_standard_table, get_title},
     ui_state::{Pane, UiState},
 };
 use ratatui::{

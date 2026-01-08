@@ -1,15 +1,15 @@
-use super::{search_state::SearchState, DisplayState};
+use super::{DisplayState, search_state::SearchState};
 use crate::{
+    Library, PlaybackSession,
     database::DbWorker,
-    domain::SimpleSong,
     key_handler::InputContext,
+    library::SimpleSong,
     player::{PlaybackMetrics, PlaybackState},
     ui_state::{
-        popup::{PopupState, PopupType},
         LibraryView, Mode, Pane, PlaylistAction, ProgressDisplay, SettingsMode, ThemeManager,
         UiState, WaveformManager,
+        popup::{PopupState, PopupType},
     },
-    Library, PlaybackSession,
 };
 use anyhow::{Error, Result};
 use std::{sync::Arc, time::Duration};

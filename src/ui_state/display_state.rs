@@ -1,10 +1,10 @@
 use super::{AlbumSort, LibraryView, Mode, Pane, TableSort, UiState};
 use crate::{
-    domain::{Album, Playlist, SimpleSong, SongInfo},
     key_handler::Director,
+    library::{Album, Playlist, SimpleSong, SongInfo},
     ui_state::{PopupType, ProgressDisplay},
 };
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use indexmap::IndexSet;
 use ratatui::widgets::{ListState, TableState};
 use std::sync::Arc;

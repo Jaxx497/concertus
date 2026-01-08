@@ -3,8 +3,8 @@ use crossbeam_channel::{Receiver, Sender};
 use std::{sync::Arc, time::Duration};
 
 use crate::player::{
-    backend_rodio::RodioBackend, core::PlayerCore, metrics::PlaybackMetrics, ConcertusTrack,
-    PlaybackState, PlayerCommand, PlayerEvent,
+    ConcertusTrack, PlaybackState, PlayerCommand, PlayerEvent, backend_cplayback::ConcertusEngine,
+    backend_rodio::RodioBackend, core::PlayerCore, metrics::PlaybackMetrics,
 };
 
 pub struct PlayerHandle {

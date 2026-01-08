@@ -1,5 +1,5 @@
 use super::{FileType, SongInfo};
-use crate::{domain::SongDatabase, get_readable_duration, Database};
+use crate::{Database, get_readable_duration};
 use anyhow::Result;
 use std::{sync::Arc, time::Duration};
 
@@ -19,7 +19,7 @@ pub struct SimpleSong {
 }
 
 /// DATABASE RELATED METHODS
-impl SongDatabase for SimpleSong {
+impl super::SongDatabase for SimpleSong {
     /// Returns the path of a song as a String
     fn get_path(&self) -> Result<String> {
         let mut db = Database::open()?;

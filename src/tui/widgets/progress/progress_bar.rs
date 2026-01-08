@@ -1,4 +1,4 @@
-use crate::{domain::SongInfo, ui_state::UiState};
+use crate::{library::SongInfo, ui_state::UiState};
 use ratatui::{
     style::Stylize,
     widgets::{Block, LineGauge, Padding, StatefulWidget, Widget},

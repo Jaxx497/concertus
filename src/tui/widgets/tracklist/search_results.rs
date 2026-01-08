@@ -1,7 +1,7 @@
 use crate::{
-    domain::SongInfo,
-    tui::widgets::tracklist::{create_standard_table, CellFactory},
-    ui_state::{fade_color, MatchField, Pane, UiState},
+    library::SongInfo,
+    tui::widgets::tracklist::{CellFactory, create_standard_table},
+    ui_state::{MatchField, Pane, UiState, fade_color},
 };
 use ratatui::{
     style::Stylize,

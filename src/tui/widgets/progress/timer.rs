@@ -1,6 +1,6 @@
 use crate::{
-    domain::SongInfo,
     get_readable_duration,
+    library::SongInfo,
     tui::widgets::DUR_WIDTH,
     ui_state::{ProgressDisplay, UiState},
 };

@@ -4,6 +4,11 @@ use rusqlite::{
 };
 use std::fmt::Display;
 
+pub static LEGAL_EXTENSION: std::sync::LazyLock<std::collections::HashSet<&'static str>> =
+    std::sync::LazyLock::new(|| {
+        std::collections::HashSet::from(["mp3", "m4a", "flac", "ogg", "wav", "opus"])
+    });
+
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Default, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum FileType {
@@ -12,6 +17,7 @@ pub enum FileType {
     OGG = 3,
     WAV = 4,
     FLAC = 5,
+    OPUS = 6,
     #[default]
     ERR = 0,
 }
@@ -22,8 +28,9 @@ impl From<&str> for FileType {
             "mp3" => Self::MP3,
             "aac" | "m4a" => Self::M4A,
             "ogg" => Self::OGG,
-            "flac" => Self::FLAC,
             "wav" => Self::WAV,
+            "flac" => Self::FLAC,
+            "opus" => Self::OPUS,
             _ => Self::ERR,
         }
     }
@@ -50,6 +57,7 @@ impl Display for FileType {
             FileType::MP3 => write!(f, "ᵐᵖ³"),
             FileType::M4A => write!(f, "ᵐ⁴ᵃ"),
             FileType::OGG => write!(f, "ᵒᵍᵍ"),
+            FileType::OPUS => write!(f, "ᵒᵖᵘˢ"),
             FileType::WAV => write!(f, "ʷᵃᵛ"),
             FileType::FLAC => write!(f, "ᶠˡᵃᶜ"),
             FileType::ERR => write!(f, "ERR"),
@@ -65,6 +73,7 @@ impl FileType {
             3 => Self::OGG,
             4 => Self::WAV,
             5 => Self::FLAC,
+            6 => Self::OPUS,
             _ => Self::ERR,
         }
     }

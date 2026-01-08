@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use crossbeam_channel::Receiver;
 use std::{
     io::{Cursor, Read},
@@ -10,8 +10,8 @@ use std::{
 };
 
 use crate::{
-    domain::{SimpleSong, SongDatabase},
     key_handler::Incrementor,
+    library::{SimpleSong, SongDatabase},
     ui_state::UiState,
 };
 

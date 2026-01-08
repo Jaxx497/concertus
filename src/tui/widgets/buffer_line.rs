@@ -1,5 +1,5 @@
 use crate::{
-    domain::SongInfo,
+    library::SongInfo,
     truncate_at_last_space,
     tui::widgets::{PAUSE_ICON, QUEUE_ICON, SELECTED},
     ui_state::{DisplayTheme, UiState},

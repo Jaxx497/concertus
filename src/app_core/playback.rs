@@ -1,7 +1,7 @@
 use crate::{
     app_core::Concertus,
-    domain::SimpleSong,
     key_handler::{Director, Incrementor, SelectionType},
+    library::SimpleSong,
     playback::{QueueDelta, ValidatedSong},
     player::ConcertusTrack,
     ui_state::{LibraryView, Mode},
@@ -11,7 +11,7 @@ use rand::seq::SliceRandom;
 use std::sync::Arc;
 
 impl Concertus {
-    pub fn advance_to_next(&mut self) -> Option<Arc<ValidatedSong>> {
+    pub fn advance_to_next_gapless(&mut self) -> Option<Arc<ValidatedSong>> {
         let (delta, next) = self.ui.playback.advance();
 
         if self.ui.get_mode() == Mode::Queue {

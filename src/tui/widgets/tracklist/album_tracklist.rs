@@ -1,5 +1,5 @@
 use crate::{
-    domain::SongInfo,
+    library::SongInfo,
     truncate_at_last_space,
     tui::widgets::tracklist::{CellFactory, create_empty_block, create_standard_table},
     ui_state::{Pane, UiState},

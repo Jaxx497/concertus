@@ -1,9 +1,9 @@
 use crate::{
-    domain::SimpleSong,
     key_handler::{Director, Incrementor, SelectionType},
+    library::SimpleSong,
     ui_state::{Mode, UiState},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use indexmap::IndexSet;
 use std::sync::Arc;
 

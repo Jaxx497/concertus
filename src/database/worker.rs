@@ -1,10 +1,10 @@
 use crate::{
-    database::{Database, DB_BOUND},
-    domain::SimpleSong,
-    ui_state::UiSnapshot,
     SongMap,
+    database::{DB_BOUND, Database},
+    library::SimpleSong,
+    ui_state::UiSnapshot,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use indexmap::IndexMap;
 use std::{
     collections::{HashSet, VecDeque},

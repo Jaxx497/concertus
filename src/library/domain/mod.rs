@@ -5,10 +5,9 @@ mod playlist;
 mod simple_song;
 
 pub use album::Album;
-pub use filetype::FileType;
+pub use filetype::{FileType, LEGAL_EXTENSION};
 pub use long_song::LongSong;
-pub use playlist::Playlist;
-pub use playlist::PlaylistSong;
+pub use playlist::{Playlist, PlaylistSong};
 pub use simple_song::SimpleSong;
 
 pub trait SongInfo {

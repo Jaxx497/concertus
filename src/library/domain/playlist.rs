@@ -1,4 +1,4 @@
-use crate::{domain::SongInfo, get_readable_duration};
+use crate::{get_readable_duration, library::SongInfo};
 
 use super::SimpleSong;
 use std::{sync::Arc, time::Duration};

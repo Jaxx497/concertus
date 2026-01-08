@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crate::{
-    domain::{SimpleSong, SongDatabase},
+    library::{SimpleSong, SongDatabase},
     playback::ValidatedSong,
 };
 

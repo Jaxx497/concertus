@@ -1,7 +1,7 @@
 use crate::{
-    domain::SimpleSong,
-    playback::{QueueDelta, ValidatedSong, HISTORY_CAPACITY},
     Database, SongMap,
+    library::SimpleSong,
+    playback::{HISTORY_CAPACITY, QueueDelta, ValidatedSong},
 };
 use anyhow::Result;
 use rand::seq::SliceRandom;

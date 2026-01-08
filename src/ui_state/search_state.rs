@@ -1,5 +1,5 @@
 use super::{Pane, UiState, new_textarea};
-use crate::domain::{SimpleSong, SongInfo};
+use crate::library::{SimpleSong, SongInfo};
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use ratatui::crossterm::event::KeyEvent;
 use std::{collections::HashMap, sync::Arc};

@@ -1,9 +1,9 @@
-use crate::{domain::SongInfo, tui::widgets::WAVEFORM_WIDGET_HEIGHT, ui_state::UiState};
+use crate::{library::SongInfo, tui::widgets::WAVEFORM_WIDGET_HEIGHT, ui_state::UiState};
 use ratatui::{
     style::{Color, Stylize},
     widgets::{
-        canvas::{Canvas, Context, Line, Rectangle},
         Block, Padding, StatefulWidget, Widget,
+        canvas::{Canvas, Context, Line, Rectangle},
     },
 };
 

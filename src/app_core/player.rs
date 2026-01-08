@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::sync::Arc;
 
 use crate::{
     app_core::Concertus,
-    domain::{SimpleSong, SongDatabase},
     key_handler::SelectionType,
+    library::{SimpleSong, SongDatabase},
     playback::ValidatedSong,
     player::{ConcertusTrack, PlayerEvent},
     ui_state::{LibraryView, Mode},
@@ -31,8 +31,13 @@ impl Concertus {
     }
 
     pub(crate) fn play_next(&mut self) -> Result<()> {
-        match self.advance_to_next() {
-            Some(song) => self.play_song(&song)?,
+        let (delta, next) = self.ui.playback.advance();
+
+        match next {
+            Some(song) => {
+                self.play_song(&song)?;
+                self.sync_player(&delta);
+            }
             None => self.player.stop()?,
         }
         self.ui.set_legal_songs();
@@ -97,7 +102,7 @@ impl Concertus {
                 let return_id = this_song.id();
 
                 if was_gapless {
-                    self.advance_to_next();
+                    self.advance_to_next_gapless();
                 }
                 let song = self.library.get_song_by_id(return_id).cloned();
                 self.ui.set_now_playing(song);
@@ -111,14 +116,17 @@ impl Concertus {
                 Ok(())
             }
             PlayerEvent::PlaybackStopped => {
-                if let Some(next) = self.advance_to_next() {
-                    return self.play_song(&next);
+                let (delta, next) = self.ui.playback.advance();
+
+                if let Some(song) = next {
+                    self.play_song(&song)?;
+                    self.sync_player(&delta);
+                    return Ok(());
                 }
 
                 self.ui.playback.set_now_playing(None);
                 self.player.stop()?;
                 self.ui.clear_waveform();
-
                 self.ui.set_legal_songs();
                 Ok(())
             }

@@ -25,11 +25,11 @@ pub use ui_snapshot::UiSnapshot;
 pub use waveform::WaveformManager;
 
 use crate::{
+    Library, PlaybackSession,
     database::DbWorker,
-    domain::{Album, Playlist, SimpleSong},
+    library::{Album, Playlist, SimpleSong},
     player::PlaybackMetrics,
     ui_state::{popup::PopupState, search_state::SearchState},
-    Library, PlaybackSession,
 };
 
 pub struct UiState {

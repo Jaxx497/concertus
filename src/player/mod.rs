@@ -6,8 +6,7 @@ mod metrics;
 mod track;
 
 pub use crate::player::track::ConcertusTrack;
-
-pub(self) use backend::ConcertusBackend;
+use backend::ConcertusBackend;
 pub use handle::PlayerHandle;
 pub use metrics::PlaybackMetrics;
 

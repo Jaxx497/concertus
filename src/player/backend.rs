@@ -20,6 +20,7 @@ pub(super) trait ConcertusBackend: Send + 'static {
     fn supports_gapless(&self) -> bool {
         false
     }
+
     fn set_next(&mut self, _path: &Path) -> Result<()> {
         Ok(()) // silently succeed if not supported
     }
